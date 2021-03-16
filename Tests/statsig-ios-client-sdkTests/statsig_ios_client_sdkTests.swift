@@ -6,7 +6,7 @@ final class statsig_ios_client_sdkTests: XCTestCase {
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct
         // results.
-        XCTAssertEqual(statsig_ios_client_sdk().text, "Hello, World!")
+        //XCTAssertEqual(statsig_ios_client_sdk().text, "Hello, World!")
     }
 
     static var allTests = [
