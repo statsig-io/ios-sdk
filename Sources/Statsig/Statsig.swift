@@ -10,7 +10,7 @@ public class Statsig {
         self.user = user;
     }
     
-    static func start(user: String, apiKey: String) {
+    public static func start(user: String, apiKey: String) {
         if sharedInstance != nil {
             NSLog("Statsig has already started!")
             return
