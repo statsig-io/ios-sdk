@@ -3,8 +3,6 @@ import Foundation
 import UIKit
 
 // TODOs:
-// switch/update user
-// add logevent API
 // add init timeout
 // add value synchronizer
 
@@ -33,18 +31,22 @@ public class Statsig {
     
     public static func checkGate(forName: String) -> Bool {
         guard let sharedInstance = sharedInstance else {
-            NSLog("Must start Statsig first before calling checkGate.")
+            NSLog("Must start Statsig first before calling checkGate. Returning false as the default.")
             return false
         }
-        return sharedInstance.valueStore.checkGate(sharedInstance.user, gateName: forName)
+        let gateValue = sharedInstance.valueStore.checkGate(sharedInstance.user, gateName: forName)
+        sharedInstance.logger.log(event: Event.gateExposure(gateName: forName, gateValue: gateValue))
+        return gateValue
     }
     
-    public static func getConfig(forName: String) -> DynamicConfig? {
+    public static func getConfig(forName: String) -> DynamicConfig {
         guard let sharedInstance = sharedInstance else {
-            NSLog("Must start Statsig first before calling getConfig.")
-            return nil
+            NSLog("Must start Statsig first before calling getConfig. The returning config will only return default values")
+            return DynamicConfig.createDummy()
         }
-        return sharedInstance.valueStore.getConfig(sharedInstance.user, configName: forName)
+        let config = sharedInstance.valueStore.getConfig(sharedInstance.user, configName: forName)
+        sharedInstance.logger.log(event: Event.configExposure(configName: forName, configGroup: config.group))
+        return config
     }
     
     public static func logEvent(withName:String, value:Double? = nil, metadata:[String:Codable]? = nil) {
@@ -55,7 +57,7 @@ public class Statsig {
         sharedInstance.logger.log(event: Event(name: withName, value: value, metadata: metadata))
     }
     
-    public static func updateUser(_ user:StatsigUser) {
+    public static func updateUser(_ user:StatsigUser, completion: completionBlock) {
         guard let sharedInstance = sharedInstance else {
             NSLog("Must start Statsig first before calling updateUser.")
             return
@@ -64,11 +66,12 @@ public class Statsig {
             NSLog("Calling updateUser with the same user, no-op.")
             return
         }
-        if sharedInstance.user.userID == user.userID {
-            // TODO: update different fields
-        } else {
-            // TODO: update the whole user and refetch values
+        if sharedInstance.user.userID != user.userID {
+            sharedInstance.logger.flush()
         }
+        sharedInstance.user = user
+        sharedInstance.networkService.updateUser(withNewUser: user)
+        sharedInstance.networkService.fetchValues(completion: completion)
     }
     
     public static func shutdown() {
@@ -86,7 +89,7 @@ public class Statsig {
         self.networkService = StatsigNetworkService(sdkKey: sdkKey, user: user, store: valueStore)
         self.logger = EventLogger(networkService: networkService)
         networkService.fetchValues(completion: completion)
-        
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(appWillBackground),
@@ -101,12 +104,10 @@ public class Statsig {
     }
     
     @objc private func appWillBackground() {
-        NSLog("app will background")
         logger.flush()
     }
     
     @objc private func appWillTerminate() {
-        NSLog("app will terminate")
         logger.flush()
         NotificationCenter.default.removeObserver(self)
     }

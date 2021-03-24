@@ -84,12 +84,15 @@ class StatsigNetworkService {
                     return
                 }
             }
-            completion?(nil)
+            completion?("An error occurred during fetching values for the user.")
         }
     }
     
     func sendEvents(_ events: [Event], completion: completionBlock) {
         sendRequest(forType: .logEvent, extraData: events.map { $0.toDictionary() }) { responseData, response, error in
+            NSLog("received log response")
+            NSLog("\(response as? HTTPURLResponse)?.statusCode")
+            NSLog(error.debugDescription)
             if error != nil {
                 // TODO: handle better and retry?
                 completion?(error.debugDescription)

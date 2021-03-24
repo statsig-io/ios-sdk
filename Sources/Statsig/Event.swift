@@ -6,9 +6,9 @@ struct Event {
     let metadata: [String:Any]?
     let time: TimeInterval
     
-    let statsigPrefix = "statsig::"
-    let configExposureEventName = "config_exposure"
-    let gateExposureEventName = "gate_exposure"
+    static let statsigPrefix = "statsig::"
+    static let configExposureEventName = "config_exposure"
+    static let gateExposureEventName = "gate_exposure"
 
     init(name: String, value: Double? = nil, metadata: [String:Any]? = nil) {
         self.time = NSDate().timeIntervalSince1970
@@ -17,7 +17,7 @@ struct Event {
         self.metadata = metadata
     }
 
-    func statsigInternalEvent(
+    static func statsigInternalEvent(
         name: String,
         value: Double? = nil,
         metadata: [String:Codable]? = nil
@@ -25,14 +25,14 @@ struct Event {
         return Event(name: self.statsigPrefix + name, value: value, metadata: metadata)
     }
 
-    func gateExposure(gateName: String, gateValue: Bool) -> Event {
+    static func gateExposure(gateName: String, gateValue: Bool) -> Event {
         return statsigInternalEvent(
             name: gateExposureEventName,
             value:nil,
             metadata: ["gate": gateName, "gateValue": gateValue])
     }
 
-    func configExposure(configName: String, configGroup: String) -> Event {
+    static func configExposure(configName: String, configGroup: String) -> Event {
         return statsigInternalEvent(
             name: configExposureEventName,
             value:nil,

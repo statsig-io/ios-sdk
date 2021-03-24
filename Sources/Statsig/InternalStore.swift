@@ -21,12 +21,12 @@ class InternalStore {
         }
     }
 
-    public func checkGate(_ forUser:StatsigUser, gateName:String) -> Bool {
+    func checkGate(_ forUser:StatsigUser, gateName:String) -> Bool {
         let userValues = get(forUser: forUser)
         return userValues?.checkGate(forName: gateName) ?? false
     }
 
-    public func getConfig(_ forUser:StatsigUser, configName:String) -> DynamicConfig? {
+    func getConfig(_ forUser:StatsigUser, configName:String) -> DynamicConfig {
         let userValues = get(forUser: forUser)
         return userValues?.getConfig(forName: configName) ?? DynamicConfig.createDummy()
     }
@@ -110,7 +110,7 @@ struct UserValues {
         creationTime = NSDate().timeIntervalSince1970
     }
     
-    public func checkGate(forName:String) -> Bool {
+    func checkGate(forName:String) -> Bool {
         if let nameHash = hash(value: forName) {
             // TODO: return dummy config?
             return gates[nameHash] ?? false
@@ -118,7 +118,7 @@ struct UserValues {
         return false
     }
     
-    public func getConfig(forName:String) -> DynamicConfig? {
+    func getConfig(forName:String) -> DynamicConfig? {
         if let nameHash = hash(value: forName) {
             // TODO: return dummy config?
             return configs[nameHash] ?? nil
