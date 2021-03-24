@@ -1,71 +1,113 @@
 import Foundation
 
+import UIKit
+
+// TODOs:
+// switch/update user
+// add logevent API
+// add init timeout
+// add value synchronizer
+
+public typealias completionBlock = ((_ errorMessage: String?
+) -> Void)?
+
 public class Statsig {
     private static var sharedInstance: Statsig?
-    private var apiKey: String
-    private var user: String
+    private var sdkKey: String
+    private var user: StatsigUser
+    private var valueStore: InternalStore
+    private var networkService: StatsigNetworkService
+    private var logger: EventLogger
     
-    public static func start(user: String, apiKey: String) {
+    public static func start(user: StatsigUser, sdkKey: String, completion: completionBlock) {
         if sharedInstance != nil {
             NSLog("Statsig has already started!")
             return
         }
-        sharedInstance = Statsig(user: user, apiKey: apiKey)
+        sharedInstance = Statsig(user: user, sdkKey: sdkKey, completion: completion)
     }
     
     public static func get() -> Statsig? {
         return sharedInstance
     }
     
-    private init(user: String, apiKey: String) {
-        self.apiKey = apiKey;
-        self.user = user;
-        let url = URL(string: "https://api.statsig.com/v1/initialize")!;
-        var request = URLRequest(url: url)
-                
-        // TODO: refacto this section
-        let params: [String: Any] = [
-            "sdkKey": "4176a946-1b82-468b-a760-4957525009ae",
-            "user": [
-                "userID": "jkw",
-                "email": "jkw@statsig.com"
-            ],
-        ]
-        let  jsonData = try? JSONSerialization.data(withJSONObject: params, options: .prettyPrinted)
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonData//?.base64EncodedData()
-        request.httpMethod = "POST"
-
-        let task = URLSession.shared.dataTask(with: request) { responseData, response, error in
-            if error != nil {
-                // TODO: handle
-                return
-            }
-            guard let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode) else {
-                // TODO: handle
-                return
-            }
-            guard let mime = response?.mimeType, mime == "application/json" else {
-                print("Wrong MIME type!")
-                // TODO: handle?
-                return
-            }
-            
-            if let json = try? JSONSerialization.jsonObject(with: responseData!, options: []) {
-                print(json)
-                if let json = json as? [String:Any] {
-                    let gates = json["gates"] as? [String:Bool]
-                    let configs = json["configs"] as? [String: Any]
-                    let sdkParams = json["sdkParams"] as? [String: Any]
-                    print("\(gates)")
-                    print("\(configs)")
-                    print("\(sdkParams)")
-                }
-                
-            }
-        
+    public static func checkGate(forName: String) -> Bool {
+        guard let sharedInstance = sharedInstance else {
+            NSLog("Must start Statsig first before calling checkGate.")
+            return false
         }
-        task.resume()
+        return sharedInstance.valueStore.checkGate(sharedInstance.user, gateName: forName)
+    }
+    
+    public static func getConfig(forName: String) -> DynamicConfig? {
+        guard let sharedInstance = sharedInstance else {
+            NSLog("Must start Statsig first before calling getConfig.")
+            return nil
+        }
+        return sharedInstance.valueStore.getConfig(sharedInstance.user, configName: forName)
+    }
+    
+    public static func logEvent(withName:String, value:Double? = nil, metadata:[String:Codable]? = nil) {
+        guard let sharedInstance = sharedInstance else {
+            NSLog("Must start Statsig first before calling logEvent.")
+            return
+        }
+        sharedInstance.logger.log(event: Event(name: withName, value: value, metadata: metadata))
+    }
+    
+    public static func updateUser(_ user:StatsigUser) {
+        guard let sharedInstance = sharedInstance else {
+            NSLog("Must start Statsig first before calling updateUser.")
+            return
+        }
+        if sharedInstance.user == user {
+            NSLog("Calling updateUser with the same user, no-op.")
+            return
+        }
+        if sharedInstance.user.userID == user.userID {
+            // TODO: update different fields
+        } else {
+            // TODO: update the whole user and refetch values
+        }
+    }
+    
+    public static func shutdown() {
+        // TODO: anything else?
+        guard let sharedInstance = sharedInstance else {
+            return
+        }
+        sharedInstance.logger.flush()
+    }
+    
+    private init(user: StatsigUser, sdkKey: String, completion: completionBlock) {
+        self.sdkKey = sdkKey;
+        self.user = user;
+        self.valueStore = InternalStore()
+        self.networkService = StatsigNetworkService(sdkKey: sdkKey, user: user, store: valueStore)
+        self.logger = EventLogger(networkService: networkService)
+        networkService.fetchValues(completion: completion)
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appWillBackground),
+            name: UIApplication.willResignActiveNotification,
+            object: nil)
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appWillTerminate),
+            name: UIApplication.willTerminateNotification,
+            object: nil)
+    }
+    
+    @objc private func appWillBackground() {
+        NSLog("app will background")
+        logger.flush()
+    }
+    
+    @objc private func appWillTerminate() {
+        NSLog("app will terminate")
+        logger.flush()
+        NotificationCenter.default.removeObserver(self)
     }
 }
