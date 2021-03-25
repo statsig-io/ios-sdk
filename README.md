@@ -5,13 +5,13 @@ Statsig client side SDK for iOS applications
 Statsig is a singleton class which you can initialize with Statsig.start() function:
 
 ```swift
-Statsig.start(sdkKey: "my_client_sdk_key", user: StatsigUser(userID:"my_user_id"))
+Statsig.start(sdkKey: "my_client_sdk_key", user: StatsigUser(userID: "my_user_id"))
 ```
 
 You can also optionally use a completion block to wait for it to finish initializing:
 
 ```swift
-Statsig.start(sdkKey: "my_client_sdk_key", user: StatsigUser(userID:"my_user_id")) { errorMessage in
+Statsig.start(sdkKey: "my_client_sdk_key", user: StatsigUser(userID: "my_user_id")) { errorMessage in
  
   // Statsig client is ready;
   
@@ -45,7 +45,7 @@ Sometimes the logged in user might switch to a different user, or you just recei
 you can call the updateUser() function to notify Statsig so it can retrieve the correct values for the updated user:
 
 ```swift
-let newUser = StatsigUser(userID:"new_user_id")
+let newUser = StatsigUser(userID: "new_user_id", email: "newUser@gmail.com", country: "US")
 
 Statsig.updateUser(newUser)
 ```
