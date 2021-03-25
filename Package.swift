@@ -24,7 +24,7 @@ let package = Package(
             dependencies: [],
             path: "Sources/Statsig"),
         .testTarget(
-            name: "statsig-ios-client-sdkTests",
+            name: "StatsigTests",
             dependencies: ["Statsig"]),
     ]
 )

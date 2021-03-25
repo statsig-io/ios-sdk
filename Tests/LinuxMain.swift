@@ -1,7 +1,7 @@
 import XCTest
 
-import statsig_ios_client_sdkTests
+import StatsigTests
 
 var tests = [XCTestCaseEntry]()
-tests += statsig_ios_client_sdkTests.allTests()
+tests += StatsigTests.allTests()
 XCTMain(tests)
