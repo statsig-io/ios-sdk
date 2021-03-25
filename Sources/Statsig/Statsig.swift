@@ -11,72 +11,86 @@ public class Statsig {
     private var valueStore: InternalStore
     private var networkService: StatsigNetworkService
     private var logger: EventLogger
+
+    static let maxEventNameLength = 64;
     
     public static func start(user: StatsigUser, sdkKey: String, completion: completionBlock) {
         if sharedInstance != nil {
-            print("Statsig has already started!")
+            completion?("Statsig has already started!")
+            return
+        }
+        if sdkKey.isEmpty || sdkKey.starts(with: "secret-") {
+            completion?("Must use a valid client SDK key.")
             return
         }
         sharedInstance = Statsig(user: user, sdkKey: sdkKey, completion: completion)
     }
     
-    public static func checkGate(forName: String) -> Bool {
+    public static func checkGate(_ gateName: String) -> Bool {
         guard let sharedInstance = sharedInstance else {
-            print("Must start Statsig first before calling checkGate. Returning false as the default.")
+            print("[Statsig]: Must start Statsig first before calling checkGate. Returning false as the default.")
             return false
         }
-        let gateValue = sharedInstance.valueStore.checkGate(sharedInstance.user, gateName: forName)
+        let gateValue = sharedInstance.valueStore.checkGate(sharedInstance.user, gateName: gateName)
         sharedInstance.logger.log(
-            event: Event.gateExposure(user: sharedInstance.user, gateName: forName, gateValue: gateValue))
+            Event.gateExposure(user: sharedInstance.user, gateName: gateName, gateValue: gateValue))
         return gateValue
     }
     
-    public static func getConfig(forName: String) -> DynamicConfig {
+    public static func getConfig(_ configName: String) -> DynamicConfig {
         guard let sharedInstance = sharedInstance else {
-            print("Must start Statsig first before calling getConfig. The returning config will only return default values")
+            print("[Statsig]: Must start Statsig first before calling getConfig. The returning config will only return default values")
             return DynamicConfig.createDummy()
         }
-        let config = sharedInstance.valueStore.getConfig(sharedInstance.user, configName: forName)
+        let config = sharedInstance.valueStore.getConfig(sharedInstance.user, configName: configName)
         sharedInstance.logger.log(
-            event: Event.configExposure(user: sharedInstance.user, configName: forName, configGroup: config.group))
+            Event.configExposure(user: sharedInstance.user, configName: configName, configGroup: config.group))
         return config
     }
     
     public static func logEvent(withName:String, value:Double? = nil, metadata:[String:Codable]? = nil) {
         guard let sharedInstance = sharedInstance else {
-            print("Must start Statsig first before calling logEvent.")
+            print("[Statsig]: Must start Statsig first before calling logEvent.")
             return
+        }
+        var eventName = withName
+
+        if eventName.isEmpty {
+            print("[Statsig]: Must log with a non-empty event name.")
+            return
+        }
+        if eventName.count > maxEventNameLength {
+            print("[Statsig]: Event name is too long. Trimming to \(maxEventNameLength).")
+            eventName = String(eventName.prefix(maxEventNameLength))
         }
         if let metadata = metadata {
             if JSONSerialization.isValidJSONObject(metadata) {
                 sharedInstance.logger.log(
-                    event: Event(user: sharedInstance.user, name: withName, value: value, metadata: metadata))
+                    Event(user: sharedInstance.user, name: eventName, value: value, metadata: metadata))
             } else {
-                print("metadata is not a valid JSON object. Event is logged without metadata.")
+                print("[Statsig]: metadata is not a valid JSON object. Event is logged without metadata.")
             }
         }
         sharedInstance.logger.log(
-            event: Event(user: sharedInstance.user, name: withName, value: value, metadata: nil))
+            Event(user: sharedInstance.user, name: eventName, value: value, metadata: nil))
     }
     
     public static func updateUser(_ user:StatsigUser, completion: completionBlock) {
         guard let sharedInstance = sharedInstance else {
-            print("Must start Statsig first before calling updateUser.")
+            print("[Statsig]: Must start Statsig first before calling updateUser.")
             completion?("Must start Statsig first before calling updateUser.")
             return
         }
         if sharedInstance.user == user {
-            print("Calling updateUser with the same user, no-op.")
             completion?(nil)
             return
         }
 
         sharedInstance.user = user
-        sharedInstance.networkService.user = user
-        sharedInstance.networkService.fetchValues(completion: completion)
-        sharedInstance.networkService.fetchValues { errorMessage in
+        sharedInstance.logger.user = user
+        sharedInstance.networkService.fetchValues(forUser: user) { errorMessage in
             if let errorMessage = errorMessage {
-                sharedInstance.logger.log(event: Event.statsigInternalEvent(
+                sharedInstance.logger.log(Event.statsigInternalEvent(
                                     user: user,
                                     name: "fetch_values_failed",
                                     value: nil,
@@ -97,12 +111,12 @@ public class Statsig {
         self.sdkKey = sdkKey;
         self.user = user;
         self.valueStore = InternalStore()
-        self.networkService = StatsigNetworkService(sdkKey: sdkKey, user: user, store: valueStore)
-        self.logger = EventLogger(networkService: networkService)
-        networkService.fetchValues { [weak self] errorMessage in
+        self.networkService = StatsigNetworkService(sdkKey: sdkKey, store: valueStore)
+        self.logger = EventLogger(user: user, networkService: networkService)
+        networkService.fetchValues(forUser: user) { [weak self] errorMessage in
             if let errorMessage = errorMessage, let self = self {
-                self.logger.log(event: Event.statsigInternalEvent(
-                                    user: user,
+                self.logger.log(Event.statsigInternalEvent(
+                                    user: self.user,
                                     name: "fetch_values_failed",
                                     value: nil,
                                     metadata: ["error": errorMessage]))
@@ -129,6 +143,9 @@ public class Statsig {
 
     @objc private func appWillTerminate() {
         logger.flush()
+    }
+
+    deinit {
         NotificationCenter.default.removeObserver(self)
     }
 }

@@ -7,94 +7,95 @@ enum requestType: String {
 
 class StatsigNetworkService {
     var sdkKey: String
-    var user: StatsigUser
     var valueStore: InternalStore
+    var rateLimiter: [String:Int]
     
     final private let apiURL = "https://api.statsig.com/v1"
-    final private let apiPathInitialize = "/initialize"
-    final private let apiPathLog = "/log_event"
-    
-    init(sdkKey: String, user: StatsigUser, store:InternalStore) {
+
+    init(sdkKey: String, store:InternalStore) {
         self.sdkKey = sdkKey
-        self.user = user
         self.valueStore = store
+        self.rateLimiter = [String:Int]()
     }
     
     private func sendRequest(
         forType: requestType,
-        extraData: Any?,
+        requestBody: [String: Any],
         completion: @escaping (Data?, URLResponse?, Error?) -> Void
     ) {
-        var request = URLRequest(url: URL(string: apiURL + forType.rawValue)!)
-        var params: [String: Any] = [
-            "sdkKey": sdkKey,
-            "user": user.toDictionary(),
-            "statsigMetadata": user.environment.toDictionary()
-        ]
-        switch forType {
-        case .initialize:
-            break
-        case .logEvent:
-            params["events"] = extraData
-            break
-        }
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: params) else {
+        let requestURL = apiURL + forType.rawValue
+        var request = URLRequest(url: URL(string: requestURL)!)
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: requestBody) else {
             completion(nil, nil, nil)
             return
         }
-        
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = jsonData
         request.httpMethod = "POST"
 
-        let task = URLSession.shared.dataTask(with: request) { responseData, response, error in
+        if let pendingRequestCount = rateLimiter[requestURL] {
+            // limit to at most 10 pending requests for the same URL at a time
+            if pendingRequestCount >= 10 {
+                completion(nil, nil, nil)
+                return
+            }
+            rateLimiter[requestURL] = pendingRequestCount + 1
+        } else {
+            rateLimiter[requestURL] = 1
+        }
+
+        let task = URLSession.shared.dataTask(with: request) { [weak self] responseData, response, error in
+            self?.rateLimiter[requestURL] = max((self?.rateLimiter[requestURL] ?? 0) - 1, 0)
             DispatchQueue.main.async {
                 completion(responseData, response, error)
             }
         }
+
         task.resume()
     }
     
-    func fetchValues(completion: completionBlock) {
+    func fetchValues(forUser: StatsigUser, completion: completionBlock) {
         var completionClone = completion
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             completionClone?(nil)
             completionClone = nil
         }
-        sendRequest(forType: .initialize, extraData: nil) { responseData, response, error in
+
+        let params: [String: Any] = [
+            "sdkKey": sdkKey,
+            "user": forUser.toDictionary(),
+            "statsigMetadata": forUser.environment.toDictionary()
+        ]
+        sendRequest(forType: .initialize, requestBody: params) { responseData, response, error in
+            var errorMessage: String?
             if let error = error {
-                completionClone?(error.localizedDescription)
-                completionClone = nil
-                return
+                errorMessage = error.localizedDescription
+            } else if let statusCode = (response as? HTTPURLResponse)?.statusCode, !(200...299).contains(statusCode) {
+                errorMessage = "An error occurred during fetching values for the user. "
+                    + "\(String(describing: statusCode))"
             }
-            guard let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode) else {
-                completionClone?("An error occurred during fetching values for the user. "
-                                    + "\(String(describing: (response as? HTTPURLResponse)?.statusCode))")
-                completionClone = nil
-                return
-            }
-            guard let mime = response?.mimeType, mime == "application/json" else {
-                completionClone?("Received wrong MIME type for http response!")
-                completionClone = nil
-                return
-            }
-            
-            if let json = try? JSONSerialization.jsonObject(with: responseData!, options: []) {
-                if let json = json as? [String:Any] {
-                    self.valueStore.set(forUser: self.user, values: UserValues(data: json))
-                    completionClone?(nil)
-                    completionClone = nil
-                    return
+
+            if let responseData = responseData {
+                if let json = try? JSONSerialization.jsonObject(with: responseData, options: []) {
+                    if let json = json as? [String:Any] {
+                        self.valueStore.set(forUser: forUser, values: UserValues(data: json))
+                    }
                 }
             }
-            completionClone?("An error occurred during fetching values for the user.")
+
+            completionClone?(errorMessage)
             completionClone = nil
         }
     }
     
-    func sendEvents(_ events: [Event], completion: completionBlock) {
-        sendRequest(forType: .logEvent, extraData: events.map { $0.toDictionary() }) { responseData, response, error in
+    func sendEvents(forUser: StatsigUser, events: [Event], completion: completionBlock) {
+        let params: [String: Any] = [
+            "events": events.map { $0.toDictionary() },
+            "sdkKey": sdkKey,
+            "user": forUser.toDictionary(),
+            "statsigMetadata": forUser.environment.toDictionary()
+        ]
+        sendRequest(forType: .logEvent, requestBody: params ) { responseData, response, error in
             if let error = error {
                 completion?(error.localizedDescription)
                 return
