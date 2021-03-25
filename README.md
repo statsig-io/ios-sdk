@@ -9,8 +9,11 @@ Statsig is a singleton class which you can initialize with Statsig.start() funct
 You can also optionally use a completion block to wait for it to finish initializing:
 
 > Statsig.start(user: StatsigUser(userID:"my_user_id"), sdkKey: "my_client_sdk_key") { errorMessage in
+> 
 >    // Statsig client is ready;
+>    
 >    // You can also check errorMessage for any debugging information.  
+>    
 > }
 
 To check the value of a feature gate for the current user, use the checkGate() function. Note that if the gate_name provided does not exist,
