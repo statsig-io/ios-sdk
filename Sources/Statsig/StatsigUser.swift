@@ -5,7 +5,7 @@ public struct StatsigUser: Equatable {
     public var email: String?
     public var ip: String?
     public var country: String?
-    public var custom: [String:String]?
+    public var custom: [String:Codable]?
     
     var environment: [String:String?]
 
@@ -13,12 +13,18 @@ public struct StatsigUser: Equatable {
          email: String? = nil,
          ip: String? = nil,
          country: String? = nil,
-         custom: [String:String]? = nil) {
+         custom: [String:Codable]? = nil) {
         self.userID = userID
         self.email = email
         self.ip = ip
         self.country = country
-        self.custom = custom
+        if let custom = custom {
+            if JSONSerialization.isValidJSONObject(custom) {
+                self.custom = custom
+            } else {
+                print("[Statsig]: The provided custom value is not added to the user because it is not a valid JSON object.")
+            }
+        }
         self.environment = DeviceEnvironment().get()
     }
 
@@ -33,10 +39,12 @@ public struct StatsigUser: Equatable {
     }
 
     public static func == (lhs: StatsigUser, rhs: StatsigUser) -> Bool {
+        let lhsJSONData = try? JSONSerialization.data(withJSONObject: lhs.custom ?? [])
+        let rhsJSONData = try? JSONSerialization.data(withJSONObject: rhs.custom ?? [])
         return lhs.userID == rhs.userID
             && lhs.email == rhs.email
             && lhs.ip == rhs.ip
             && lhs.country == rhs.country
-            && lhs.custom == rhs.custom
+            && lhsJSONData == rhsJSONData
     }
 }
