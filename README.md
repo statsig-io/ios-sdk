@@ -45,7 +45,9 @@ Sometimes the logged in user might switch to a different user, or you just recei
 you can call the updateUser() function to notify Statsig so it can retrieve the correct values for the updated user:
 
 ```swift
-Statsig.updateUser(StatsigUser(userID:"new_user_id"))
+let newUser = StatsigUser(userID:"new_user_id")
+
+Statsig.updateUser(newUser)
 ```
 
 You can also use the same optional completion block to be notified when Statsig is done fetching values for the new user, just like in start().
