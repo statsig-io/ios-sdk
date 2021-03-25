@@ -4,7 +4,7 @@ class EventLogger {
     var eventQueue: [Event]
     var flushTimer: Timer?
     var flushBatchSize: Int = 10
-    var flushInterval: Double = 60 // seconds
+    var flushInterval: Double = 60
     var maxEventQueueSize: Int = 1000
     
     private let networkService: StatsigNetworkService
@@ -31,7 +31,7 @@ class EventLogger {
             }
         }
     }
-    
+
     func flush() {
         flushTimer?.invalidate()
         if eventQueue.isEmpty {
@@ -44,15 +44,9 @@ class EventLogger {
             if errorMessage == nil {
                 return
             }
+            //log(event: Event.statsigInternalEvent(user: <#T##StatsigUser#>, name: <#T##String#>))
             self.eventQueue = oldQueue + self.eventQueue // add old events back to the queue if request fails
             self.flushBatchSize = min(self.eventQueue.count + 1, self.maxEventQueueSize)
         }
     }
-    
-    deinit {
-        flush()
-    }
-    
-    // TODOs:
-    // flush on app kill
 }

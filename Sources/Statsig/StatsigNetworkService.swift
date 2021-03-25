@@ -13,7 +13,7 @@ class StatsigNetworkService {
     final private let apiURL = "https://api.statsig.com/v1"
     final private let apiPathInitialize = "/initialize"
     final private let apiPathLog = "/log_event"
-
+    
     init(sdkKey: String, user: StatsigUser, store:InternalStore) {
         self.sdkKey = sdkKey
         self.user = user
@@ -42,67 +42,68 @@ class StatsigNetworkService {
             completion(nil, nil, nil)
             return
         }
-
+        
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = jsonData
         request.httpMethod = "POST"
 
         let task = URLSession.shared.dataTask(with: request) { responseData, response, error in
-            completion(responseData, response, error)
+            DispatchQueue.main.async {
+                completion(responseData, response, error)
+            }
         }
-        
         task.resume()
     }
     
-    func updateUser(withNewUser: StatsigUser) {
-        self.user = withNewUser
-    }
-    
     func fetchValues(completion: completionBlock) {
+        var completionClone = completion
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            completionClone?(nil)
+            completionClone = nil
+        }
         sendRequest(forType: .initialize, extraData: nil) { responseData, response, error in
-            if error != nil {
-                // TODO: handle better and retry?
-                completion?(error?.localizedDescription ?? "An error occurred during fetching values for the user.")
+            if let error = error {
+                completionClone?(error.localizedDescription)
+                completionClone = nil
                 return
             }
             guard let httpResponse = response as? HTTPURLResponse,
                   (200...299).contains(httpResponse.statusCode) else {
-                // TODO: handle better and retry?
-                completion?("An error occurred during fetching values for the user. \((response as? HTTPURLResponse)?.statusCode)")
-                    return
+                completionClone?("An error occurred during fetching values for the user. "
+                                    + "\(String(describing: (response as? HTTPURLResponse)?.statusCode))")
+                completionClone = nil
+                return
             }
             guard let mime = response?.mimeType, mime == "application/json" else {
-                // TODO: handle better and retry?
-                completion?("Received wrong MIME type for http response!")
+                completionClone?("Received wrong MIME type for http response!")
+                completionClone = nil
                 return
             }
             
             if let json = try? JSONSerialization.jsonObject(with: responseData!, options: []) {
                 if let json = json as? [String:Any] {
                     self.valueStore.set(forUser: self.user, values: UserValues(data: json))
-                    completion?(nil)
+                    completionClone?(nil)
+                    completionClone = nil
                     return
                 }
             }
-            completion?("An error occurred during fetching values for the user.")
+            completionClone?("An error occurred during fetching values for the user.")
+            completionClone = nil
         }
     }
     
     func sendEvents(_ events: [Event], completion: completionBlock) {
         sendRequest(forType: .logEvent, extraData: events.map { $0.toDictionary() }) { responseData, response, error in
-            NSLog("received log response")
-            NSLog("\(response as? HTTPURLResponse)?.statusCode")
-            NSLog(error.debugDescription)
-            if error != nil {
-                // TODO: handle better and retry?
-                completion?(error.debugDescription)
+            if let error = error {
+                completion?(error.localizedDescription)
                 return
             }
             
             guard let httpResponse = response as? HTTPURLResponse,
                   (200...299).contains(httpResponse.statusCode) else {
-                // TODO: handle better and retry?
-                completion?("An error occurred during sending events to server. \((response as? HTTPURLResponse)?.statusCode)")
+                completion?("An error occurred during sending events to server. "
+                            + "\(String(describing: (response as? HTTPURLResponse)?.statusCode))")
                 return
             }
         }

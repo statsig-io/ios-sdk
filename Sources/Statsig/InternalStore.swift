@@ -1,12 +1,10 @@
 import Foundation
-import CommonCrypto
 
-// TODOs:
-// rename file/class
+import CommonCrypto
 
 class InternalStore {
     private let localStorageKey = "com.Statsig.InternalStore.localStorageKey"
-    private let loggedOutUserID = "com.Statsig.InternalStore.loggedOutUserID"
+    private let loggedOutUserID = "com.Statsig.InternalStore.loggedOutUser"
     private let maxUserCacheCount = 5
     private var cache: [String: UserValues]
 
@@ -33,9 +31,6 @@ class InternalStore {
 
     func set(forUser: StatsigUser, values: UserValues) {
         cache[forUser.userID ?? loggedOutUserID] = values
-
-        // logged out user should get cached values of the most recent logged in session
-        cache[loggedOutUserID] = values
         while cache.count > maxUserCacheCount {
             removeOldest()
         }
@@ -45,7 +40,7 @@ class InternalStore {
     
     func get(forUser: StatsigUser) -> UserValues? {
         if let userID = forUser.userID {
-            return cache[userID] ?? cache[loggedOutUserID]
+            return cache[userID] ?? nil
         }
         return cache[loggedOutUserID]
     }
@@ -74,18 +69,17 @@ class InternalStore {
 }
 
 struct UserValues {
-    var rawData: [String:Any] // data fetched directly from Statsig server
+    var rawData: [String:Any] // raw data fetched directly from Statsig server
     var gates: [String:Bool]
     var configs: [String:DynamicConfig]
-    var sdkParams: [String:Any]
     var creationTime: Double
     
     init(data: [String:Any]) {
         self.rawData = data
+        self.creationTime = NSDate().timeIntervalSince1970
 
         var gates = [String:Bool]()
         var configs = [String:DynamicConfig]()
-        var sdkParams = [String:Any]()
         if let gatesJSON = data["gates"] as? [String:Bool] {
             for (name, value) in gatesJSON {
                 gates[name] = value
@@ -99,67 +93,30 @@ struct UserValues {
             }
         }
         self.configs = configs;
-        
-        if let sdkParamsJSON = data["sdkParams"] as? [String:Any] {
-            for (param, value) in sdkParamsJSON {
-                sdkParams[param] = value
-            }
-        }
-        self.sdkParams = sdkParams;
-        
-        creationTime = NSDate().timeIntervalSince1970
     }
     
     func checkGate(forName:String) -> Bool {
-        if let nameHash = hash(value: forName) {
-            // TODO: return dummy config?
+        if let nameHash = forName.sha256() {
             return gates[nameHash] ?? false
         }
         return false
     }
     
     func getConfig(forName:String) -> DynamicConfig? {
-        if let nameHash = hash(value: forName) {
-            // TODO: return dummy config?
-            return configs[nameHash] ?? nil
+        if let nameHash = forName.sha256() {
+            return configs[nameHash] ?? DynamicConfig.createDummy()
         }
-        return nil
-    }
-    
-    private func hash(value: String) -> String? {
-        guard let nameData = value.data(using: String.Encoding.utf8) else {
-            return nil
-        }
-        var hashNameData = Data(count: Int(CC_SHA256_DIGEST_LENGTH))
-        _ = hashNameData.withUnsafeMutableBytes {digestBytes in
-            nameData.withUnsafeBytes {messageBytes in
-                CC_SHA256(messageBytes, CC_LONG(nameData.count), digestBytes)
-            }
-        }
-        return hashNameData.base64EncodedString(options: Data.Base64EncodingOptions(rawValue: 0))
+        return DynamicConfig.createDummy()
     }
 }
 
-public struct DynamicConfig {
-    var name: String
-    var group: String
-    var value: [String:Any]
-    
-    init(configName: String, config: [String:Any]) {
-        self.name = configName;
-        self.group = config["group"] as? String ?? "unknown";
-        self.value = config["value"] as? [String:Any] ?? [String:Any]();
-    }
-    
-    static func createDummy() -> DynamicConfig {
-        return DynamicConfig(configName: "com.Statsig.DynamicConfig.dummy", config: [String:Any]())
-    }
-    
-    public func getValue<T: StatsigDynamicConfigValue>(forKey:String, defaultValue: T) -> T {
-        let serverValue = value[forKey] as? T
-        if serverValue == nil {
-            NSLog("\(forKey) does not exist in this Dynamic Config. Returning the defaultValue.")
+extension String {
+    func sha256() -> String? {
+        let data = Data(self.utf8)
+        var digest = [UInt8](repeating: 0, count:Int(CC_SHA256_DIGEST_LENGTH))
+        data.withUnsafeBytes {
+            _ = CC_SHA256($0.baseAddress, CC_LONG(data.count), &digest)
         }
-        return serverValue ?? defaultValue
+        return Data(digest).base64EncodedString()
     }
 }

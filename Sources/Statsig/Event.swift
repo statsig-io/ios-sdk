@@ -3,37 +3,42 @@ import Foundation
 struct Event {
     let name: String
     let value: Double?
-    let metadata: [String:Any]?
+    let metadata: [String:Codable]?
     let time: TimeInterval
+    let user: StatsigUser
     
     static let statsigPrefix = "statsig::"
     static let configExposureEventName = "config_exposure"
     static let gateExposureEventName = "gate_exposure"
 
-    init(name: String, value: Double? = nil, metadata: [String:Any]? = nil) {
-        self.time = NSDate().timeIntervalSince1970
+    init(user: StatsigUser, name: String, value: Double? = nil, metadata: [String:Codable]? = nil) {
+        self.time = NSDate().timeIntervalSince1970 * 1000
+        self.user = user
         self.name = name
         self.value = value
         self.metadata = metadata
     }
 
     static func statsigInternalEvent(
+        user: StatsigUser,
         name: String,
         value: Double? = nil,
         metadata: [String:Codable]? = nil
     ) -> Event {
-        return Event(name: self.statsigPrefix + name, value: value, metadata: metadata)
+        return Event(user: user, name: self.statsigPrefix + name, value: value, metadata: metadata)
     }
 
-    static func gateExposure(gateName: String, gateValue: Bool) -> Event {
+    static func gateExposure(user: StatsigUser, gateName: String, gateValue: Bool) -> Event {
         return statsigInternalEvent(
+            user: user,
             name: gateExposureEventName,
             value:nil,
             metadata: ["gate": gateName, "gateValue": gateValue])
     }
 
-    static func configExposure(configName: String, configGroup: String) -> Event {
+    static func configExposure(user: StatsigUser, configName: String, configGroup: String) -> Event {
         return statsigInternalEvent(
+            user: user,
             name: configExposureEventName,
             value:nil,
             metadata: ["config": configName, "configGroup": configGroup])
@@ -49,7 +54,7 @@ struct Event {
         if let metadata = metadata {
             dict["metadata"] = metadata
         }
-        
+
         return dict
     }
 }
