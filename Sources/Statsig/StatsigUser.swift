@@ -1,15 +1,13 @@
 import Foundation
 
-import UIKit
-
-public struct StatsigUser: Codable, Equatable {
+public struct StatsigUser: Equatable {
     public var userID: String?
     public var email: String?
     public var ip: String?
     public var country: String?
     public var custom: [String:String]?
     
-    var environment: DeviceEnvironment = DeviceEnvironment()
+    var environment: [String:String?]
 
     public init(userID:String? = nil,
          email: String? = nil,
@@ -21,8 +19,9 @@ public struct StatsigUser: Codable, Equatable {
         self.ip = ip
         self.country = country
         self.custom = custom
+        self.environment = DeviceEnvironment().get()
     }
-    
+
     func toDictionary() -> [String:Any?] {
         var dict = [String:Any?]()
         dict["userID"] = self.userID
@@ -32,7 +31,7 @@ public struct StatsigUser: Codable, Equatable {
         dict["custom"] = self.custom
         return dict
     }
-    
+
     public static func == (lhs: StatsigUser, rhs: StatsigUser) -> Bool {
         return lhs.userID == rhs.userID
             && lhs.email == rhs.email

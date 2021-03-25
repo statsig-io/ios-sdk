@@ -2,16 +2,18 @@ import Foundation
 
 import UIKit
 
-struct DeviceEnvironment: Codable {
+struct DeviceEnvironment {
+    private let stableIDKey = "com.Statsig.InternalStore.stableIDKey"
+
     var deviceOS: String = "iOS"
     var sdkVersion: String = "1.0.0"
-    var deviceID: String? { UIDevice.current.identifierForVendor?.uuidString }
     var sessionID: String? { UUID().uuidString }
     var systemVersion: String { UIDevice.current.systemVersion }
     var systemName: String { UIDevice.current.systemName }
     var language: String { Locale.preferredLanguages[0] }
     var locale: String { Locale.current.identifier }
     var appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+    var appIdentifier = Bundle.main.bundleIdentifier
 
     var deviceModel: String {
         if let simulatorModelIdentifier = ProcessInfo().environment["SIMULATOR_MODEL_IDENTIFIER"] {
@@ -25,17 +27,27 @@ struct DeviceEnvironment: Codable {
             return UIDevice.current.model
         }
     }
+
+    var stableID: String {
+        if let stableID = UserDefaults.standard.string(forKey: stableIDKey) {
+            return stableID
+        }
+        let newStableID = UUID().uuidString
+        UserDefaults.standard.setValue(newStableID, forKey: stableIDKey)
+        return newStableID
+    }
     
-    func toDictionary() -> [String:String?] {
+    func get() -> [String:String?] {
         return [
+            "appIdentifier": appIdentifier,
             "appVersion": appVersion,
-            "deviceID": deviceID,
             "deviceMode": deviceModel,
             "deviceOS": deviceOS,
             "language": language,
             "locale": locale,
             "sdkVersion": sdkVersion,
             "sessionID": sessionID,
+            "stableID": stableID,
             "systemVersion": systemVersion,
             "systemName": systemName
         ]

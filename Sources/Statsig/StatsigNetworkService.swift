@@ -64,7 +64,7 @@ class StatsigNetworkService {
         let params: [String: Any] = [
             "sdkKey": sdkKey,
             "user": forUser.toDictionary(),
-            "statsigMetadata": forUser.environment.toDictionary()
+            "statsigMetadata": forUser.environment
         ]
         sendRequest(forType: .initialize, requestBody: params) { responseData, response, error in
             var errorMessage: String?
@@ -93,7 +93,7 @@ class StatsigNetworkService {
             "events": events.map { $0.toDictionary() },
             "sdkKey": sdkKey,
             "user": forUser.toDictionary(),
-            "statsigMetadata": forUser.environment.toDictionary()
+            "statsigMetadata": forUser.environment
         ]
         sendRequest(forType: .logEvent, requestBody: params ) { responseData, response, error in
             if let error = error {

@@ -4,7 +4,7 @@ import CommonCrypto
 
 class InternalStore {
     private let localStorageKey = "com.Statsig.InternalStore.localStorageKey"
-    private let loggedOutUserID = "com.Statsig.InternalStore.loggedOutUser"
+    private let loggedOutUserID = "com.Statsig.InternalStore.loggedOutUserID"
     private let maxUserCacheCount = 5
     private var cache: [String: UserValues]
 
