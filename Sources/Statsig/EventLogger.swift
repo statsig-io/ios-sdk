@@ -6,14 +6,16 @@ class EventLogger {
     let maxEventQueueSize: Int = 1000
 
     var eventQueue: [Event]
+    var loggedErrorMessage: Set<String>
     var flushTimer: Timer?
     var user: StatsigUser
     let networkService: StatsigNetworkService
-    
+
     init(user: StatsigUser, networkService: StatsigNetworkService) {
         self.eventQueue = [Event]()
         self.user = user
         self.networkService = networkService
+        self.loggedErrorMessage = Set<String>()
     }
     
     func log(_ event: Event) {
@@ -41,14 +43,18 @@ class EventLogger {
         }
 
         let oldQueue = eventQueue
+        eventQueue = [Event]()
         networkService.sendEvents(forUser: user, events: oldQueue) { [weak self] errorMessage in
             guard let self = self else { return }
             if errorMessage == nil {
                 return
             }
-            self.log(Event.statsigInternalEvent(user: self.user, name: "log_event_failed"))
             self.eventQueue = oldQueue + self.eventQueue // add old events back to the queue if request fails
-            self.flushBatchSize = min(self.eventQueue.count + 1, self.maxEventQueueSize)
+            self.flushBatchSize = min(self.eventQueue.count * 2, self.maxEventQueueSize)
+            if let errorMessage = errorMessage, !self.loggedErrorMessage.contains(errorMessage) {
+                self.loggedErrorMessage.insert(errorMessage)
+                self.log(Event.statsigInternalEvent(user: self.user, name: "log_event_failed", value: nil, metadata: ["error": errorMessage]))
+            }
         }
     }
 }
