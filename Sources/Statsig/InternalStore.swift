@@ -97,14 +97,14 @@ struct UserValues {
     
     func checkGate(forName:String) -> Bool {
         if let nameHash = forName.sha256() {
-            return gates[nameHash] ?? false
+            return gates[nameHash] ?? gates[forName] ?? false
         }
         return false
     }
     
     func getConfig(forName:String) -> DynamicConfig? {
         if let nameHash = forName.sha256() {
-            return configs[nameHash] ?? DynamicConfig.createDummy()
+            return configs[nameHash] ?? configs[forName] ?? DynamicConfig.createDummy()
         }
         return DynamicConfig.createDummy()
     }
