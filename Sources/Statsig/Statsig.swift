@@ -14,7 +14,7 @@ public class Statsig {
 
     static let maxEventNameLength = 64;
     
-    public static func start(sdkKey: String, user: StatsigUser?, completion: completionBlock = nil) {
+    public static func start(sdkKey: String, user: StatsigUser? = nil, completion: completionBlock = nil) {
         if sharedInstance != nil {
             completion?("Statsig has already started!")
             return
