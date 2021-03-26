@@ -83,8 +83,10 @@ class StatsigNetworkService {
                 }
             }
 
-            completionClone?(errorMessage)
-            completionClone = nil
+            DispatchQueue.main.async {
+                completionClone?(errorMessage)
+                completionClone = nil
+            }
         }
     }
     
