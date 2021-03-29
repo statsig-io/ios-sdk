@@ -1,11 +1,11 @@
 import Foundation
 
 public struct StatsigUser: Equatable {
-    public var userID: String?
-    public var email: String?
-    public var ip: String?
-    public var country: String?
-    public var custom: [String:Codable]?
+    public let userID: String?
+    public let email: String?
+    public let ip: String?
+    public let country: String?
+    public let custom: [String:Codable]?
     
     var environment: [String:String?]
 
@@ -18,12 +18,11 @@ public struct StatsigUser: Equatable {
         self.email = email
         self.ip = ip
         self.country = country
-        if let custom = custom {
-            if JSONSerialization.isValidJSONObject(custom) {
-                self.custom = custom
-            } else {
-                print("[Statsig]: The provided custom value is not added to the user because it is not a valid JSON object.")
-            }
+        if let custom = custom, JSONSerialization.isValidJSONObject(custom) {
+            self.custom = custom
+        } else {
+            print("[Statsig]: The provided custom value is not added to the user because it is not a valid JSON object.")
+            self.custom = nil
         }
         self.environment = DeviceEnvironment().get()
     }

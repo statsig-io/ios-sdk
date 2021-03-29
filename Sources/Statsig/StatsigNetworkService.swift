@@ -25,8 +25,9 @@ class StatsigNetworkService {
     ) {
         let requestURL = apiURL + forType.rawValue
         var request = URLRequest(url: URL(string: requestURL)!)
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: requestBody) else {
-            completion(nil, nil, nil)
+        guard JSONSerialization.isValidJSONObject(requestBody),
+              let jsonData = try? JSONSerialization.data(withJSONObject: requestBody) else {
+            completion(nil, nil, StatsigError.invalidJSONParam("requestBody"))
             return
         }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -36,7 +37,7 @@ class StatsigNetworkService {
         if let pendingRequestCount = rateLimiter[requestURL] {
             // limit to at most 10 pending requests for the same URL at a time
             if pendingRequestCount >= 10 {
-                completion(nil, nil, nil)
+                completion(nil, nil, StatsigError.tooManyRequests(requestURL))
                 return
             }
             rateLimiter[requestURL] = pendingRequestCount + 1
