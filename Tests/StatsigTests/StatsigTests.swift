@@ -3,19 +3,19 @@ import XCTest
 
 final class StatsigTests: XCTestCase {
     func testInvalidInput() {
-        Statsig.start(user: StatsigUser(userID: "jkw", email: "jkw@statsig.com"), sdkKey: "") { errorMessage in
+        Statsig.start(sdkKey: "", user: StatsigUser(userID: "jkw", email: "jkw@statsig.com")) { errorMessage in
             XCTAssert(errorMessage != nil)
         }
-        Statsig.start(user: StatsigUser(userID: "jkw", email: "jkw@statsig.com"), sdkKey: "secret-1234") { errorMessage in
+        Statsig.start(sdkKey: "secret-1234", user: StatsigUser(userID: "jkw", email: "jkw@statsig.com")) { errorMessage in
             XCTAssert(errorMessage != nil)
         }
-        Statsig.start(user: StatsigUser(userID: "jkw", email: "jkw@statsig.com"), sdkKey: "secret-1234") { errorMessage in
+        Statsig.start(sdkKey: "secret-1234", user: StatsigUser(userID: "jkw", email: "jkw@statsig.com")) { errorMessage in
             XCTAssert(errorMessage != nil)
         }
     }
 
     func testCallAPIBeforeStart() {
-        // Should all return default values
+        // Should all return default values because Statsig has not been started
         XCTAssertFalse(Statsig.checkGate("some_gate"))
 
         let config = Statsig.getConfig("some_config")
@@ -25,11 +25,4 @@ final class StatsigTests: XCTestCase {
         XCTAssertEqual(config.getValue(forKey: "Dict", defaultValue: ["key": 3]), ["key": 3])
         XCTAssertEqual(config.getValue(forKey: "Array", defaultValue: [1, 3]), [1, 3])
     }
-
-    // TODO: add more tests with mocks
-
-    static var allTests = [
-        ("testInvalidInput", testInvalidInput),
-        ("testCallAPIBeforeStart", testCallAPIBeforeStart),
-    ]
 }
