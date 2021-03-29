@@ -6,7 +6,7 @@ struct Event {
     let metadata: [String:Codable]?
     let time: TimeInterval
     let user: StatsigUser
-    
+
     static let statsigPrefix = "statsig::"
     static let configExposureEventName = "config_exposure"
     static let gateExposureEventName = "gate_exposure"
@@ -47,6 +47,7 @@ struct Event {
     func toDictionary() -> [String:Any] {
         var dict = [String:Any]()
         dict["eventName"] = name
+        dict["user"] = user.toDictionary()
         dict["time"] = time
         if let value = value {
             dict["value"] = value
