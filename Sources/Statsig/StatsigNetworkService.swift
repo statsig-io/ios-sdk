@@ -1,8 +1,8 @@
 import Foundation
 
 enum requestType: String {
-    case initialize = "/initialize"
-    case logEvent = "/log_event"
+    case initialize = "initialize"
+    case logEvent = "logEvent"
 }
 
 class StatsigNetworkService {
@@ -10,43 +10,61 @@ class StatsigNetworkService {
     var valueStore: InternalStore
     var rateLimiter: [String:Int]
     
-    final private let apiURL = "https://api.statsig.com/v1"
+    final private let apiHost = "api.statsig.com"
+    final private let initializeAPIPath = "/v1/initialize"
+    final private let logEventAPIPath = "/v1/log_event"
 
     init(sdkKey: String, store:InternalStore) {
         self.sdkKey = sdkKey
         self.valueStore = store
         self.rateLimiter = [String:Int]()
     }
-    
+
     private func sendRequest(
         forType: requestType,
         requestBody: [String: Any],
         completion: @escaping (Data?, URLResponse?, Error?) -> Void
     ) {
-        let requestURL = apiURL + forType.rawValue
-        var request = URLRequest(url: URL(string: requestURL)!)
+        var urlComponents = URLComponents()
+        urlComponents.scheme = "https"
+        urlComponents.host = apiHost
+        switch forType {
+        case .initialize:
+            urlComponents.path = initializeAPIPath
+        case .logEvent:
+            urlComponents.path = logEventAPIPath
+        }
+
+        guard let requestURL = urlComponents.url else {
+            completion(nil, nil, StatsigError.invalidRequestURL(forType.rawValue))
+            return
+        }
+        let urlString = requestURL.absoluteString
+        
+        var request = URLRequest(url: requestURL)
         guard JSONSerialization.isValidJSONObject(requestBody),
               let jsonData = try? JSONSerialization.data(withJSONObject: requestBody) else {
             completion(nil, nil, StatsigError.invalidJSONParam("requestBody"))
             return
         }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(sdkKey, forHTTPHeaderField: "STATSIG-API-KEY")
         request.httpBody = jsonData
         request.httpMethod = "POST"
 
-        if let pendingRequestCount = rateLimiter[requestURL] {
+        if let pendingRequestCount = rateLimiter[urlString] {
             // limit to at most 10 pending requests for the same URL at a time
             if pendingRequestCount >= 10 {
-                completion(nil, nil, StatsigError.tooManyRequests(requestURL))
+                completion(nil, nil, StatsigError.tooManyRequests(urlString))
                 return
             }
-            rateLimiter[requestURL] = pendingRequestCount + 1
+            rateLimiter[urlString] = pendingRequestCount + 1
         } else {
-            rateLimiter[requestURL] = 1
+            rateLimiter[urlString] = 1
         }
 
         let task = URLSession.shared.dataTask(with: request) { [weak self] responseData, response, error in
-            self?.rateLimiter[requestURL] = max((self?.rateLimiter[requestURL] ?? 0) - 1, 0)
+            self?.rateLimiter[urlString] = max((self?.rateLimiter[urlString] ?? 0) - 1, 0)
             DispatchQueue.main.async {
                 completion(responseData, response, error)
             }
@@ -63,7 +81,6 @@ class StatsigNetworkService {
         }
 
         let params: [String: Any] = [
-            "sdkKey": sdkKey,
             "user": forUser.toDictionary(),
             "statsigMetadata": forUser.environment
         ]
@@ -94,7 +111,6 @@ class StatsigNetworkService {
     func sendEvents(forUser: StatsigUser, events: [Event], completion: completionBlock) {
         let params: [String: Any] = [
             "events": events.map { $0.toDictionary() },
-            "sdkKey": sdkKey,
             "user": forUser.toDictionary(),
             "statsigMetadata": forUser.environment
         ]
