@@ -1,0 +1,18 @@
+on: pull_request
+name: Test
+jobs:
+  test:
+    name: Test
+    runs-on: macOS-latest
+    strategy:
+      matrix:
+        destination: ['platform=iOS Simulator,OS=14.4,name=iPhone 12 Pro']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Build and test
+        run: |
+          cd .swiftpm/xcode
+          xcodebuild clean test -workspace package.xcworkspace -scheme Statsig -destination "${destination}" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO
+        env:
+          destination: ${{ matrix.destination }}
