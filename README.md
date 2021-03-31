@@ -70,4 +70,10 @@ metrics calculation for A/B testing:
 Statsig.logEvent(withName: "purchase", value: 2.99, metadata: ["item_name": "remove_ads"])
 ```
 
+## Shut down
 
+When your application is shutting down, call shutdown() so we can make sure any event logs are being sent for logging properly and all resources are released.
+
+```swift
+Statsig.shutdown()
+```
