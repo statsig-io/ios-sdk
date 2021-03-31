@@ -84,7 +84,7 @@ class StatsigNetworkService {
             "user": forUser.toDictionary(),
             "statsigMetadata": forUser.environment
         ]
-        sendRequest(forType: .initialize, requestBody: params) { responseData, response, error in
+        sendRequest(forType: .initialize, requestBody: params) { [weak self] responseData, response, error in
             var errorMessage: String?
             if let error = error {
                 errorMessage = error.localizedDescription
@@ -95,7 +95,7 @@ class StatsigNetworkService {
 
             if let responseData = responseData {
                 if let json = try? JSONSerialization.jsonObject(with: responseData, options: []) {
-                    if let json = json as? [String:Any] {
+                    if let json = json as? [String:Any], let self = self {
                         self.valueStore.set(forUser: forUser, values: UserValues(data: json))
                     }
                 }

@@ -101,10 +101,11 @@ public class Statsig {
     }
     
     public static func shutdown() {
-        guard let sharedInstance = sharedInstance else {
+        if sharedInstance == nil {
             return
         }
-        sharedInstance.logger.flush()
+        sharedInstance?.logger.flush()
+        sharedInstance = nil
     }
 
     private init(sdkKey: String, user: StatsigUser?, completion: completionBlock) {
