@@ -48,7 +48,7 @@ public class Statsig {
         return config
     }
     
-    public static func logEvent(withName:String, value:Double? = nil, metadata:[String:Codable]? = nil) {
+    public static func logEvent(withName: String, value: Double? = nil, metadata: [String: String]? = nil) {
         guard let sharedInstance = sharedInstance else {
             print("[Statsig]: Must start Statsig first before calling logEvent.")
             return

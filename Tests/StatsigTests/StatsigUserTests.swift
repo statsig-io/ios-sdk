@@ -2,8 +2,9 @@ import XCTest
 @testable import Statsig
 
 final class StatsigUserTests: XCTestCase {
-    private let validJSONObject: [String:Codable] = ["company": "Statsig", "YOE": 10.5, "alias" : ["abby", "bob", "charlie"]]
-    private let invalidJSONObject: [String:Codable] =
+    private let validJSONObject: [String:StatsigUserCustomTypeConvertible] =
+        ["company": "Statsig", "YOE": 10.5, "alias" : ["abby", "bob", "charlie"]]
+    private let invalidJSONObject: [String:StatsigUserCustomTypeConvertible] =
         ["company": "Statsig", "invalid": String(bytes: [0xD8, 0x00] as [UInt8], encoding: String.Encoding.utf16BigEndian)!]
 
     func testUserCreation() {

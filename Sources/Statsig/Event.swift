@@ -3,7 +3,7 @@ import Foundation
 struct Event {
     let name: String
     let value: Double?
-    let metadata: [String:Codable]?
+    let metadata: [String: String]?
     let time: TimeInterval
     let user: StatsigUser
 
@@ -11,7 +11,7 @@ struct Event {
     static let configExposureEventName = "config_exposure"
     static let gateExposureEventName = "gate_exposure"
 
-    init(user: StatsigUser, name: String, value: Double? = nil, metadata: [String:Codable]? = nil) {
+    init(user: StatsigUser, name: String, value: Double? = nil, metadata: [String: String]? = nil) {
         self.time = NSDate().timeIntervalSince1970 * 1000
         self.user = user
         self.name = name
@@ -23,7 +23,7 @@ struct Event {
         user: StatsigUser,
         name: String,
         value: Double? = nil,
-        metadata: [String:Codable]? = nil
+        metadata: [String: String]? = nil
     ) -> Event {
         return Event(user: user, name: self.statsigPrefix + name, value: value, metadata: metadata)
     }
@@ -33,7 +33,7 @@ struct Event {
             user: user,
             name: gateExposureEventName,
             value:nil,
-            metadata: ["gate": gateName, "gateValue": gateValue])
+            metadata: ["gate": gateName, "gateValue": String(gateValue)])
     }
 
     static func configExposure(user: StatsigUser, configName: String, configGroup: String) -> Event {

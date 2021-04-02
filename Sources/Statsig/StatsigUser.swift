@@ -5,7 +5,7 @@ public struct StatsigUser: Equatable {
     public let email: String?
     public let ip: String?
     public let country: String?
-    public let custom: [String:Codable]?
+    public let custom: [String: StatsigUserCustomTypeConvertible]?
     
     var environment: [String:String?]
 
@@ -13,7 +13,7 @@ public struct StatsigUser: Equatable {
          email: String? = nil,
          ip: String? = nil,
          country: String? = nil,
-         custom: [String:Codable]? = nil) {
+         custom: [String: StatsigUserCustomTypeConvertible]? = nil) {
         self.userID = userID
         self.email = email
         self.ip = ip
