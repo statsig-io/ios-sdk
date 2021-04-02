@@ -2,6 +2,41 @@
 Statsig client side SDK for iOS applications
 
 ## Getting started
+
+### Adding Statsig as a dependency to your project
+
+To add Statsig as a dependency through Swift Package Manager, in your Xcode, select File > Swift Packages > Add Package Dependency
+and enter the URL https://github.com/statsig-io/pre-release-ios-sdk.
+
+You can also include it directly in your project's Package.swift:
+
+```
+//...
+dependencies: [
+    .package(url: "https://github.com/statsig-io/pre-release-ios-sdk.git", .upToNextMinor("1.0.5")),
+],
+//...
+targets: [
+    .target(
+        name: "YOUR_TARGET",
+        dependencies: ["Statsig"]
+    )
+],
+//...
+```
+
+If you are using CocoaPods, our pod name is 'Statsig', and you can include the following line to your Podfile:
+
+```
+use_frameworks!
+target 'TargetName' do
+  //...
+  pod 'Statsig', '~> 1.0.5' // Add this line
+end
+```
+
+### Using Statsig in your project
+
 Statsig is a singleton class which you can initialize with Statsig.start() function:
 
 ```swift
@@ -12,11 +47,11 @@ You can also optionally use a completion block to wait for it to finish initiali
 
 ```swift
 Statsig.start(sdkKey: "my_client_sdk_key", user: StatsigUser(userID: "my_user_id")) { errorMessage in
- 
+
   // Statsig client is ready;
-  
+
   // You can also check errorMessage for any debugging information.  
-    
+
 }
 ```
 
@@ -52,16 +87,14 @@ Statsig.updateUser(newUser)
 
 You can also use the same optional completion block to be notified when Statsig is done fetching values for the new user, just like in start().
 
-
-## StatsigUser
+### StatsigUser
 
 The StatsigUser class is what we use to help you with targeting. You can provide *userID*, *email*, *ip*, *country*, and even *custom*, which
 is a dictionary of String values for your own choices of targeting criteria. *userID* is highly recommended, and we will try to use device ID
 to identify the same user in the absence of a *userID*. You are also encouraged to provide as much *custom* info as you know about the
 user, all of which can be used by you in our console for feature gating and Dynamic Config's targeting.
 
-
-## Logging custom events
+### Logging custom events
 
 The logEvent() API can be used to log custom events for your application, which will be shown in your Statsig dashboard and used for
 metrics calculation for A/B testing:
