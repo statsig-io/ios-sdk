@@ -2,7 +2,7 @@ import Foundation
 
 struct Event {
     let name: String
-    let value: Double?
+    let value: Any?
     let metadata: [String: String]?
     let time: TimeInterval
     let user: StatsigUser
@@ -11,7 +11,7 @@ struct Event {
     static let configExposureEventName = "config_exposure"
     static let gateExposureEventName = "gate_exposure"
 
-    init(user: StatsigUser, name: String, value: Double? = nil, metadata: [String: String]? = nil) {
+    init(user: StatsigUser, name: String, value: Any? = nil, metadata: [String: String]? = nil) {
         self.time = NSDate().timeIntervalSince1970 * 1000
         self.user = user
         self.name = name
@@ -22,7 +22,7 @@ struct Event {
     static func statsigInternalEvent(
         user: StatsigUser,
         name: String,
-        value: Double? = nil,
+        value: Any? = nil,
         metadata: [String: String]? = nil
     ) -> Event {
         return Event(user: user, name: self.statsigPrefix + name, value: value, metadata: metadata)

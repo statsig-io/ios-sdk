@@ -47,34 +47,19 @@ public class Statsig {
             Event.configExposure(user: sharedInstance.currentUser, configName: configName, configGroup: config.group))
         return config
     }
-    
-    public static func logEvent(withName: String, value: Double? = nil, metadata: [String: String]? = nil) {
-        guard let sharedInstance = sharedInstance else {
-            print("[Statsig]: Must start Statsig first before calling logEvent.")
-            return
-        }
-        var eventName = withName
 
-        if eventName.isEmpty {
-            print("[Statsig]: Must log with a non-empty event name.")
-            return
-        }
-        if eventName.count > maxEventNameLength {
-            print("[Statsig]: Event name is too long. Trimming to \(maxEventNameLength).")
-            eventName = String(eventName.prefix(maxEventNameLength))
-        }
-        if let metadata = metadata, !JSONSerialization.isValidJSONObject(metadata) {
-            print("[Statsig]: metadata is not a valid JSON object. Event is logged without metadata.")
-            sharedInstance.logger.log(
-                Event(user: sharedInstance.currentUser, name: eventName, value: value, metadata: nil))
-            return
-        }
-
-        sharedInstance.logger.log(
-            Event(user: sharedInstance.currentUser, name: eventName, value: value, metadata: metadata))
-
+    public static func logEvent(_ withName: String, metadata: [String: String]? = nil) {
+        logEventInternal(withName, value: nil, metadata: metadata)
     }
-    
+
+    public static func logEvent(_ withName: String, value: String, metadata: [String: String]? = nil) {
+        logEventInternal(withName, value: value, metadata: metadata)
+    }
+
+    public static func logEvent(_ withName: String, value: Double, metadata: [String: String]? = nil) {
+        logEventInternal(withName, value: value, metadata: metadata)
+    }
+
     public static func updateUser(_ user:StatsigUser, completion: completionBlock) {
         guard let sharedInstance = sharedInstance else {
             print("[Statsig]: Must start Statsig first before calling updateUser.")
@@ -136,6 +121,32 @@ public class Statsig {
             selector: #selector(appWillTerminate),
             name: UIApplication.willTerminateNotification,
             object: nil)
+    }
+
+    private static func logEventInternal(_ withName: String, value: Any? = nil, metadata: [String: String]? = nil) {
+        guard let sharedInstance = sharedInstance else {
+            print("[Statsig]: Must start Statsig first before calling logEvent.")
+            return
+        }
+        var eventName = withName
+
+        if eventName.isEmpty {
+            print("[Statsig]: Must log with a non-empty event name.")
+            return
+        }
+        if eventName.count > maxEventNameLength {
+            print("[Statsig]: Event name is too long. Trimming to \(maxEventNameLength).")
+            eventName = String(eventName.prefix(maxEventNameLength))
+        }
+        if let metadata = metadata, !JSONSerialization.isValidJSONObject(metadata) {
+            print("[Statsig]: metadata is not a valid JSON object. Event is logged without metadata.")
+            sharedInstance.logger.log(
+                Event(user: sharedInstance.currentUser, name: eventName, value: value, metadata: nil))
+            return
+        }
+
+        sharedInstance.logger.log(
+            Event(user: sharedInstance.currentUser, name: eventName, value: value, metadata: metadata))
     }
 
     @objc private func appWillBackground() {
