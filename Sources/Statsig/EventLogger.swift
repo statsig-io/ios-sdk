@@ -1,11 +1,13 @@
 import Foundation
 
 class EventLogger {
+    private let loggingRequestUserDefaultsKey = "com.Statsig.EventLogger.loggingRequestUserDefaultsKey"
     var flushBatchSize: Int = 10
     let flushInterval: Double = 60
     let maxEventQueueSize: Int = 1000
 
     var eventQueue: [Event]
+    var requestQueue: [Data]
     var loggedErrorMessage: Set<String>
     var flushTimer: Timer?
     var user: StatsigUser
@@ -13,9 +15,18 @@ class EventLogger {
 
     init(user: StatsigUser, networkService: StatsigNetworkService) {
         self.eventQueue = [Event]()
+        self.requestQueue = [Data]()
         self.user = user
         self.networkService = networkService
         self.loggedErrorMessage = Set<String>()
+        if let localCache = UserDefaults.standard.array(forKey: loggingRequestUserDefaultsKey) as? [Data] {
+            self.requestQueue = localCache
+        }
+        UserDefaults.standard.removeObject(forKey: loggingRequestUserDefaultsKey)
+        networkService.sendRequestsWithData(requestQueue) { [weak self] failedRequestsData in
+            guard let failedRequestsData = failedRequestsData, let self = self else { return }
+            self.requestQueue += failedRequestsData
+        }
     }
     
     func log(_ event: Event) {
@@ -36,7 +47,7 @@ class EventLogger {
         }
     }
 
-    func flush() {
+    func flush(shutdown: Bool = false) {
         flushTimer?.invalidate()
         if eventQueue.isEmpty {
             return
@@ -44,16 +55,27 @@ class EventLogger {
 
         let oldQueue = eventQueue
         eventQueue = [Event]()
-        networkService.sendEvents(forUser: user, events: oldQueue) { [weak self] errorMessage in
+        networkService.sendEvents(forUser: user, events: oldQueue) { [weak self] errorMessage, requestData in
             guard let self = self else { return }
             if errorMessage == nil {
                 return
             }
+
+            // when shutting down, save request data locally to be sent next time instead of adding it back to event queue
+            if shutdown {
+                if let requestData = requestData {
+                    self.requestQueue.append(requestData)
+                }
+                UserDefaults.standard.setValue(self.requestQueue, forKey: self.loggingRequestUserDefaultsKey)
+                return
+            }
+
             self.eventQueue = oldQueue + self.eventQueue // add old events back to the queue if request fails
             self.flushBatchSize = min(self.eventQueue.count * 2, self.maxEventQueueSize)
             if let errorMessage = errorMessage, !self.loggedErrorMessage.contains(errorMessage) {
                 self.loggedErrorMessage.insert(errorMessage)
-                self.log(Event.statsigInternalEvent(user: self.user, name: "log_event_failed", value: nil, metadata: ["error": errorMessage]))
+                self.log(Event.statsigInternalEvent(user: self.user, name: "log_event_failed", value: nil,
+                                                    metadata: ["error": errorMessage]))
             }
         }
     }

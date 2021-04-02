@@ -25,6 +25,19 @@ class StatsigNetworkService {
         requestBody: [String: Any],
         completion: @escaping (Data?, URLResponse?, Error?) -> Void
     ) {
+        guard JSONSerialization.isValidJSONObject(requestBody),
+              let jsonData = try? JSONSerialization.data(withJSONObject: requestBody) else {
+            completion(nil, nil, StatsigError.invalidJSONParam("requestBody"))
+            return
+        }
+        sendRequest(forType: forType, requestData: jsonData, completion: completion)
+    }
+
+    private func sendRequest(
+        forType: requestType,
+        requestData: Data,
+        completion: @escaping (Data?, URLResponse?, Error?) -> Void
+    ) {
         var urlComponents = URLComponents()
         urlComponents.scheme = "https"
         urlComponents.host = apiHost
@@ -42,14 +55,9 @@ class StatsigNetworkService {
         let urlString = requestURL.absoluteString
         
         var request = URLRequest(url: requestURL)
-        guard JSONSerialization.isValidJSONObject(requestBody),
-              let jsonData = try? JSONSerialization.data(withJSONObject: requestBody) else {
-            completion(nil, nil, StatsigError.invalidJSONParam("requestBody"))
-            return
-        }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(sdkKey, forHTTPHeaderField: "STATSIG-API-KEY")
-        request.httpBody = jsonData
+        request.httpBody = requestData
         request.httpMethod = "POST"
 
         if let pendingRequestCount = rateLimiter[urlString] {
@@ -108,24 +116,50 @@ class StatsigNetworkService {
         }
     }
     
-    func sendEvents(forUser: StatsigUser, events: [Event], completion: completionBlock) {
+    func sendEvents(forUser: StatsigUser, events: [Event],
+                    completion: @escaping ((_ errorMessage: String?, _ data: Data?) -> Void)) {
         let params: [String: Any] = [
             "events": events.map { $0.toDictionary() },
             "user": forUser.toDictionary(),
             "statsigMetadata": forUser.environment
         ]
-        sendRequest(forType: .logEvent, requestBody: params ) { responseData, response, error in
+        guard JSONSerialization.isValidJSONObject(params),
+              let jsonData = try? JSONSerialization.data(withJSONObject: params) else {
+            completion(StatsigError.invalidJSONParam("requestBody").localizedDescription, nil)
+            return
+        }
+
+        sendRequest(forType: .logEvent, requestData: jsonData ) { responseData, response, error in
             if let error = error {
-                completion?(error.localizedDescription)
+                completion(error.localizedDescription, jsonData)
                 return
             }
             
             guard let httpResponse = response as? HTTPURLResponse,
                   (200...299).contains(httpResponse.statusCode) else {
-                completion?("An error occurred during sending events to server. "
-                            + "\(String(describing: (response as? HTTPURLResponse)?.statusCode))")
+                completion("An error occurred during sending events to server. "
+                            + "\(String(describing: (response as? HTTPURLResponse)?.statusCode))", jsonData)
                 return
             }
+        }
+    }
+
+    func sendRequestsWithData(_ dataArray: [Data], completion: @escaping ((_ failedRequestsData: [Data]?) -> Void)) {
+        var failedRequests: [Data] = []
+        let dispatchGroup = DispatchGroup()
+        for data in dataArray {
+            dispatchGroup.enter()
+            sendRequest(forType: .logEvent, requestData: data) { responseData, response, error in
+                let httpResponse = response as? HTTPURLResponse
+                if error != nil ||
+                    (httpResponse != nil && !(200...299).contains(httpResponse!.statusCode)) {
+                    failedRequests.append(data)
+                }
+                dispatchGroup.leave()
+            }
+        }
+        dispatchGroup.notify(queue: .main) {
+            completion(failedRequests)
         }
     }
 }

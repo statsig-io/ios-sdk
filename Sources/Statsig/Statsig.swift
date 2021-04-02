@@ -63,16 +63,16 @@ public class Statsig {
             print("[Statsig]: Event name is too long. Trimming to \(maxEventNameLength).")
             eventName = String(eventName.prefix(maxEventNameLength))
         }
-        if let metadata = metadata {
-            if JSONSerialization.isValidJSONObject(metadata) {
-                sharedInstance.logger.log(
-                    Event(user: sharedInstance.currentUser, name: eventName, value: value, metadata: metadata))
-            } else {
-                print("[Statsig]: metadata is not a valid JSON object. Event is logged without metadata.")
-            }
+        if let metadata = metadata, !JSONSerialization.isValidJSONObject(metadata) {
+            print("[Statsig]: metadata is not a valid JSON object. Event is logged without metadata.")
+            sharedInstance.logger.log(
+                Event(user: sharedInstance.currentUser, name: eventName, value: value, metadata: nil))
+            return
         }
+
         sharedInstance.logger.log(
-            Event(user: sharedInstance.currentUser, name: eventName, value: value, metadata: nil))
+            Event(user: sharedInstance.currentUser, name: eventName, value: value, metadata: metadata))
+
     }
     
     public static func updateUser(_ user:StatsigUser, completion: completionBlock) {
@@ -139,11 +139,11 @@ public class Statsig {
     }
 
     @objc private func appWillBackground() {
-        logger.flush()
+        logger.flush(shutdown: true)
     }
 
     @objc private func appWillTerminate() {
-        logger.flush()
+        logger.flush(shutdown: true)
     }
 
     deinit {
