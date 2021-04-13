@@ -1,4 +1,5 @@
 # ios-client-sdk
+
 Statsig client side SDK for iOS applications
 
 ## Getting started
@@ -6,14 +7,14 @@ Statsig client side SDK for iOS applications
 ### Adding Statsig as a dependency to your project
 
 To add Statsig as a dependency through Swift Package Manager, in your Xcode, select File > Swift Packages > Add Package Dependency
-and enter the URL https://github.com/statsig-io/pre-release-ios-sdk.
+and enter the URL https://github.com/statsig-io/ios-sdk.
 
 You can also include it directly in your project's Package.swift:
 
 ```
 //...
 dependencies: [
-    .package(url: "https://github.com/statsig-io/pre-release-ios-sdk.git", .upToNextMinor("1.0.5")),
+    .package(url: "https://github.com/statsig-io/ios-sdk.git", .upToNextMinor("1.0.5")),
 ],
 //...
 targets: [
@@ -50,7 +51,7 @@ Statsig.start(sdkKey: "my_client_sdk_key", user: StatsigUser(userID: "my_user_id
 
   // Statsig client is ready;
 
-  // You can also check errorMessage for any debugging information.  
+  // You can also check errorMessage for any debugging information.
 
 }
 ```
@@ -58,7 +59,7 @@ Statsig.start(sdkKey: "my_client_sdk_key", user: StatsigUser(userID: "my_user_id
 To check the value of a feature gate for the current user, use the checkGate() function. Note that if the gate_name provided does not exist,
 or if the device is offline, we will return false as the default value.
 
-```swift 
+```swift
 let showNewDesign = Statsig.checkGate("show_new_design")
 ```
 
@@ -75,7 +76,6 @@ defaultValue will be returned when the user if offline or the key does not exist
 let buttonText = localizationConfig.getValue(forKey: "button_text", defaultValue: "Check out")
 ```
 
-
 Sometimes the logged in user might switch to a different user, or you just received more information about the user and wish to update them,
 you can call the updateUser() function to notify Statsig so it can retrieve the correct values for the updated user:
 
@@ -89,9 +89,9 @@ You can also use the same optional completion block to be notified when Statsig 
 
 ### StatsigUser
 
-The StatsigUser class is what we use to help you with targeting. You can provide *userID*, *email*, *ip*, *country*, and even *custom*, which
-is a dictionary of String values for your own choices of targeting criteria. *userID* is highly recommended, and we will try to use device ID
-to identify the same user in the absence of a *userID*. You are also encouraged to provide as much *custom* info as you know about the
+The StatsigUser class is what we use to help you with targeting. You can provide _userID_, _email_, _ip_, _country_, and even _custom_, which
+is a dictionary of String values for your own choices of targeting criteria. _userID_ is highly recommended, and we will try to use device ID
+to identify the same user in the absence of a _userID_. You are also encouraged to provide as much _custom_ info as you know about the
 user, all of which can be used by you in our console for feature gating and Dynamic Config's targeting.
 
 ### Logging custom events
