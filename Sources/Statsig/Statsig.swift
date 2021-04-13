@@ -13,6 +13,7 @@ public class Statsig {
     private var logger: EventLogger
 
     static let maxEventNameLength = 64;
+    static var loggedExposures = Set<String>()
     
     public static func start(sdkKey: String, user: StatsigUser? = nil, completion: completionBlock = nil) {
         if sharedInstance != nil {
@@ -32,8 +33,12 @@ public class Statsig {
             return false
         }
         let gateValue = sharedInstance.valueStore.checkGate(sharedInstance.currentUser, gateName: gateName)
-        sharedInstance.logger.log(
-            Event.gateExposure(user: sharedInstance.currentUser, gateName: gateName, gateValue: gateValue))
+        let exposureDedupeKey = "gate::" + gateName;
+        if (!loggedExposures.contains(exposureDedupeKey)) {
+            sharedInstance.logger.log(
+                Event.gateExposure(user: sharedInstance.currentUser, gateName: gateName, gateValue: gateValue))
+            loggedExposures.insert(exposureDedupeKey);
+        }
         return gateValue
     }
     
@@ -43,8 +48,12 @@ public class Statsig {
             return DynamicConfig.createDummy()
         }
         let config = sharedInstance.valueStore.getConfig(sharedInstance.currentUser, configName: configName)
-        sharedInstance.logger.log(
-            Event.configExposure(user: sharedInstance.currentUser, configName: configName, configGroup: config.group))
+        let exposureDedupeKey = "config::" + configName;
+        if (!loggedExposures.contains(exposureDedupeKey)) {
+            sharedInstance.logger.log(
+                Event.configExposure(user: sharedInstance.currentUser, configName: configName, configGroup: config.group))
+            loggedExposures.insert(exposureDedupeKey);
+        }
         return config
     }
 
@@ -71,6 +80,7 @@ public class Statsig {
             return
         }
 
+        loggedExposures.removeAll()
         sharedInstance.currentUser = user
         sharedInstance.logger.user = user
         sharedInstance.networkService.fetchValues(forUser: user) { errorMessage in
