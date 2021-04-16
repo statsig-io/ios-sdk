@@ -69,7 +69,7 @@ public class Statsig {
         logEventInternal(withName, value: value, metadata: metadata)
     }
 
-    public static func updateUser(_ user:StatsigUser, completion: completionBlock) {
+    public static func updateUser(_ user: StatsigUser, completion: completionBlock) {
         guard let sharedInstance = sharedInstance else {
             print("[Statsig]: Must start Statsig first before calling updateUser.")
             completion?("Must start Statsig first before calling updateUser.")

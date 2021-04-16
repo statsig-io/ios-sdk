@@ -1,9 +1,9 @@
 import Foundation
 
 public struct DynamicConfig {
-    var name: String
+    public var name: String
+    public var value: [String:Any]
     var group: String
-    var value: [String:Any]
 
     init(configName: String, config: [String:Any]) {
         self.name = configName;
