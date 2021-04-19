@@ -1,4 +1,4 @@
-# ios-client-sdk
+# ios-sdk
 
 Statsig SDK for iOS applications written in Swift or Objective-C.
 
@@ -14,7 +14,7 @@ You can also include it directly in your project's Package.swift:
 ```
 //...
 dependencies: [
-    .package(url: "https://github.com/statsig-io/ios-sdk.git", .upToNextMinor("1.0.5")),
+    .package(url: "https://github.com/statsig-io/ios-sdk.git", .upToNextMinor("1.0.8")),
 ],
 //...
 targets: [
