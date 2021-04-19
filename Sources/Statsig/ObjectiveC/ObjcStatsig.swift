@@ -2,8 +2,20 @@ import Foundation
 
 @objc(Statsig)
 public final class ObjcStatsig : NSObject {
-    @objc public static func start(sdkKey: String, user: ObjcStatsigUser? = nil, completion: completionBlock = nil) {
-        Statsig.start(sdkKey: sdkKey, user: user?.user, completion: completion)
+    @objc public static func start(withSDKKey: String) {
+        Statsig.start(sdkKey: withSDKKey)
+    }
+
+    @objc public static func start(withSDKKey: String, user: ObjcStatsigUser) {
+        Statsig.start(sdkKey: withSDKKey, user: user.user)
+    }
+
+    @objc public static func start(withSDKKey: String, completion: completionBlock) {
+        Statsig.start(sdkKey: withSDKKey, completion: completion)
+    }
+
+    @objc public static func start(withSDKKey: String, user: ObjcStatsigUser, completion: completionBlock) {
+        Statsig.start(sdkKey: withSDKKey, user: user.user, completion: completion)
     }
 
     @objc public static func checkGate(forName: String) -> Bool {
@@ -37,6 +49,10 @@ public final class ObjcStatsig : NSObject {
 
     @objc public static func logEvent(_ withName: String, doubleValue: Double, metadata: [String: String]) {
         Statsig.logEvent(withName, value: doubleValue, metadata: metadata)
+    }
+
+    @objc public static func updateUser(newUser: ObjcStatsigUser) {
+        Statsig.updateUser(newUser.user, completion: nil)
     }
 
     @objc public static func updateUser(newUser: ObjcStatsigUser, completion: completionBlock) {
