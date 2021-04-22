@@ -6,7 +6,8 @@ enum requestType: String {
 }
 
 class StatsigNetworkService {
-    var sdkKey: String
+    let sdkKey: String
+    let statsigOptions: StatsigOptions
     var valueStore: InternalStore
     var rateLimiter: [String:Int]
     
@@ -14,8 +15,9 @@ class StatsigNetworkService {
     final private let initializeAPIPath = "/v1/initialize"
     final private let logEventAPIPath = "/v1/log_event"
 
-    init(sdkKey: String, store:InternalStore) {
+    init(sdkKey: String, options: StatsigOptions, store: InternalStore) {
         self.sdkKey = sdkKey
+        self.statsigOptions = options
         self.valueStore = store
         self.rateLimiter = [String:Int]()
     }
@@ -83,9 +85,11 @@ class StatsigNetworkService {
     
     func fetchValues(forUser: StatsigUser, completion: completionBlock) {
         var completionClone = completion
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            completionClone?(nil)
-            completionClone = nil
+        if self.statsigOptions.initTimeout > 0 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + self.statsigOptions.initTimeout) {
+                completionClone?(nil)
+                completionClone = nil
+            }
         }
 
         let params: [String: Any] = [

@@ -8,6 +8,7 @@ public class Statsig {
     private static var sharedInstance: Statsig?
     private var sdkKey: String
     private var currentUser: StatsigUser
+    private var statsigOptions: StatsigOptions
     private var valueStore: InternalStore
     private var networkService: StatsigNetworkService
     private var logger: EventLogger
@@ -15,7 +16,7 @@ public class Statsig {
     static let maxEventNameLength = 64;
     static var loggedExposures = Set<String>()
     
-    public static func start(sdkKey: String, user: StatsigUser? = nil, completion: completionBlock = nil) {
+    public static func start(sdkKey: String, user: StatsigUser? = nil, options: StatsigOptions? = nil, completion: completionBlock = nil) {
         if sharedInstance != nil {
             completion?("Statsig has already started!")
             return
@@ -24,7 +25,7 @@ public class Statsig {
             completion?("Must use a valid client SDK key.")
             return
         }
-        sharedInstance = Statsig(sdkKey: sdkKey, user: user, completion: completion)
+        sharedInstance = Statsig(sdkKey: sdkKey, user: user, options: options, completion: completion)
     }
     
     public static func checkGate(_ gateName: String) -> Bool {
@@ -106,11 +107,12 @@ public class Statsig {
         sharedInstance = nil
     }
 
-    private init(sdkKey: String, user: StatsigUser?, completion: completionBlock) {
+    private init(sdkKey: String, user: StatsigUser?, options: StatsigOptions?, completion: completionBlock) {
         self.sdkKey = sdkKey;
         self.currentUser = user ?? StatsigUser();
+        self.statsigOptions = options ?? StatsigOptions();
         self.valueStore = InternalStore()
-        self.networkService = StatsigNetworkService(sdkKey: sdkKey, store: valueStore)
+        self.networkService = StatsigNetworkService(sdkKey: sdkKey, options: self.statsigOptions, store: valueStore)
         self.logger = EventLogger(user: currentUser, networkService: networkService)
         networkService.fetchValues(forUser: currentUser) { [weak self] errorMessage in
             if let errorMessage = errorMessage, let self = self {
