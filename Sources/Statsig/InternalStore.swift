@@ -24,9 +24,9 @@ class InternalStore {
         return userValues?.checkGate(forName: gateName) ?? false
     }
 
-    func getConfig(_ forUser:StatsigUser, configName:String) -> DynamicConfig {
+    func getConfig(_ forUser:StatsigUser, configName:String) -> DynamicConfig? {
         let userValues = get(forUser: forUser)
-        return userValues?.getConfig(forName: configName) ?? DynamicConfig.createDummy()
+        return userValues?.getConfig(forName: configName)
     }
 
     func set(forUser: StatsigUser, values: UserValues) {
@@ -104,9 +104,9 @@ struct UserValues {
     
     func getConfig(forName:String) -> DynamicConfig? {
         if let nameHash = forName.sha256() {
-            return configs[nameHash] ?? configs[forName] ?? DynamicConfig.createDummy()
+            return configs[nameHash] ?? configs[forName]
         }
-        return DynamicConfig.createDummy()
+        return nil
     }
 }
 

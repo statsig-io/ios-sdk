@@ -29,7 +29,7 @@ public class Statsig {
     
     public static func checkGate(_ gateName: String) -> Bool {
         guard let sharedInstance = sharedInstance else {
-            print("[Statsig]: Must start Statsig first before calling checkGate. Returning false as the default.")
+            print("[Statsig]: Must start Statsig first and wait for it to complete before calling checkGate. Returning false as the default.")
             return false
         }
         let gateValue = sharedInstance.valueStore.checkGate(sharedInstance.currentUser, gateName: gateName)
@@ -42,12 +42,15 @@ public class Statsig {
         return gateValue
     }
     
-    public static func getConfig(_ configName: String) -> DynamicConfig {
+    public static func getConfig(_ configName: String) -> DynamicConfig? {
         guard let sharedInstance = sharedInstance else {
-            print("[Statsig]: Must start Statsig first before calling getConfig. The returning config will only return default values")
-            return DynamicConfig.createDummy()
+            print("[Statsig]: Must start Statsig first and wait for it to complete before calling getConfig. Returning nil.")
+            return nil
         }
-        let config = sharedInstance.valueStore.getConfig(sharedInstance.currentUser, configName: configName)
+        guard let config = sharedInstance.valueStore.getConfig(sharedInstance.currentUser, configName: configName) else {
+            print("[Statsig]: The config with name \(configName) does not exist. Returning nil.")
+            return nil
+        }
         let exposureDedupeKey = "config::" + configName;
         if (!loggedExposures.contains(exposureDedupeKey)) {
             sharedInstance.logger.log(
@@ -71,8 +74,8 @@ public class Statsig {
 
     public static func updateUser(_ user: StatsigUser, completion: completionBlock = nil) {
         guard let sharedInstance = sharedInstance else {
-            print("[Statsig]: Must start Statsig first before calling updateUser.")
-            completion?("Must start Statsig first before calling updateUser.")
+            print("[Statsig]: Must start Statsig first and wait for it to complete before calling updateUser.")
+            completion?("Must start Statsig first and wait for it to complete before calling updateUser.")
             return
         }
         if sharedInstance.currentUser == user {
@@ -135,7 +138,7 @@ public class Statsig {
 
     private static func logEventInternal(_ withName: String, value: Any? = nil, metadata: [String: String]? = nil) {
         guard let sharedInstance = sharedInstance else {
-            print("[Statsig]: Must start Statsig first before calling logEvent.")
+            print("[Statsig]: Must start Statsig first and wait for it to complete before calling logEvent.")
             return
         }
         var eventName = withName

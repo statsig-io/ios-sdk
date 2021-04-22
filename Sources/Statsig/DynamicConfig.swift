@@ -11,10 +11,6 @@ public struct DynamicConfig {
         self.value = config["value"] as? [String:Any] ?? [String:Any]();
     }
 
-    static func createDummy() -> DynamicConfig {
-        return DynamicConfig(configName: "com.Statsig.DynamicConfig.dummy", config: [String:Any]())
-    }
-
     public func getValue<T: StatsigDynamicConfigValue>(forKey:String, defaultValue: T) -> T {
         let serverValue = value[forKey] as? T
         if serverValue == nil {
