@@ -87,7 +87,7 @@ public class Statsig {
         loggedExposures.removeAll()
         sharedInstance.currentUser = user
         sharedInstance.logger.user = user
-        sharedInstance.networkService.fetchValues(forUser: user) { errorMessage in
+        sharedInstance.networkService.fetchInitialValues(forUser: user) { errorMessage in
             if let errorMessage = errorMessage {
                 sharedInstance.logger.log(Event.statsigInternalEvent(
                                     user: user,
@@ -114,7 +114,7 @@ public class Statsig {
         self.valueStore = InternalStore()
         self.networkService = StatsigNetworkService(sdkKey: sdkKey, options: self.statsigOptions, store: valueStore)
         self.logger = EventLogger(user: currentUser, networkService: networkService)
-        networkService.fetchValues(forUser: currentUser) { [weak self] errorMessage in
+        networkService.fetchInitialValues(forUser: currentUser) { [weak self] errorMessage in
             if let errorMessage = errorMessage, let self = self {
                 self.logger.log(Event.statsigInternalEvent(
                                     user: self.currentUser,

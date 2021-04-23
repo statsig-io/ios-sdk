@@ -14,6 +14,7 @@ class StatsigNetworkService {
     final private let apiHost = "api.statsig.com"
     final private let initializeAPIPath = "/v1/initialize"
     final private let logEventAPIPath = "/v1/log_event"
+    final private let networkRetryErrorCodes = [408, 500, 502, 503, 504, 522, 524, 599]
 
     init(sdkKey: String, options: StatsigOptions, store: InternalStore) {
         self.sdkKey = sdkKey
@@ -25,6 +26,7 @@ class StatsigNetworkService {
     private func sendRequest(
         forType: requestType,
         requestBody: [String: Any],
+        retry: Int = 0,
         completion: @escaping (Data?, URLResponse?, Error?) -> Void
     ) {
         guard JSONSerialization.isValidJSONObject(requestBody),
@@ -32,12 +34,13 @@ class StatsigNetworkService {
             completion(nil, nil, StatsigError.invalidJSONParam("requestBody"))
             return
         }
-        sendRequest(forType: forType, requestData: jsonData, completion: completion)
+        sendRequest(forType: forType, requestData: jsonData, retry: retry, completion: completion)
     }
 
     private func sendRequest(
         forType: requestType,
         requestData: Data,
+        retry: Int = 0,
         completion: @escaping (Data?, URLResponse?, Error?) -> Void
     ) {
         var urlComponents = URLComponents()
@@ -73,17 +76,33 @@ class StatsigNetworkService {
             rateLimiter[urlString] = 1
         }
 
-        let task = URLSession.shared.dataTask(with: request) { [weak self] responseData, response, error in
-            self?.rateLimiter[urlString] = max((self?.rateLimiter[urlString] ?? 0) - 1, 0)
+        send(request: request, retry: retry) { [weak self] responseData, response, error in
+            if let self = self {
+                self.rateLimiter[urlString] = max((self.rateLimiter[urlString] ?? 0) - 1, 0)
+            }
             DispatchQueue.main.async {
                 completion(responseData, response, error)
             }
         }
+    }
 
+    func send(request: URLRequest, retry: Int = 0, backoff: Double = 0.5, completion: @escaping (Data?, URLResponse?, Error?) -> Void) {
+        let task = URLSession.shared.dataTask(with: request) { [weak self] responseData, response, error in
+            if retry > 0,
+               let self = self,
+               let statusCode = (response as? HTTPURLResponse)?.statusCode,
+               self.networkRetryErrorCodes.contains(statusCode) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + backoff) {
+                    self.send(request: request, retry: retry - 1, backoff: backoff * 2, completion: completion)
+                }
+            } else {
+                completion(responseData, response, error)
+            }
+        }
         task.resume()
     }
     
-    func fetchValues(forUser: StatsigUser, completion: completionBlock) {
+    func fetchInitialValues(forUser: StatsigUser, completion: completionBlock) {
         var completionClone = completion
         if self.statsigOptions.initTimeout > 0 {
             DispatchQueue.main.asyncAfter(deadline: .now() + self.statsigOptions.initTimeout) {
@@ -96,7 +115,7 @@ class StatsigNetworkService {
             "user": forUser.toDictionary(),
             "statsigMetadata": forUser.environment
         ]
-        sendRequest(forType: .initialize, requestBody: params) { [weak self] responseData, response, error in
+        sendRequest(forType: .initialize, requestBody: params, retry: 5) { [weak self] responseData, response, error in
             var errorMessage: String?
             if let error = error {
                 errorMessage = error.localizedDescription
