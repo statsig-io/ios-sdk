@@ -37,7 +37,7 @@ struct DeviceEnvironment {
         return newStableID
     }
     
-    func get() -> [String:String?] {
+    func get() -> [String: String?] {
         return [
             "appIdentifier": appIdentifier,
             "appVersion": appVersion,

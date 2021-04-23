@@ -11,6 +11,8 @@ let package = Package(
             targets: ["Statsig"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/Quick/Nimble.git", .upToNextMajor(from: "9.0.0")),
+        .package(url: "https://github.com/Quick/Quick.git", .upToNextMajor(from: "3.1.2")),
     ],
     targets: [
         .target(
@@ -19,7 +21,7 @@ let package = Package(
             path: "Sources/Statsig"),
         .testTarget(
             name: "StatsigTests",
-            dependencies: ["Statsig"]),
+            dependencies: ["Statsig", "Quick", "Nimble"]),
     ],
     swiftLanguageVersions: [.v5]
 )
