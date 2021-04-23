@@ -37,7 +37,11 @@ public class Statsig {
         let exposureDedupeKey = "gate::" + gateName;
         if (!loggedExposures.contains(exposureDedupeKey)) {
             sharedInstance.logger.log(
-                Event.gateExposure(user: sharedInstance.currentUser, gateName: gateName, gateValue: gateValue))
+                Event.gateExposure(
+                    user: sharedInstance.currentUser,
+                    gateName: gateName,
+                    gateValue: gateValue,
+                    disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
             loggedExposures.insert(exposureDedupeKey);
         }
         return gateValue
@@ -55,7 +59,11 @@ public class Statsig {
         let exposureDedupeKey = "config::" + configName;
         if (!loggedExposures.contains(exposureDedupeKey)) {
             sharedInstance.logger.log(
-                Event.configExposure(user: sharedInstance.currentUser, configName: configName, configGroup: config.group))
+                Event.configExposure(
+                    user: sharedInstance.currentUser,
+                    configName: configName,
+                    configGroup: config.group,
+                    disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
             loggedExposures.insert(exposureDedupeKey);
         }
         return config
@@ -156,12 +164,26 @@ public class Statsig {
         if let metadata = metadata, !JSONSerialization.isValidJSONObject(metadata) {
             print("[Statsig]: metadata is not a valid JSON object. Event is logged without metadata.")
             sharedInstance.logger.log(
-                Event(user: sharedInstance.currentUser, name: eventName, value: value, metadata: nil))
+                Event(
+                    user: sharedInstance.currentUser,
+                    name: eventName,
+                    value: value,
+                    metadata: nil,
+                    disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging
+                )
+            )
             return
         }
 
         sharedInstance.logger.log(
-            Event(user: sharedInstance.currentUser, name: eventName, value: value, metadata: metadata))
+            Event(
+                user: sharedInstance.currentUser,
+                name: eventName,
+                value: value,
+                metadata: metadata,
+                disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging
+            )
+        )
     }
 
     @objc private func appWillBackground() {
