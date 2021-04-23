@@ -10,12 +10,29 @@ public final class ObjcStatsig : NSObject {
         Statsig.start(sdkKey: withSDKKey, user: user.user)
     }
 
+    @objc public static func start(withSDKKey: String, options: StatsigOptions) {
+        Statsig.start(sdkKey: withSDKKey, options: options)
+    }
+
     @objc public static func start(withSDKKey: String, completion: completionBlock) {
         Statsig.start(sdkKey: withSDKKey, completion: completion)
     }
 
     @objc public static func start(withSDKKey: String, user: ObjcStatsigUser, completion: completionBlock) {
         Statsig.start(sdkKey: withSDKKey, user: user.user, completion: completion)
+    }
+
+    @objc public static func start(withSDKKey: String, user: ObjcStatsigUser, options: StatsigOptions) {
+        Statsig.start(sdkKey: withSDKKey, user: user.user, options: options)
+    }
+
+    @objc public static func start(withSDKKey: String, options: StatsigOptions, completion: completionBlock) {
+        Statsig.start(sdkKey: withSDKKey, options: options, completion: completion)
+    }
+
+    @objc public static func start(withSDKKey: String, user: ObjcStatsigUser, options: StatsigOptions,
+                                   completion: completionBlock) {
+        Statsig.start(sdkKey: withSDKKey, user: user.user, options: options, completion: completion)
     }
 
     @objc public static func checkGate(forName: String) -> Bool {
