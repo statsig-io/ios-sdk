@@ -71,7 +71,7 @@ struct Event {
             disableCurrentVCLogging: disableCurrentVCLogging)
     }
 
-    func toDictionary() -> [String:Any] {
+    func toDictionary() -> [String: Any] {
         var dict = [String:Any]()
         dict["eventName"] = name
         dict["user"] = user.toDictionary()
