@@ -3,14 +3,14 @@ import Foundation
 import CommonCrypto
 
 class InternalStore {
-    private let localStorageKey = "com.Statsig.InternalStore.localStorageKey"
+    private static let localStorageKey = "com.Statsig.InternalStore.localStorageKey"
     private let loggedOutUserID = "com.Statsig.InternalStore.loggedOutUserID"
     private let maxUserCacheCount = 5
     private var cache: [String: UserValues]
 
     init() {
         cache = [String: UserValues]()
-        if let localCache = UserDefaults.standard.dictionary(forKey: localStorageKey) {
+        if let localCache = UserDefaults.standard.dictionary(forKey: InternalStore.localStorageKey) {
             for (userID, rawData) in localCache {
                 if let rawData = rawData as? [String: Any] {
                     cache[userID] = UserValues(data: rawData)
@@ -44,6 +44,10 @@ class InternalStore {
         }
         return cache[loggedOutUserID]
     }
+
+    static func deleteLocalStorage() {
+        UserDefaults.standard.removeObject(forKey: InternalStore.localStorageKey)
+    }
     
     private func removeOldest() {
         var oldestTime: Double = -1;
@@ -64,7 +68,7 @@ class InternalStore {
         for (userID, values) in cache {
             rawCache[userID] = values.rawData
         }
-        try? UserDefaults.standard.setValue(rawCache, forKey: localStorageKey)
+        UserDefaults.standard.setValue(rawCache, forKey: InternalStore.localStorageKey)
     }
 }
 

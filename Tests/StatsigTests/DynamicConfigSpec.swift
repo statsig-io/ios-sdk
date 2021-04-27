@@ -4,23 +4,26 @@ import XCTest
 @testable import Statsig
 
 class DynamicConfigSpec: QuickSpec {
+    static let TestMixedConfig : [String: Any] =
+        [
+            "group": "default",
+            "value":
+                [
+                    "str": "string",
+                    "bool": true,
+                    "double": 3.14,
+                    "int": 3,
+                    "strArray": ["1", "2"],
+                    "mixedArray": [1, "2"],
+                    "dict": ["key": "value"],
+                    "mixedDict": ["keyStr": "string", "keyInt": 2, "keyArr": [1,2], "keyDouble": 1.23, "keyDict": ["k": "v"]],
+                ]
+        ]
     override func spec() {
         describe("creating a dynamic config from dictionary") {
             let dc = DynamicConfig(
                 configName: "testConfig",
-                config:[
-                    "group": "default",
-                    "value":
-                        [
-                            "str": "string",
-                            "bool": true,
-                            "double": 3.14,
-                            "int": 3,
-                            "strArray": ["1", "2"],
-                            "mixedArray": [1, "2"],
-                            "dict": ["key": "value"],
-                            "mixedDict": ["keyStr": "string", "keyInt": 2, "keyArr": [1,2], "keyDouble": 1.23, "keyDict": ["k": "v"]],
-                        ]])
+                config: DynamicConfigSpec.TestMixedConfig)
 
             it("returns the correct value for key given the defaultValue with correct type") {
                 expect(dc.getValue(forKey: "str", defaultValue: "1")) == "string"
