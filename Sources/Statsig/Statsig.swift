@@ -10,7 +10,7 @@ public class Statsig {
     private var currentUser: StatsigUser
     private var statsigOptions: StatsigOptions
     private var valueStore: InternalStore
-    private var networkService: StatsigNetworkService
+    private var networkService: NetworkService
     private var logger: EventLogger
 
     static let maxEventNameLength = 64;
@@ -120,7 +120,7 @@ public class Statsig {
         self.currentUser = user ?? StatsigUser();
         self.statsigOptions = options ?? StatsigOptions();
         self.valueStore = InternalStore()
-        self.networkService = StatsigNetworkService(sdkKey: sdkKey, options: self.statsigOptions, store: valueStore)
+        self.networkService = NetworkService(sdkKey: sdkKey, options: self.statsigOptions, store: valueStore)
         self.logger = EventLogger(user: currentUser, networkService: networkService)
         networkService.fetchInitialValues(forUser: currentUser) { [weak self] errorMessage in
             if let errorMessage = errorMessage, let self = self {

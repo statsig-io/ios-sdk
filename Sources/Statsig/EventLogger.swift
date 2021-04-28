@@ -11,9 +11,9 @@ class EventLogger {
     var loggedErrorMessage: Set<String>
     var flushTimer: Timer?
     var user: StatsigUser
-    let networkService: StatsigNetworkService
+    let networkService: NetworkService
 
-    init(user: StatsigUser, networkService: StatsigNetworkService) {
+    init(user: StatsigUser, networkService: NetworkService) {
         self.eventQueue = [Event]()
         self.requestQueue = [Data]()
         self.user = user

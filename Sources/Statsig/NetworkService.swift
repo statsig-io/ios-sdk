@@ -5,7 +5,7 @@ enum requestType: String {
     case logEvent = "logEvent"
 }
 
-class StatsigNetworkService {
+class NetworkService {
     let sdkKey: String
     let statsigOptions: StatsigOptions
     var valueStore: InternalStore
