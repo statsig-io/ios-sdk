@@ -21,7 +21,9 @@ public struct StatsigUser: Equatable {
         if let custom = custom, JSONSerialization.isValidJSONObject(custom) {
             self.custom = custom
         } else {
-            print("[Statsig]: The provided custom value is not added to the user because it is not a valid JSON object.")
+            if custom != nil {
+                print("[Statsig]: The provided custom value is not added to the user because it is not a valid JSON object.")
+            }
             self.custom = nil
         }
         self.environment = DeviceEnvironment().get()
