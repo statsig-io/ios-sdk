@@ -13,7 +13,9 @@ class NetworkServiceSpec: QuickSpec {
             let sdkKey = "client-api-key"
             afterEach {
                 HTTPStubs.removeAllStubs()
+                InternalStore.deleteLocalStorage()
             }
+
             it("should send the correct request data when calling fetchInitialValues()") {
                 var actualRequest: URLRequest?
                 var actualRequestHttpBody: [String: Any]?

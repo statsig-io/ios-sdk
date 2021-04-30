@@ -17,6 +17,7 @@ class StatsigSpec: QuickSpec {
             afterEach {
                 HTTPStubs.removeAllStubs()
                 Statsig.shutdown()
+                InternalStore.deleteLocalStorage()
             }
 
             context("when starting with invalid SDK keys") {

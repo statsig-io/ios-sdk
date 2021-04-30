@@ -1,9 +1,9 @@
 import Foundation
 
 class EventLogger {
-    private let loggingRequestUserDefaultsKey = "com.Statsig.EventLogger.loggingRequestUserDefaultsKey"
+    private static let loggingRequestUserDefaultsKey = "com.Statsig.EventLogger.loggingRequestUserDefaultsKey"
     var flushBatchSize: Int = 10
-    let flushInterval: Double = 60
+    var flushInterval: Double = 60
     let maxEventQueueSize: Int = 1000
 
     var eventQueue: [Event]
@@ -19,10 +19,11 @@ class EventLogger {
         self.user = user
         self.networkService = networkService
         self.loggedErrorMessage = Set<String>()
-        if let localCache = UserDefaults.standard.array(forKey: loggingRequestUserDefaultsKey) as? [Data] {
+        if let localCache = UserDefaults.standard.array(forKey: EventLogger.loggingRequestUserDefaultsKey) as? [Data] {
             self.requestQueue = localCache
         }
-        UserDefaults.standard.removeObject(forKey: loggingRequestUserDefaultsKey)
+        UserDefaults.standard.removeObject(forKey: EventLogger.loggingRequestUserDefaultsKey)
+
         networkService.sendRequestsWithData(requestQueue) { [weak self] failedRequestsData in
             guard let failedRequestsData = failedRequestsData, let self = self else { return }
             self.requestQueue += failedRequestsData
@@ -66,7 +67,7 @@ class EventLogger {
                 if let requestData = requestData {
                     self.requestQueue.append(requestData)
                 }
-                UserDefaults.standard.setValue(self.requestQueue, forKey: self.loggingRequestUserDefaultsKey)
+                UserDefaults.standard.setValue(self.requestQueue, forKey: EventLogger.loggingRequestUserDefaultsKey)
                 return
             }
 
@@ -78,5 +79,9 @@ class EventLogger {
                                                     metadata: ["error": errorMessage]))
             }
         }
+    }
+
+    static func deleteLocalStorage() {
+        UserDefaults.standard.removeObject(forKey: EventLogger.loggingRequestUserDefaultsKey)
     }
 }
