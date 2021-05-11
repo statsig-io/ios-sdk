@@ -19,9 +19,9 @@ class InternalStore {
         }
     }
 
-    func checkGate(_ forUser: StatsigUser, gateName: String) -> Bool {
+    func checkGate(_ forUser: StatsigUser, gateName: String) -> FeatureGate? {
         let userValues = get(forUser: forUser)
-        return userValues?.checkGate(forName: gateName) ?? false
+        return userValues?.checkGate(forName: gateName)
     }
 
     func getConfig(_ forUser: StatsigUser, configName: String) -> DynamicConfig? {
@@ -74,7 +74,7 @@ class InternalStore {
 
 struct UserValues {
     var rawData: [String: Any] // raw data fetched directly from Statsig server
-    var gates: [String: Bool]
+    var gates: [String: FeatureGate]
     var configs: [String: DynamicConfig]
     var creationTime: Double
     
@@ -82,28 +82,28 @@ struct UserValues {
         self.rawData = data
         self.creationTime = NSDate().timeIntervalSince1970
 
-        var gates = [String: Bool]()
+        var gates = [String: FeatureGate]()
         var configs = [String: DynamicConfig]()
-        if let gatesJSON = data["gates"] as? [String: Bool] {
-            for (name, value) in gatesJSON {
-                gates[name] = value
+        if let gatesJSON = data["feature_gates"] as? [String: [String: Any]] {
+            for (name, gateObj) in gatesJSON {
+                gates[name] = FeatureGate(name: name, gateObj: gateObj)
             }
         }
         self.gates = gates;
         
-        if let configsJSON = data["configs"] as? [String: [String: Any]] {
-            for (name, config) in configsJSON {
-                configs[name] = DynamicConfig(configName: name, config: config)
+        if let configsJSON = data["dynamic_configs"] as? [String: [String: Any]] {
+            for (name, configObj) in configsJSON {
+                configs[name] = DynamicConfig(configName: name, configObj: configObj)
             }
         }
         self.configs = configs;
     }
     
-    func checkGate(forName: String) -> Bool {
+    func checkGate(forName: String) -> FeatureGate? {
         if let nameHash = forName.sha256() {
-            return gates[nameHash] ?? gates[forName] ?? false
+            return gates[nameHash] ?? gates[forName] ?? nil
         }
-        return false
+        return nil
     }
     
     func getConfig(forName: String) -> DynamicConfig? {

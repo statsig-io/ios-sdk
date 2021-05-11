@@ -31,12 +31,13 @@ class EventSpec: QuickSpec {
                     user: StatsigUser(),
                     gateName: "show_coupon",
                     gateValue: true,
+                    ruleID: "default",
                     disableCurrentVCLogging: false)
 
                 expect(gateExposure.name) == "statsig::gate_exposure"
                 expect(gateExposure.user) == StatsigUser()
                 expect(gateExposure.value).to(beNil())
-                expect(gateExposure.metadata) == ["gate": "show_coupon", "gateValue": String(true)]
+                expect(gateExposure.metadata) == ["gate": "show_coupon", "gateValue": String(true), "ruleID": "default"]
                 expect(Int(gateExposure.time / 1000)) == Int(NSDate().timeIntervalSince1970)
             }
 
@@ -44,13 +45,13 @@ class EventSpec: QuickSpec {
                 let configExposure = Event.configExposure(
                     user: StatsigUser(),
                     configName: "my_config",
-                    configGroup: "default",
+                    ruleID: "default",
                     disableCurrentVCLogging: false)
 
                 expect(configExposure.name) == "statsig::config_exposure"
                 expect(configExposure.user) == StatsigUser()
                 expect(configExposure.value).to(beNil())
-                expect(configExposure.metadata) == ["config": "my_config", "configGroup": "default"]
+                expect(configExposure.metadata) == ["config": "my_config", "ruleID": "default"]
                 expect(Int(configExposure.time / 1000)) == Int(NSDate().timeIntervalSince1970)
             }
 

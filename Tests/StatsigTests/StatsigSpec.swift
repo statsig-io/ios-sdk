@@ -63,12 +63,12 @@ class StatsigSpec: QuickSpec {
                 let configName = "config"
                 let nonExistentConfigName = "non_existent_config"
 
-                let responseObj = [
-                    "gates": [
-                        gateName1.sha256(): false,
-                        gateName2.sha256(): true
+                let responseObj: [String: Any] = [
+                    "feature_gates": [
+                        gateName1.sha256(): ["value": false, "rule_id": "rule_id_1"],
+                        gateName2.sha256(): ["value": true, "rule_id": "rule_id_2"]
                     ],
-                    "configs": [
+                    "dynamic_configs": [
                         configName.sha256(): DynamicConfigSpec.TestMixedConfig
                     ]
                 ]
@@ -110,7 +110,7 @@ class StatsigSpec: QuickSpec {
                     expect(gate2).toEventually(beTrue())
                     expect(nonExistentGate).toEventually(beFalse())
 
-                    expect(dc?.group).toEventually(equal("default"))
+                    expect(dc?.ruleID).toEventually(equal("default"))
                     expect(dc?.getValue(forKey: "str", defaultValue: "1")) == "string"
                     expect(dc?.getValue(forKey: "bool", defaultValue: false)) == true
                     expect(dc?.getValue(forKey: "double", defaultValue: 1.0)) == 3.14

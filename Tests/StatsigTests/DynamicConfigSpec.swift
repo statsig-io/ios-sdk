@@ -6,7 +6,7 @@ import XCTest
 class DynamicConfigSpec: QuickSpec {
     static let TestMixedConfig : [String: Any] =
         [
-            "group": "default",
+            "rule_id": "default",
             "value":
                 [
                     "str": "string",
@@ -23,7 +23,7 @@ class DynamicConfigSpec: QuickSpec {
         describe("creating a dynamic config from dictionary") {
             let dc = DynamicConfig(
                 configName: "testConfig",
-                config: DynamicConfigSpec.TestMixedConfig)
+                configObj: DynamicConfigSpec.TestMixedConfig)
 
             it("returns the correct value for key given the defaultValue with correct type") {
                 expect(dc.getValue(forKey: "str", defaultValue: "1")) == "string"
@@ -49,7 +49,7 @@ class DynamicConfigSpec: QuickSpec {
                 expect(mixedDict["keyDouble"] as? Double) == 1.23
                 expect(mixedDict["keyDict"] as? [String: String]) == ["k": "v"]
 
-                expect(dc.group) == "default"
+                expect(dc.ruleID) == "default"
             }
 
             it("returns the default value for mismatched types") {

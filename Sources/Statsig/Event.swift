@@ -47,27 +47,28 @@ struct Event {
         user: StatsigUser,
         gateName: String,
         gateValue: Bool,
+        ruleID: String,
         disableCurrentVCLogging: Bool
     ) -> Event {
         return statsigInternalEvent(
             user: user,
             name: gateExposureEventName,
             value: nil,
-            metadata: ["gate": gateName, "gateValue": String(gateValue)],
+            metadata: ["gate": gateName, "gateValue": String(gateValue), "ruleID": ruleID],
             disableCurrentVCLogging: disableCurrentVCLogging)
     }
 
     static func configExposure(
         user: StatsigUser,
         configName: String,
-        configGroup: String,
+        ruleID: String,
         disableCurrentVCLogging: Bool
     ) -> Event {
         return statsigInternalEvent(
             user: user,
             name: configExposureEventName,
             value: nil,
-            metadata: ["config": configName, "configGroup": configGroup],
+            metadata: ["config": configName, "ruleID": ruleID],
             disableCurrentVCLogging: disableCurrentVCLogging)
     }
 

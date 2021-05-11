@@ -3,12 +3,12 @@ import Foundation
 public struct DynamicConfig {
     public var name: String
     public var value: [String: Any]
-    var group: String
+    var ruleID: String
 
-    init(configName: String, config: [String: Any]) {
+    init(configName: String, configObj: [String: Any]) {
         self.name = configName;
-        self.group = config["group"] as? String ?? "unknown";
-        self.value = config["value"] as? [String: Any] ?? [:];
+        self.ruleID = configObj["rule_id"] as? String ?? "";
+        self.value = configObj["value"] as? [String: Any] ?? [:];
     }
 
     public func getValue<T: StatsigDynamicConfigValue>(forKey: String, defaultValue: T) -> T {

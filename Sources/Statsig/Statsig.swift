@@ -33,18 +33,22 @@ public class Statsig {
             print("[Statsig]: Must start Statsig first and wait for it to complete before calling checkGate. Returning false as the default.")
             return false
         }
-        let gateValue = sharedInstance.valueStore.checkGate(sharedInstance.currentUser, gateName: gateName)
+        guard let gate = sharedInstance.valueStore.checkGate(sharedInstance.currentUser, gateName: gateName) else {
+            print("[Statsig]: The feature gate with name \(gateName) does not exist. Returning false as the default.")
+            return false
+        }
         let exposureDedupeKey = "gate::" + gateName;
-        if (!loggedExposures.contains(exposureDedupeKey)) {
+        if !loggedExposures.contains(exposureDedupeKey) {
             sharedInstance.logger.log(
                 Event.gateExposure(
                     user: sharedInstance.currentUser,
                     gateName: gateName,
-                    gateValue: gateValue,
+                    gateValue: gate.value,
+                    ruleID: gate.ruleID,
                     disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
             loggedExposures.insert(exposureDedupeKey);
         }
-        return gateValue
+        return gate.value
     }
     
     public static func getConfig(_ configName: String) -> DynamicConfig? {
@@ -62,7 +66,7 @@ public class Statsig {
                 Event.configExposure(
                     user: sharedInstance.currentUser,
                     configName: configName,
-                    configGroup: config.group,
+                    ruleID: config.ruleID,
                     disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
             loggedExposures.insert(exposureDedupeKey);
         }
