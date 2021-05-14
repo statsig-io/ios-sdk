@@ -51,14 +51,14 @@ public class Statsig {
         return gate.value
     }
     
-    public static func getConfig(_ configName: String) -> DynamicConfig? {
+    public static func getConfig(_ configName: String) -> DynamicConfig {
         guard let sharedInstance = sharedInstance else {
-            print("[Statsig]: Must start Statsig first and wait for it to complete before calling getConfig. Returning nil.")
-            return nil
+            print("[Statsig]: Must start Statsig first and wait for it to complete before calling getConfig. Returning a dummy DynamicConfig that will only return default values.")
+            return DynamicConfig(configName: configName)
         }
         guard let config = sharedInstance.valueStore.getConfig(configName: configName) else {
-            print("[Statsig]: The config with name \(configName) does not exist. Returning nil.")
-            return nil
+            print("[Statsig]: The config with name \(configName) does not exist. Returning a dummy DynamicConfig that will only return default values.")
+            return DynamicConfig(configName: configName)
         }
         let exposureDedupeKey = "config::" + configName;
         if (!loggedExposures.contains(exposureDedupeKey)) {

@@ -5,7 +5,7 @@ public struct DynamicConfig {
     public var value: [String: Any]
     var ruleID: String
 
-    init(configName: String, configObj: [String: Any]) {
+    init(configName: String, configObj: [String: Any] = [:]) {
         self.name = configName;
         self.ruleID = configObj["rule_id"] as? String ?? "";
         self.value = configObj["value"] as? [String: Any] ?? [:];

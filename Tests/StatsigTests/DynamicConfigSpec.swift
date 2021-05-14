@@ -20,6 +20,18 @@ class DynamicConfigSpec: QuickSpec {
                 ]
         ]
     override func spec() {
+        describe("dummy config works as expected") {
+            it("only returns the default values") {
+                let dc = DynamicConfig(configName: "dummy")
+                expect(dc.getValue(forKey: "str", defaultValue: "1")) == "1"
+                expect(dc.getValue(forKey: "bool", defaultValue: true)) == true
+                expect(dc.getValue(forKey: "double", defaultValue: 1.1)) == 1.1
+                expect(dc.getValue(forKey: "int", defaultValue: 3)) == 3
+                expect(dc.getValue(forKey: "strArray", defaultValue: ["1", "2"])) == ["1", "2"]
+                expect(dc.getValue(forKey: "dict", defaultValue: ["key": "value"])) == ["key": "value"]
+            }
+        }
+
         describe("creating a dynamic config from dictionary") {
             let dc = DynamicConfig(
                 configName: "testConfig",

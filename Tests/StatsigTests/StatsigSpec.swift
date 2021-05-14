@@ -47,7 +47,7 @@ class StatsigSpec: QuickSpec {
                     }
                     expect(error).toEventually(contain("403"))
                     expect(gate).toEventually(beFalse())
-                    expect(config).toEventually(beNil())
+                    expect(NSDictionary(dictionary: config!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
                 }
 
                 it("works when provided server secret by returning default value") {
@@ -61,7 +61,7 @@ class StatsigSpec: QuickSpec {
                     }
                     expect(error).toEventually(equal("Must use a valid client SDK key."))
                     expect(gate).toEventually(beFalse())
-                    expect(config).toEventually(beNil())
+                    expect(NSDictionary(dictionary: config!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
                 }
             }
 
@@ -110,18 +110,9 @@ class StatsigSpec: QuickSpec {
                     expect(gate2).toEventually(beTrue())
                     expect(nonExistentGate).toEventually(beFalse())
 
-                    expect(dc?.ruleID).toEventually(equal("default"))
-                    expect(dc?.getValue(forKey: "str", defaultValue: "1")) == "string"
-                    expect(dc?.getValue(forKey: "bool", defaultValue: false)) == true
-                    expect(dc?.getValue(forKey: "double", defaultValue: 1.0)) == 3.14
-                    expect(dc?.getValue(forKey: "int", defaultValue: 1)) == 3
-                    expect(dc?.getValue(forKey: "strArray", defaultValue: [])) == ["1", "2"]
-                    expect(dc?.getValue(forKey: "mixedArray", defaultValue: []).count) == 2
-                    expect(dc?.getValue(forKey: "dict", defaultValue: [String: String]()).count) == 1
-                    expect(dc?.getValue(forKey: "dict", defaultValue: [String: String]())["key"]) == "value"
-                    expect(dc?.getValue(forKey: "mixedDict", defaultValue: [:]).count) == 5
-
-                    expect(nonExistentDC).to(beNil())
+                    expect(NSDictionary(dictionary: dc!.value)).toEventually(
+                        equal(NSDictionary(dictionary: DynamicConfigSpec.TestMixedConfig["value"] as! [String: Any])))
+                    expect(NSDictionary(dictionary: nonExistentDC!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
                 }
 
                 it("times out if the request took too long and responds early with default values, when there is no local cache") {
@@ -146,7 +137,7 @@ class StatsigSpec: QuickSpec {
                     // check the values immediately following the completion block from start() assignments
                     expect(error).toEventually(beNil(), timeout: .milliseconds(3500))
                     expect(gate).toEventually(beFalse(), timeout: .milliseconds(3500))
-                    expect(dc).toEventually(beNil(), timeout: .milliseconds(3500))
+                    expect(NSDictionary(dictionary: dc!.value)).toEventually(equal(NSDictionary(dictionary: [:])), timeout: .milliseconds(3500))
                     expect(Int(timeDiff!)).toEventually(equal(3), timeout: .milliseconds(3500))
 
                     // check the same gate and config >4 seconds later should return the results from response JSON
@@ -183,7 +174,7 @@ class StatsigSpec: QuickSpec {
                     expect(gate).toEventually(beTrue())
                     expect(nonExistentGate).toEventually(beFalse())
                     expect(dc).toEventuallyNot(beNil())
-                    expect(nonExistentDC).toEventually(beNil())
+                    expect(NSDictionary(dictionary: nonExistentDC!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
                 }
 
                 it("correctly shuts down") {
@@ -195,7 +186,7 @@ class StatsigSpec: QuickSpec {
                         dc = Statsig.getConfig(configName)
                     }
                     expect(trueBool).toEventually(beFalse())
-                    expect(dc).toEventually(beNil())
+                    expect(NSDictionary(dictionary: dc!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
                 }
             }
         }

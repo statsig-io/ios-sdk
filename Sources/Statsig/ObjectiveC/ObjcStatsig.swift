@@ -39,11 +39,8 @@ public final class ObjcStatsig : NSObject {
         return Statsig.checkGate(forName)
     }
 
-    @objc public static func getConfig(forName: String) -> ObjcStatsigDynamicConfig? {
-        guard let dc = Statsig.getConfig(forName) else {
-            return nil
-        }
-        return ObjcStatsigDynamicConfig(withConfig: dc)
+    @objc public static func getConfig(forName: String) -> ObjcStatsigDynamicConfig {
+        return ObjcStatsigDynamicConfig(withConfig: Statsig.getConfig(forName))
     }
 
     @objc public static func logEvent(_ withName: String) {
