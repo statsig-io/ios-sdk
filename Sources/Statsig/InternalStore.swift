@@ -4,71 +4,35 @@ import CommonCrypto
 
 class InternalStore {
     private static let localStorageKey = "com.Statsig.InternalStore.localStorageKey"
-    private let loggedOutUserID = "com.Statsig.InternalStore.loggedOutUserID"
-    private let maxUserCacheCount = 5
-    private var cache: [String: UserValues]
+    var cache: UserValues?
 
     init() {
-        cache = [String: UserValues]()
         if let localCache = UserDefaults.standard.dictionary(forKey: InternalStore.localStorageKey) {
-            for (userID, rawData) in localCache {
-                if let rawData = rawData as? [String: Any] {
-                    cache[userID] = UserValues(data: rawData)
-                }
-            }
+            cache = UserValues(data: localCache)
         }
     }
 
-    func checkGate(_ forUser: StatsigUser, gateName: String) -> FeatureGate? {
-        let userValues = get(forUser: forUser)
-        return userValues?.checkGate(forName: gateName)
+    func checkGate(gateName: String) -> FeatureGate? {
+        return cache?.checkGate(forName: gateName)
     }
 
-    func getConfig(_ forUser: StatsigUser, configName: String) -> DynamicConfig? {
-        let userValues = get(forUser: forUser)
-        return userValues?.getConfig(forName: configName)
+    func getConfig(configName: String) -> DynamicConfig? {
+        return cache?.getConfig(forName: configName)
     }
 
-    func set(forUser: StatsigUser, values: UserValues) {
-        cache[forUser.userID ?? loggedOutUserID] = values
-        while cache.count > maxUserCacheCount {
-            removeOldest()
-        }
-        
+    func set(values: UserValues) {
+        cache = values
         saveToLocalCache()
-    }
-    
-    func get(forUser: StatsigUser) -> UserValues? {
-        if let userID = forUser.userID {
-            return cache[userID] ?? nil
-        }
-        return cache[loggedOutUserID]
     }
 
     static func deleteLocalStorage() {
         UserDefaults.standard.removeObject(forKey: InternalStore.localStorageKey)
     }
-    
-    private func removeOldest() {
-        var oldestTime: Double = -1;
-        var oldestUserKey: String?;
-        for (key, values) in cache {
-            if oldestTime < 0 || oldestTime > values.creationTime {
-                oldestTime = values.creationTime
-                oldestUserKey = key
-            }
-        }
-        if oldestUserKey != nil {
-            cache.removeValue(forKey: oldestUserKey ?? "")
-        }
-    }
-    
+
     private func saveToLocalCache() {
-        var rawCache = [String: [String: Any]]()
-        for (userID, values) in cache {
-            rawCache[userID] = values.rawData
+        if let rawData = cache?.rawData {
+            UserDefaults.standard.setValue(rawData, forKey: InternalStore.localStorageKey)
         }
-        UserDefaults.standard.setValue(rawCache, forKey: InternalStore.localStorageKey)
     }
 }
 

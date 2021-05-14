@@ -8,6 +8,16 @@ import OHHTTPStubsSwift
 @testable import Statsig
 
 class StatsigSpec: QuickSpec {
+    static let mockUserValues: [String: Any] = [
+        "feature_gates": [
+            "gate_name_1".sha256(): ["value": false, "rule_id": "rule_id_1"],
+            "gate_name_2".sha256(): ["value": true, "rule_id": "rule_id_2"]
+        ],
+        "dynamic_configs": [
+            "config".sha256(): DynamicConfigSpec.TestMixedConfig
+        ]
+    ]
+
     override func spec() {
         describe("starting Statsig") {
             beforeEach {
@@ -63,16 +73,6 @@ class StatsigSpec: QuickSpec {
                 let configName = "config"
                 let nonExistentConfigName = "non_existent_config"
 
-                let responseObj: [String: Any] = [
-                    "feature_gates": [
-                        gateName1.sha256(): ["value": false, "rule_id": "rule_id_1"],
-                        gateName2.sha256(): ["value": true, "rule_id": "rule_id_2"]
-                    ],
-                    "dynamic_configs": [
-                        configName.sha256(): DynamicConfigSpec.TestMixedConfig
-                    ]
-                ]
-
                 it("only makes 1 network request if start() is called multiple times") {
                     var requestCount = 0;
                     stub(condition: isHost("api.statsig.com")) { _ in
@@ -89,7 +89,7 @@ class StatsigSpec: QuickSpec {
 
                 it("works correctly with a valid JSON response") {
                     stub(condition: isHost("api.statsig.com")) { _ in
-                        return HTTPStubsResponse(jsonObject: responseObj, statusCode: 200, headers: nil)
+                        return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
                     }
 
                     var gate1: Bool?
@@ -126,7 +126,7 @@ class StatsigSpec: QuickSpec {
 
                 it("times out if the request took too long and responds early with default values, when there is no local cache") {
                     stub(condition: isHost("api.statsig.com")) { _ in
-                        return HTTPStubsResponse(jsonObject: responseObj, statusCode: 200, headers: nil)
+                        return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
                             .responseTime(4.0)
                     }
 
@@ -156,7 +156,7 @@ class StatsigSpec: QuickSpec {
 
                 it("times out and returns value from local cache") {
                     stub(condition: isHost("api.statsig.com")) { _ in
-                        return HTTPStubsResponse(jsonObject: responseObj, statusCode: 200, headers: nil)
+                        return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
                     }
 
                     var gate: Bool?
@@ -169,7 +169,7 @@ class StatsigSpec: QuickSpec {
                         // shutdown client to call start() again, and makes response slow so we can test early timeout with cached return
                         Statsig.shutdown()
                         stub(condition: isHost("api.statsig.com")) { _ in
-                            return HTTPStubsResponse(jsonObject: responseObj, statusCode: 200, headers: nil).responseTime(3)
+                            return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil).responseTime(3)
                         }
 
                         Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(initTimeout: 0.1)) { errorMessage in

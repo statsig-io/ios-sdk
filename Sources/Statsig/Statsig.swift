@@ -33,7 +33,7 @@ public class Statsig {
             print("[Statsig]: Must start Statsig first and wait for it to complete before calling checkGate. Returning false as the default.")
             return false
         }
-        guard let gate = sharedInstance.valueStore.checkGate(sharedInstance.currentUser, gateName: gateName) else {
+        guard let gate = sharedInstance.valueStore.checkGate(gateName: gateName) else {
             print("[Statsig]: The feature gate with name \(gateName) does not exist. Returning false as the default.")
             return false
         }
@@ -56,7 +56,7 @@ public class Statsig {
             print("[Statsig]: Must start Statsig first and wait for it to complete before calling getConfig. Returning nil.")
             return nil
         }
-        guard let config = sharedInstance.valueStore.getConfig(sharedInstance.currentUser, configName: configName) else {
+        guard let config = sharedInstance.valueStore.getConfig(configName: configName) else {
             print("[Statsig]: The config with name \(configName) does not exist. Returning nil.")
             return nil
         }

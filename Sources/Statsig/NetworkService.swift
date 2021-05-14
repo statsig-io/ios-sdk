@@ -127,7 +127,7 @@ class NetworkService {
             if let responseData = responseData {
                 if let json = try? JSONSerialization.jsonObject(with: responseData, options: []) {
                     if let json = json as? [String:Any], let self = self {
-                        self.valueStore.set(forUser: forUser, values: UserValues(data: json))
+                        self.valueStore.set(values: UserValues(data: json))
                     }
                 }
             }
