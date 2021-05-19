@@ -5,6 +5,7 @@ import CommonCrypto
 class InternalStore {
     private static let localStorageKey = "com.Statsig.InternalStore.localStorageKey"
     var cache: UserValues?
+    var updatedTime: Double = 0// in milliseconds - retrieved from and sent to server in milliseconds
 
     init() {
         if let localCache = UserDefaults.standard.dictionary(forKey: InternalStore.localStorageKey) {
@@ -20,8 +21,9 @@ class InternalStore {
         return cache?.getConfig(forName: configName)
     }
 
-    func set(values: UserValues) {
+    func set(values: UserValues, time: Double? = nil) {
         cache = values
+        updatedTime = time ?? updatedTime
         saveToLocalCache()
     }
 

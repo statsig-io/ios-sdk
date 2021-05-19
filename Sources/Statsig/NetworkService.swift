@@ -3,12 +3,13 @@ import Foundation
 enum requestType: String {
     case initialize = "initialize"
     case logEvent = "logEvent"
+//    case
 }
 
 class NetworkService {
     let sdkKey: String
     let statsigOptions: StatsigOptions
-    var valueStore: InternalStore
+    var store: InternalStore
     var rateLimiter: [String:Int]
     
     final private let apiHost = "api.statsig.com"
@@ -19,7 +20,7 @@ class NetworkService {
     init(sdkKey: String, options: StatsigOptions, store: InternalStore) {
         self.sdkKey = sdkKey
         self.statsigOptions = options
-        self.valueStore = store
+        self.store = store
         self.rateLimiter = [String:Int]()
     }
 
@@ -101,8 +102,28 @@ class NetworkService {
         }
         task.resume()
     }
+
+    func fetchUpdatedValues(for user: StatsigUser, since: Double, completion: (() -> Void)?) {
+        let params: [String: Any] = [
+            "user": user.toDictionary(),
+            "statsigMetadata": user.environment,
+            "lastSyncTimeForUser": since,
+        ]
+        sendRequest(forType: .initialize, requestBody: params) { [weak self] responseData, _, _ in
+            if let self = self,
+               let responseData = responseData,
+               let json = try? JSONSerialization.jsonObject(with: responseData, options: []),
+               let responseDict = json as? [String: Any],
+               let hasUpdates = responseDict["has_updates"] as? Bool,
+               hasUpdates {
+                self.store.set(values: UserValues(data: responseDict), time: responseDict["time"] as? Double)
+            }
+
+            completion?()
+        }
+    }
     
-    func fetchInitialValues(forUser: StatsigUser, completion: completionBlock) {
+    func fetchInitialValues(for user: StatsigUser, completion: completionBlock) {
         var completionClone = completion
         if self.statsigOptions.initTimeout > 0 {
             DispatchQueue.main.asyncAfter(deadline: .now() + self.statsigOptions.initTimeout) {
@@ -112,8 +133,8 @@ class NetworkService {
         }
 
         let params: [String: Any] = [
-            "user": forUser.toDictionary(),
-            "statsigMetadata": forUser.environment
+            "user": user.toDictionary(),
+            "statsigMetadata": user.environment
         ]
         sendRequest(forType: .initialize, requestBody: params, retry: 5) { [weak self] responseData, response, error in
             var errorMessage: String?
@@ -124,12 +145,11 @@ class NetworkService {
                     + "\(String(describing: statusCode))"
             }
 
-            if let responseData = responseData {
-                if let json = try? JSONSerialization.jsonObject(with: responseData, options: []) {
-                    if let json = json as? [String:Any], let self = self {
-                        self.valueStore.set(values: UserValues(data: json))
-                    }
-                }
+            if let self = self,
+               let responseData = responseData,
+               let json = try? JSONSerialization.jsonObject(with: responseData, options: []),
+               let responseDict = json as? [String: Any] {
+                self.store.set(values: UserValues(data: responseDict), time: responseDict["time"] as? Double)
             }
 
             DispatchQueue.main.async {

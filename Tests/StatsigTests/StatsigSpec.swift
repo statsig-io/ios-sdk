@@ -40,7 +40,7 @@ class StatsigSpec: QuickSpec {
                     var error: String?
                     var gate: Bool?
                     var config: DynamicConfig?
-                    Statsig.start(sdkKey: "invalid_sdk_key") { errorMessage in
+                    Statsig.start(sdkKey: "invalid_sdk_key", options: StatsigOptions()) { errorMessage in
                         error = errorMessage
                         gate = Statsig.checkGate("show_coupon")
                         config = Statsig.getConfig("my_config")
@@ -85,6 +85,33 @@ class StatsigSpec: QuickSpec {
                     Statsig.start(sdkKey: "client-api-key")
 
                     expect(requestCount).toEventually(equal(1))
+                }
+
+                it("makes 3 network request in 20 seconds and updates internal store's updatedTime correctly each time") {
+                    var requestCount = 0;
+                    var lastSyncTime: Double = 0;
+                    let now = NSDate().timeIntervalSince1970
+
+                    stub(condition: isHost("api.statsig.com")) { request in
+                        requestCount += 1;
+
+                        let httpBody = try! JSONSerialization.jsonObject(
+                            with: request.ohhttpStubs_httpBody!,
+                            options: []) as! [String: Any]
+                        lastSyncTime = httpBody["lastSyncTimeForUser"] as? Double ?? 0
+
+                        return HTTPStubsResponse(jsonObject: ["time": now * 1000], statusCode: 200, headers: nil)
+                    }
+
+                    Statsig.start(sdkKey: "client-api-key")
+
+                    // first request, "lastSyncTimeForUser" field should not be present in the request body
+                    expect(requestCount).toEventually(equal(1), timeout: .seconds(1))
+                    expect(lastSyncTime).to(equal(0))
+
+                    // second request, "lastSyncTimeForUser" field should be the time when the first request was sent
+                    expect(requestCount).toEventually(equal(2), timeout: .seconds(11))
+                    expect(Int(lastSyncTime / 1000)).toEventually(equal(Int(now)), timeout: .seconds(11))
                 }
 
                 it("works correctly with a valid JSON response") {

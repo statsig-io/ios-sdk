@@ -9,14 +9,16 @@ public class Statsig {
     private var sdkKey: String
     private var currentUser: StatsigUser
     private var statsigOptions: StatsigOptions
-    private var valueStore: InternalStore
+    private var store: InternalStore
     private var networkService: NetworkService
     private var logger: EventLogger
+    private var syncTimer: Timer?
 
     static let maxEventNameLength = 64;
     static var loggedExposures = Set<String>()
     
-    public static func start(sdkKey: String, user: StatsigUser? = nil, options: StatsigOptions? = nil, completion: completionBlock = nil) {
+    public static func start(sdkKey: String, user: StatsigUser? = nil, options: StatsigOptions? = nil,
+                             completion: completionBlock = nil) {
         if sharedInstance != nil {
             completion?("Statsig has already started!")
             return
@@ -33,7 +35,7 @@ public class Statsig {
             print("[Statsig]: Must start Statsig first and wait for it to complete before calling checkGate. Returning false as the default.")
             return false
         }
-        guard let gate = sharedInstance.valueStore.checkGate(gateName: gateName) else {
+        guard let gate = sharedInstance.store.checkGate(gateName: gateName) else {
             print("[Statsig]: The feature gate with name \(gateName) does not exist. Returning false as the default.")
             return false
         }
@@ -56,7 +58,7 @@ public class Statsig {
             print("[Statsig]: Must start Statsig first and wait for it to complete before calling getConfig. Returning a dummy DynamicConfig that will only return default values.")
             return DynamicConfig(configName: configName)
         }
-        guard let config = sharedInstance.valueStore.getConfig(configName: configName) else {
+        guard let config = sharedInstance.store.getConfig(configName: configName) else {
             print("[Statsig]: The config with name \(configName) does not exist. Returning a dummy DynamicConfig that will only return default values.")
             return DynamicConfig(configName: configName)
         }
@@ -91,24 +93,11 @@ public class Statsig {
             completion?("Must start Statsig first and wait for it to complete before calling updateUser.")
             return
         }
-        if sharedInstance.currentUser == user {
-            completion?(nil)
-            return
-        }
 
         loggedExposures.removeAll()
         sharedInstance.currentUser = user
         sharedInstance.logger.user = user
-        sharedInstance.networkService.fetchInitialValues(forUser: user) { errorMessage in
-            if let errorMessage = errorMessage {
-                sharedInstance.logger.log(Event.statsigInternalEvent(
-                                    user: user,
-                                    name: "fetch_values_failed",
-                                    value: nil,
-                                    metadata: ["error": errorMessage]))
-            }
-            completion?(errorMessage)
-        }
+        sharedInstance.fetchAndScheduleSyncing(completion: completion)
     }
     
     public static func shutdown() {
@@ -116,6 +105,7 @@ public class Statsig {
             return
         }
         sharedInstance?.logger.flush()
+        sharedInstance?.syncTimer?.invalidate()
         sharedInstance = nil
     }
 
@@ -123,19 +113,11 @@ public class Statsig {
         self.sdkKey = sdkKey;
         self.currentUser = user ?? StatsigUser();
         self.statsigOptions = options ?? StatsigOptions();
-        self.valueStore = InternalStore()
-        self.networkService = NetworkService(sdkKey: sdkKey, options: self.statsigOptions, store: valueStore)
+        self.store = InternalStore()
+        self.networkService = NetworkService(sdkKey: sdkKey, options: self.statsigOptions, store: store)
         self.logger = EventLogger(user: currentUser, networkService: networkService)
-        networkService.fetchInitialValues(forUser: currentUser) { [weak self] errorMessage in
-            if let errorMessage = errorMessage, let self = self {
-                self.logger.log(Event.statsigInternalEvent(
-                                    user: self.currentUser,
-                                    name: "fetch_values_failed",
-                                    value: nil,
-                                    metadata: ["error": errorMessage]))
-            }
-            completion?(errorMessage)
-        }
+
+        fetchAndScheduleSyncing(completion: completion)
 
         NotificationCenter.default.addObserver(
             self,
@@ -148,6 +130,37 @@ public class Statsig {
             selector: #selector(appWillTerminate),
             name: UIApplication.willTerminateNotification,
             object: nil)
+    }
+
+    private func fetchAndScheduleSyncing(completion: completionBlock) {
+        syncTimer?.invalidate()
+
+        let currentUser = self.currentUser
+        networkService.fetchInitialValues(for: currentUser) { [weak self] errorMessage in
+            if let self = self {
+                if let errorMessage = errorMessage {
+                    self.logger.log(Event.statsigInternalEvent(
+                                        user: self.currentUser,
+                                        name: "fetch_values_failed",
+                                        value: nil,
+                                        metadata: ["error": errorMessage]))
+                }
+                self.scheduleRepeatingSync()
+            }
+
+            completion?(errorMessage)
+        }
+    }
+
+    private func scheduleRepeatingSync() {
+        let currentUser = self.currentUser
+        self.syncTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [weak self] timer in
+            guard let self = self else { return }
+            self.networkService.fetchUpdatedValues(for: currentUser, since: self.store.updatedTime)
+            { [weak self] in
+                self?.scheduleRepeatingSync()
+            }
+        }
     }
 
     private static func logEventInternal(_ withName: String, value: Any? = nil, metadata: [String: String]? = nil) {

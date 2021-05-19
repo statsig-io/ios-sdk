@@ -28,12 +28,37 @@ class NetworkServiceSpec: QuickSpec {
                 }
 
                 let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore())
-                ns.fetchInitialValues(forUser: StatsigUser(userID: "jkw"), completion: nil)
+                ns.fetchInitialValues(for: StatsigUser(userID: "jkw"), completion: nil)
 
                 expect(actualRequestHttpBody?.keys).toEventually(contain("user", "statsigMetadata"))
                 expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).toEventually(equal(sdkKey))
                 expect(actualRequest?.httpMethod).toEventually(equal("POST"))
                 expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/initialize"))
+            }
+
+            it("should send the correct request data when calling fetchUpdatedValues()") {
+                var actualRequest: URLRequest?
+                var actualRequestHttpBody: [String: Any]?
+                stub(condition: isHost("api.statsig.com")) { request in
+                    actualRequest = request
+                    actualRequestHttpBody = try! JSONSerialization.jsonObject(
+                        with: request.ohhttpStubs_httpBody!,
+                        options: []) as! [String: Any]
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
+                }
+
+                let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore())
+                let now = NSDate().timeIntervalSince1970 * 1000
+                waitUntil { done in 
+                    ns.fetchUpdatedValues(for: StatsigUser(userID: "jkw"), since: now) {
+                        done()
+                    }
+                }
+                
+                expect(actualRequestHttpBody?.keys).to(contain("user", "statsigMetadata", "lastSyncTimeForUser"))
+                expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).to(equal(sdkKey))
+                expect(actualRequest?.httpMethod).to(equal("POST"))
+                expect(actualRequest?.url?.absoluteString).to(equal("https://api.statsig.com/v1/initialize"))
             }
 
             it("should send the correct request data when calling sendEvents(), and returns the request data back if request fails") {
