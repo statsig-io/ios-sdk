@@ -35,9 +35,10 @@ public class Statsig {
             print("[Statsig]: Must start Statsig first and wait for it to complete before calling checkGate. Returning false as the default.")
             return false
         }
-        guard let gate = sharedInstance.store.checkGate(gateName: gateName) else {
+        var gate = sharedInstance.store.checkGate(gateName: gateName)
+        if gate == nil {
             print("[Statsig]: The feature gate with name \(gateName) does not exist. Returning false as the default.")
-            return false
+            gate = FeatureGate(name: gateName, value: false, ruleID: "")
         }
         let exposureDedupeKey = "gate::" + gateName;
         if !loggedExposures.contains(exposureDedupeKey) {
@@ -45,12 +46,12 @@ public class Statsig {
                 Event.gateExposure(
                     user: sharedInstance.currentUser,
                     gateName: gateName,
-                    gateValue: gate.value,
-                    ruleID: gate.ruleID,
+                    gateValue: gate?.value ?? false,
+                    ruleID: gate?.ruleID ?? "",
                     disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
             loggedExposures.insert(exposureDedupeKey);
         }
-        return gate.value
+        return gate?.value ?? false
     }
     
     public static func getConfig(_ configName: String) -> DynamicConfig {
@@ -58,9 +59,10 @@ public class Statsig {
             print("[Statsig]: Must start Statsig first and wait for it to complete before calling getConfig. Returning a dummy DynamicConfig that will only return default values.")
             return DynamicConfig(configName: configName)
         }
-        guard let config = sharedInstance.store.getConfig(configName: configName) else {
+        var config = sharedInstance.store.getConfig(configName: configName)
+        if config == nil {
             print("[Statsig]: The config with name \(configName) does not exist. Returning a dummy DynamicConfig that will only return default values.")
-            return DynamicConfig(configName: configName)
+            config = DynamicConfig(configName: configName)
         }
         let exposureDedupeKey = "config::" + configName;
         if (!loggedExposures.contains(exposureDedupeKey)) {
@@ -68,11 +70,11 @@ public class Statsig {
                 Event.configExposure(
                     user: sharedInstance.currentUser,
                     configName: configName,
-                    ruleID: config.ruleID,
+                    ruleID: config?.ruleID ?? "",
                     disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
             loggedExposures.insert(exposureDedupeKey);
         }
-        return config
+        return config!
     }
 
     public static func logEvent(_ withName: String, metadata: [String: String]? = nil) {

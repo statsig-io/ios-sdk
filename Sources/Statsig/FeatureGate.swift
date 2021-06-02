@@ -8,4 +8,10 @@ struct FeatureGate: Codable {
         self.value = gateObj["value"] as? Bool ?? false
         self.ruleID = gateObj["rule_id"] as? String ?? ""
     }
+
+    init(name: String, value: Bool, ruleID: String) {
+        self.name = name
+        self.value = value
+        self.ruleID = ruleID ?? ""
+    }
 }
