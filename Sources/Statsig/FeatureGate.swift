@@ -12,6 +12,6 @@ struct FeatureGate: Codable {
     init(name: String, value: Bool, ruleID: String) {
         self.name = name
         self.value = value
-        self.ruleID = ruleID ?? ""
+        self.ruleID = ruleID
     }
 }
