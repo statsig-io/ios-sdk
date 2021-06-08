@@ -6,7 +6,8 @@ struct DeviceEnvironment {
     private let stableIDKey = "com.Statsig.InternalStore.stableIDKey"
 
     var deviceOS: String = "iOS"
-    var sdkVersion: String = "1.0.9"
+    var sdkType: String = "ios-client"
+    var sdkVersion: String = "1.0.10"
     var sessionID: String? { UUID().uuidString }
     var systemVersion: String { UIDevice.current.systemVersion }
     var systemName: String { UIDevice.current.systemName }
@@ -45,6 +46,7 @@ struct DeviceEnvironment {
             "deviceOS": deviceOS,
             "language": language,
             "locale": locale,
+            "sdkType": sdkType,
             "sdkVersion": sdkVersion,
             "sessionID": sessionID,
             "stableID": stableID,

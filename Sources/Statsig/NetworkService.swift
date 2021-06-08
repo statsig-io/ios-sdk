@@ -3,7 +3,6 @@ import Foundation
 enum requestType: String {
     case initialize = "initialize"
     case logEvent = "logEvent"
-//    case
 }
 
 class NetworkService {
