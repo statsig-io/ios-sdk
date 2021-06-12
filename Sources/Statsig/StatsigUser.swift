@@ -6,10 +6,11 @@ public struct StatsigUser: Equatable {
     public let ip: String?
     public let country: String?
     public let custom: [String: StatsigUserCustomTypeConvertible]?
-    
-    var environment: [String:String?]
 
-    public init(userID:String? = nil,
+    var statsigEnvironment: [String: String] = [:]
+    var deviceEnvironment: [String: String?]
+
+    public init(userID: String? = nil,
          email: String? = nil,
          ip: String? = nil,
          country: String? = nil,
@@ -26,16 +27,17 @@ public struct StatsigUser: Equatable {
             }
             self.custom = nil
         }
-        self.environment = DeviceEnvironment().get()
+        self.deviceEnvironment = DeviceEnvironment().get()
     }
 
-    func toDictionary() -> [String:Any?] {
-        var dict = [String:Any?]()
+    func toDictionary() -> [String: Any?] {
+        var dict = [String: Any?]()
         dict["userID"] = self.userID
         dict["email"] = self.email
         dict["ip"] = self.ip
         dict["country"] = self.country
         dict["custom"] = self.custom
+        dict["statsigEnvironment"] = self.statsigEnvironment
         return dict
     }
 

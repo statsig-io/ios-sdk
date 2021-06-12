@@ -97,8 +97,8 @@ public class Statsig {
         }
 
         loggedExposures.removeAll()
-        sharedInstance.currentUser = user
-        sharedInstance.logger.user = user
+        sharedInstance.currentUser = normalizeUser(user, options: sharedInstance.statsigOptions)
+        sharedInstance.logger.user = sharedInstance.currentUser
         sharedInstance.fetchAndScheduleSyncing(completion: completion)
     }
     
@@ -113,7 +113,7 @@ public class Statsig {
 
     private init(sdkKey: String, user: StatsigUser?, options: StatsigOptions?, completion: completionBlock) {
         self.sdkKey = sdkKey;
-        self.currentUser = user ?? StatsigUser();
+        self.currentUser = Statsig.normalizeUser(user, options: options)
         self.statsigOptions = options ?? StatsigOptions();
         self.store = InternalStore()
         self.networkService = NetworkService(sdkKey: sdkKey, options: self.statsigOptions, store: store)
@@ -203,6 +203,12 @@ public class Statsig {
                 disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging
             )
         )
+    }
+
+    private static func normalizeUser(_ user: StatsigUser?, options: StatsigOptions?) -> StatsigUser {
+        var normalized = user ?? StatsigUser()
+        normalized.statsigEnvironment = options?.environment ?? [:]
+        return normalized
     }
 
     @objc private func appWillBackground() {

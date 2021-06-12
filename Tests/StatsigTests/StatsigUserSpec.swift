@@ -18,14 +18,15 @@ class StatsigUserSpec: QuickSpec {
                 expect(validEmptyUser.country).to(beNil())
                 expect(validEmptyUser.ip).to(beNil())
                 expect(validEmptyUser.custom).to(beNil())
-                expect(validEmptyUser.environment).toNot(beNil())
+                expect(validEmptyUser.deviceEnvironment).toNot(beNil())
             }
 
             it("is a valid user with ID provided") {
                 let validUserWithID = StatsigUser(userID: "12345")
                 expect(validUserWithID).toNot(beNil())
                 expect(validUserWithID.userID) == "12345"
-                expect(validUserWithID.toDictionary().count) == 1
+                expect(validUserWithID.statsigEnvironment) == [:]
+                expect(validUserWithID.toDictionary().count) == 2
             }
 
             it("is a valid user with custom attribute") {
