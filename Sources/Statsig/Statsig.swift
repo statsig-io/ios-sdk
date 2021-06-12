@@ -53,10 +53,14 @@ public class Statsig {
         }
         return gate?.value ?? false
     }
+
+    public static func getExperiment(_ experimentName: String) -> DynamicConfig {
+        return getConfig(experimentName)
+    }
     
     public static func getConfig(_ configName: String) -> DynamicConfig {
         guard let sharedInstance = sharedInstance else {
-            print("[Statsig]: Must start Statsig first and wait for it to complete before calling getConfig. Returning a dummy DynamicConfig that will only return default values.")
+            print("[Statsig]: Must start Statsig first and wait for it to complete before calling getConfig or getExperiment. Returning a dummy DynamicConfig that will only return default values.")
             return DynamicConfig(configName: configName)
         }
         var config = sharedInstance.store.getConfig(configName: configName)

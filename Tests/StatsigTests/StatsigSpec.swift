@@ -123,6 +123,7 @@ class StatsigSpec: QuickSpec {
                     var gate2: Bool?
                     var nonExistentGate: Bool?
                     var dc: DynamicConfig?
+                    var exp: DynamicConfig?
                     var nonExistentDC: DynamicConfig?
                     Statsig.start(sdkKey: "client-api-key") { errorMessage in
                         gate1 = Statsig.checkGate(gateName1)
@@ -130,6 +131,7 @@ class StatsigSpec: QuickSpec {
                         nonExistentGate = Statsig.checkGate(nonExistentGateName)
 
                         dc = Statsig.getConfig(configName)
+                        exp = Statsig.getExperiment(configName)
                         nonExistentDC = Statsig.getConfig(nonExistentConfigName)
                     }
 
@@ -138,6 +140,8 @@ class StatsigSpec: QuickSpec {
                     expect(nonExistentGate).toEventually(beFalse())
 
                     expect(NSDictionary(dictionary: dc!.value)).toEventually(
+                        equal(NSDictionary(dictionary: DynamicConfigSpec.TestMixedConfig["value"] as! [String: Any])))
+                    expect(NSDictionary(dictionary: exp!.value)).toEventually(
                         equal(NSDictionary(dictionary: DynamicConfigSpec.TestMixedConfig["value"] as! [String: Any])))
                     expect(NSDictionary(dictionary: nonExistentDC!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
                 }
@@ -180,6 +184,7 @@ class StatsigSpec: QuickSpec {
                     var gate: Bool?
                     var nonExistentGate: Bool?
                     var dc: DynamicConfig?
+                    var exp: DynamicConfig?
                     var nonExistentDC: DynamicConfig?
 
                     // First call start() to fetch and store values in local storage
@@ -194,6 +199,7 @@ class StatsigSpec: QuickSpec {
                             gate = Statsig.checkGate(gateName2)
                             nonExistentGate = Statsig.checkGate(nonExistentGateName)
                             dc = Statsig.getConfig(configName)
+                            exp = Statsig.getExperiment(configName)
                             nonExistentDC = Statsig.getConfig(nonExistentConfigName)
                         }
                     }
@@ -201,6 +207,7 @@ class StatsigSpec: QuickSpec {
                     expect(gate).toEventually(beTrue())
                     expect(nonExistentGate).toEventually(beFalse())
                     expect(dc).toEventuallyNot(beNil())
+                    expect(exp).toEventuallyNot(beNil())
                     expect(NSDictionary(dictionary: nonExistentDC!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
                 }
 
