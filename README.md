@@ -14,7 +14,7 @@ You can also include it directly in your project's Package.swift:
 ```
 //...
 dependencies: [
-    .package(url: "https://github.com/statsig-io/ios-sdk.git", .upToNextMinor("1.1.0")),
+    .package(url: "https://github.com/statsig-io/ios-sdk.git", .upToNextMinor("1.2.0")),
 ],
 //...
 targets: [
@@ -32,7 +32,7 @@ If you are using CocoaPods, our pod name is 'Statsig', and you can include the f
 use_frameworks!
 target 'TargetName' do
   //...
-  pod 'Statsig', '~> 1.1.0' // Add this line
+  pod 'Statsig', '~> 1.2.0' // Add this line
 end
 ```
 

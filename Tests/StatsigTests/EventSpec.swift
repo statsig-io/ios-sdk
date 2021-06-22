@@ -10,7 +10,6 @@ class EventSpec: QuickSpec {
             it("creates basic events as expected") {
                 let event = Event(user: StatsigUser(), name: "purchase", disableCurrentVCLogging: false)
                 expect(event.name) == "purchase"
-                expect(event.user) == StatsigUser()
                 expect(event.value).to(beNil())
                 expect(event.metadata).to(beNil())
                 expect(Int(event.time / 1000)) == Int(NSDate().timeIntervalSince1970)
@@ -20,7 +19,6 @@ class EventSpec: QuickSpec {
                 let event = Event(user: StatsigUser(), name: "purchase", value:1.23,
                                   metadata: ["item_name": "no_ads"], disableCurrentVCLogging: false)
                 expect(event.name) == "purchase"
-                expect(event.user) == StatsigUser()
                 expect(event.value as! Double).to(equal(1.23))
                 expect(event.metadata) == ["item_name": "no_ads"]
                 expect(Int(event.time / 1000)) == Int(NSDate().timeIntervalSince1970)
@@ -35,7 +33,6 @@ class EventSpec: QuickSpec {
                     disableCurrentVCLogging: false)
 
                 expect(gateExposure.name) == "statsig::gate_exposure"
-                expect(gateExposure.user) == StatsigUser()
                 expect(gateExposure.value).to(beNil())
                 expect(gateExposure.metadata) == ["gate": "show_coupon", "gateValue": String(true), "ruleID": "default"]
                 expect(Int(gateExposure.time / 1000)) == Int(NSDate().timeIntervalSince1970)
@@ -49,7 +46,6 @@ class EventSpec: QuickSpec {
                     disableCurrentVCLogging: false)
 
                 expect(configExposure.name) == "statsig::config_exposure"
-                expect(configExposure.user) == StatsigUser()
                 expect(configExposure.value).to(beNil())
                 expect(configExposure.metadata) == ["config": "my_config", "ruleID": "default"]
                 expect(Int(configExposure.time / 1000)) == Int(NSDate().timeIntervalSince1970)
@@ -64,7 +60,6 @@ class EventSpec: QuickSpec {
                     disableCurrentVCLogging: false)
 
                 expect(internalEvent.name) == "statsig::network_failure"
-                expect(internalEvent.user) == StatsigUser()
                 expect(internalEvent.value as! Int).to(equal(10))
                 expect(internalEvent.metadata).to(beNil())
                 expect(Int(internalEvent.time / 1000)) == Int(NSDate().timeIntervalSince1970)

@@ -48,17 +48,5 @@ class StatsigUserSpec: QuickSpec {
                 expect(validUserInvalidCustom.custom).to(beNil())
             }
         }
-
-        describe("checking if 2 StatsigUser are equal") {
-            expect(StatsigUser()) == StatsigUser()
-            expect(StatsigUser(userID: "1")) == StatsigUser(userID: "1")
-            expect(StatsigUser(userID: "1", custom: validJSONObject)) == StatsigUser(userID: "1", custom: validJSONObject)
-            expect(StatsigUser(userID: "1")) == StatsigUser(userID: "1", custom: invalidJSONObject)
-
-            expect(StatsigUser()) != StatsigUser(userID: "1")
-            expect(StatsigUser(userID: "1")) != StatsigUser(userID: "2")
-            expect(StatsigUser(userID: "1")) != StatsigUser(userID: "1", email:"1@gmail.com")
-            expect(StatsigUser(userID: "1")) != StatsigUser(userID: "1", custom: validJSONObject)
-        }
     }
 }

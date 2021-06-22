@@ -16,6 +16,8 @@ public final class ObjcStatsigUser : NSObject {
                       email: String? = nil,
                       ip: String? = nil,
                       country: String? = nil,
+                      locale: String? = nil,
+                      appVersion: String? = nil,
                       custom: [String: Any]? = nil) {
         var filteredCustom = [String: StatsigUserCustomTypeConvertible]();
         if let custom = custom {
@@ -28,7 +30,7 @@ public final class ObjcStatsigUser : NSObject {
             })
         }
 
-        self.user = StatsigUser(userID: userID, email: email, ip: ip, country: country,
-                           custom: filteredCustom.isEmpty ? nil : filteredCustom);
+        self.user = StatsigUser(userID: userID, email: email, ip: ip, country: country, locale: locale,
+                                appVersion: appVersion, custom: filteredCustom.isEmpty ? nil : filteredCustom);
     }
 }

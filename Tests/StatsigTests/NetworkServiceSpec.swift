@@ -29,9 +29,12 @@ class NetworkServiceSpec: QuickSpec {
 
                 let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore())
                 ns.fetchInitialValues(for: StatsigUser(userID: "jkw"), completion: nil)
+                let now = NSDate().timeIntervalSince1970
 
                 expect(actualRequestHttpBody?.keys).toEventually(contain("user", "statsigMetadata"))
                 expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).toEventually(equal(sdkKey))
+                expect(Double(actualRequest?.allHTTPHeaderFields?["STATSIG-CLIENT-TIME"] ?? "0")! / 1000)
+                    .toEventually(beCloseTo(now, within: 1))
                 expect(actualRequest?.httpMethod).toEventually(equal("POST"))
                 expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/initialize"))
             }
