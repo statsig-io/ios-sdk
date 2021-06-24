@@ -3,17 +3,24 @@ import Foundation
 @objc public class StatsigOptions: NSObject {
     public var initTimeout = 3.0;
     public var disableCurrentVCLogging = false;
+    public var enableAutoValueUpdate = false;
     var environment: [String: String] = [:];
 
-    public init(initTimeout: Double = 3.0, disableCurrentVCLogging: Bool = false, environment: StatsigEnvironment? = nil) {
-        if initTimeout >= 0 {
+    public init(initTimeout: Double? = 3.0,
+                disableCurrentVCLogging: Bool? = false,
+                environment: StatsigEnvironment? = nil,
+                enableAutoValueUpdate: Bool? = false) {
+        if let initTimeout = initTimeout, initTimeout >= 0 {
             self.initTimeout = initTimeout
         }
-        if disableCurrentVCLogging {
+        if let disableCurrentVCLogging = disableCurrentVCLogging {
             self.disableCurrentVCLogging = disableCurrentVCLogging
         }
         if let environment = environment {
             self.environment = environment.params
+        }
+        if let enableAutoValueUpdate = enableAutoValueUpdate {
+            self.enableAutoValueUpdate = enableAutoValueUpdate
         }
     }
 }

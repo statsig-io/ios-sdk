@@ -87,7 +87,7 @@ class StatsigSpec: QuickSpec {
                     expect(requestCount).toEventually(equal(1))
                 }
 
-                it("makes 3 network request in 20 seconds and updates internal store's updatedTime correctly each time") {
+                it("make only 1 network request in 11 seconds when enableAutoValueUpdate is not set to true") {
                     var requestCount = 0;
                     var lastSyncTime: Double = 0;
                     let now = NSDate().timeIntervalSince1970
@@ -104,6 +104,29 @@ class StatsigSpec: QuickSpec {
                     }
 
                     Statsig.start(sdkKey: "client-api-key")
+
+                    // first request, "lastSyncTimeForUser" field should not be present in the request body
+                    expect(requestCount).toEventually(equal(1), timeout: .seconds(11))
+                    expect(lastSyncTime).to(equal(0))
+                }
+
+                it("makes 2 network requests in 11 seconds and updates internal store's updatedTime correctly each time when enableAutoValueUpdate is true") {
+                    var requestCount = 0;
+                    var lastSyncTime: Double = 0;
+                    let now = NSDate().timeIntervalSince1970
+
+                    stub(condition: isHost("api.statsig.com")) { request in
+                        requestCount += 1;
+
+                        let httpBody = try! JSONSerialization.jsonObject(
+                            with: request.ohhttpStubs_httpBody!,
+                            options: []) as! [String: Any]
+                        lastSyncTime = httpBody["lastSyncTimeForUser"] as? Double ?? 0
+
+                        return HTTPStubsResponse(jsonObject: ["time": now * 1000], statusCode: 200, headers: nil)
+                    }
+
+                    Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(enableAutoValueUpdate: true))
 
                     // first request, "lastSyncTimeForUser" field should not be present in the request body
                     expect(requestCount).toEventually(equal(1), timeout: .seconds(1))

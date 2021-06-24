@@ -142,6 +142,7 @@ public class Statsig {
         syncTimer?.invalidate()
 
         let currentUser = self.currentUser
+        let shouldScheduleSync = self.statsigOptions.enableAutoValueUpdate
         networkService.fetchInitialValues(for: currentUser) { [weak self] errorMessage in
             if let self = self {
                 if let errorMessage = errorMessage {
@@ -151,7 +152,9 @@ public class Statsig {
                                         value: nil,
                                         metadata: ["error": errorMessage]))
                 }
-                self.scheduleRepeatingSync()
+                if shouldScheduleSync {
+                    self.scheduleRepeatingSync()
+                }
             }
 
             completion?(errorMessage)
