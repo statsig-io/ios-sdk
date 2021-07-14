@@ -15,7 +15,6 @@ public class Statsig {
     private var syncTimer: Timer?
 
     static let maxEventNameLength = 64;
-    static var loggedExposures = Set<String>()
     
     public static func start(sdkKey: String, user: StatsigUser? = nil, options: StatsigOptions? = nil,
                              completion: completionBlock = nil) {
@@ -40,17 +39,13 @@ public class Statsig {
             print("[Statsig]: The feature gate with name \(gateName) does not exist. Returning false as the default.")
             gate = FeatureGate(name: gateName, value: false, ruleID: "")
         }
-        let exposureDedupeKey = "gate::" + gateName;
-        if !loggedExposures.contains(exposureDedupeKey) {
-            sharedInstance.logger.log(
-                Event.gateExposure(
-                    user: sharedInstance.currentUser,
-                    gateName: gateName,
-                    gateValue: gate?.value ?? false,
-                    ruleID: gate?.ruleID ?? "",
-                    disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
-            loggedExposures.insert(exposureDedupeKey);
-        }
+        sharedInstance.logger.log(
+            Event.gateExposure(
+                user: sharedInstance.currentUser,
+                gateName: gateName,
+                gateValue: gate?.value ?? false,
+                ruleID: gate?.ruleID ?? "",
+                disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
         return gate?.value ?? false
     }
 
@@ -68,16 +63,13 @@ public class Statsig {
             print("[Statsig]: The config with name \(configName) does not exist. Returning a dummy DynamicConfig that will only return default values.")
             config = DynamicConfig(configName: configName)
         }
-        let exposureDedupeKey = "config::" + configName;
-        if (!loggedExposures.contains(exposureDedupeKey)) {
-            sharedInstance.logger.log(
-                Event.configExposure(
-                    user: sharedInstance.currentUser,
-                    configName: configName,
-                    ruleID: config?.ruleID ?? "",
-                    disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
-            loggedExposures.insert(exposureDedupeKey);
-        }
+
+        sharedInstance.logger.log(
+            Event.configExposure(
+                user: sharedInstance.currentUser,
+                configName: configName,
+                ruleID: config?.ruleID ?? "",
+                disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
         return config!
     }
 
@@ -100,7 +92,6 @@ public class Statsig {
             return
         }
 
-        loggedExposures.removeAll()
         sharedInstance.currentUser = normalizeUser(user, options: sharedInstance.statsigOptions)
         sharedInstance.logger.user = sharedInstance.currentUser
         sharedInstance.fetchAndScheduleSyncing(completion: completion)
