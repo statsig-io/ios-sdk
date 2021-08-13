@@ -26,8 +26,8 @@ public final class ObjcStatsig : NSObject {
         Statsig.start(sdkKey: withSDKKey, user: user.user, options: options.optionsInternal)
     }
 
-    @objc public static func start(withSDKKey: String, options: StatsigOptions, completion: completionBlock) {
-        Statsig.start(sdkKey: withSDKKey, options: options, completion: completion)
+    @objc public static func start(withSDKKey: String, options: ObjcStatsigOptions, completion: completionBlock) {
+        Statsig.start(sdkKey: withSDKKey, options: options.optionsInternal, completion: completion)
     }
 
     @objc public static func start(withSDKKey: String, user: ObjcStatsigUser, options: ObjcStatsigOptions,

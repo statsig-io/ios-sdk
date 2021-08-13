@@ -1,6 +1,6 @@
 import Foundation
 
-@objc public class StatsigOptions: NSObject {
+public class StatsigOptions {
     public var initTimeout = 3.0;
     public var disableCurrentVCLogging = false;
     public var enableAutoValueUpdate = false;
