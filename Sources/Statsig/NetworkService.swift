@@ -105,7 +105,7 @@ class NetworkService {
 
     func fetchUpdatedValues(for user: StatsigUser, since: Double, completion: (() -> Void)?) {
         let params: [String: Any] = [
-            "user": user.toDictionary(),
+            "user": user.toDictionary(forLogging: false),
             "statsigMetadata": user.deviceEnvironment,
             "lastSyncTimeForUser": since,
         ]
@@ -133,7 +133,7 @@ class NetworkService {
         }
 
         let params: [String: Any] = [
-            "user": user.toDictionary(),
+            "user": user.toDictionary(forLogging: false),
             "statsigMetadata": user.deviceEnvironment
         ]
         sendRequest(forType: .initialize, requestBody: params, retry: 5) { [weak self] responseData, response, error in
@@ -163,7 +163,7 @@ class NetworkService {
                     completion: @escaping ((_ errorMessage: String?, _ data: Data?) -> Void)) {
         let params: [String: Any] = [
             "events": events.map { $0.toDictionary() },
-            "user": forUser.toDictionary(),
+            "user": forUser.toDictionary(forLogging: true),
             "statsigMetadata": forUser.deviceEnvironment
         ]
         guard JSONSerialization.isValidJSONObject(params),

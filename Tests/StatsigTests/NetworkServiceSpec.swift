@@ -28,10 +28,12 @@ class NetworkServiceSpec: QuickSpec {
                 }
 
                 let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore())
-                ns.fetchInitialValues(for: StatsigUser(userID: "jkw"), completion: nil)
+                ns.fetchInitialValues(for: StatsigUser(userID: "jkw", privateAttributes:["email": "something@somethingelse.com"]), completion: nil)
                 let now = NSDate().timeIntervalSince1970
 
                 expect(actualRequestHttpBody?.keys).toEventually(contain("user", "statsigMetadata"))
+                // make sure when fetching values we still use private attributes
+                expect((actualRequestHttpBody?["user"] as? [String: Any])!.keys).toEventually(contain("privateAttributes"))
                 expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).toEventually(equal(sdkKey))
                 expect(Double(actualRequest?.allHTTPHeaderFields?["STATSIG-CLIENT-TIME"] ?? "0")! / 1000)
                     .toEventually(beCloseTo(now, within: 1))
@@ -81,7 +83,7 @@ class NetworkServiceSpec: QuickSpec {
                 }
 
                 let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore())
-                let user = StatsigUser(userID: "jkw")
+                let user = StatsigUser(userID: "jkw", privateAttributes:["email": "something@somethingelse.com"])
                 waitUntil { done in
                     ns.sendEvents(forUser: user, events: [Event(user: user, name: "test_event", value: 9.99, disableCurrentVCLogging: false)])
                     { errorMessage, jsonData in
@@ -95,6 +97,10 @@ class NetworkServiceSpec: QuickSpec {
                 expect(actualRequest?.httpMethod).toEventually(equal("POST"))
                 expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/log_event"))
                 expect(actualRequestData).toEventually(equal(returnedRequestData))
+
+                // make sure when logging we drop private attributes
+                expect((actualRequestHttpBody?["user"] as? [String: Any])!.keys).toEventuallyNot(contain("privateAttributes"))
+                expect(((actualRequestHttpBody?["events"] as? [[String: Any]])![0]["user"] as? [String: Any])!.keys).toEventuallyNot(contain("privateAttributes"))
             }
 
             it("should send the correct request data when calling sendRequestsWithData(), and returns the request data back if request fails") {
@@ -118,7 +124,7 @@ class NetworkServiceSpec: QuickSpec {
                 var data = [Data]()
                 for index in 1...10 {
                     let params: [String: Any] = [
-                        "user": StatsigUser(userID: String(index)).toDictionary(),
+                        "user": StatsigUser(userID: String(index)).toDictionary(forLogging: true),
                         "events": [Event(user: user, name: "test_event_\(index)", value: index, disableCurrentVCLogging: false).toDictionary()]
                     ]
                     let d = try! JSONSerialization.data(withJSONObject: params)

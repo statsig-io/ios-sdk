@@ -8,6 +8,7 @@ public struct StatsigUser {
     public let locale: String?
     public let appVersion: String?
     public let custom: [String: StatsigUserCustomTypeConvertible]?
+    public let privateAttributes: [String: StatsigUserCustomTypeConvertible]?
 
     var statsigEnvironment: [String: String] = [:]
     var deviceEnvironment: [String: String?]
@@ -18,7 +19,8 @@ public struct StatsigUser {
          country: String? = nil,
          locale: String? = nil,
          appVersion: String? = nil,
-         custom: [String: StatsigUserCustomTypeConvertible]? = nil) {
+         custom: [String: StatsigUserCustomTypeConvertible]? = nil,
+         privateAttributes: [String: StatsigUserCustomTypeConvertible]? = nil) {
         self.userID = userID
         self.email = email
         self.ip = ip
@@ -34,10 +36,19 @@ public struct StatsigUser {
             }
             self.custom = nil
         }
+
+        if let privateAttributes = privateAttributes, JSONSerialization.isValidJSONObject(privateAttributes) {
+            self.privateAttributes = privateAttributes
+        } else {
+            if privateAttributes != nil {
+                print("[Statsig]: The provided privateAttributes is not added to the user because it is not a valid JSON object.")
+            }
+            self.privateAttributes = nil
+        }
         self.deviceEnvironment = DeviceEnvironment().get()
     }
 
-    func toDictionary() -> [String: Any?] {
+    func toDictionary(forLogging: Bool) -> [String: Any?] {
         var dict = [String: Any?]()
         dict["userID"] = self.userID
         dict["email"] = self.email
@@ -47,6 +58,11 @@ public struct StatsigUser {
         dict["appVersion"] = self.appVersion
         dict["custom"] = self.custom
         dict["statsigEnvironment"] = self.statsigEnvironment
+
+        if !forLogging {
+            dict["privateAttributes"] = self.privateAttributes
+        }
+
         return dict
     }
 }

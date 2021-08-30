@@ -4,9 +4,9 @@ import Nimble
 
 class StatsigUserSpec: QuickSpec {
     override func spec() {
-        let validJSONObject: [String:StatsigUserCustomTypeConvertible] =
+        let validJSONObject: [String: StatsigUserCustomTypeConvertible] =
             ["company": "Statsig", "YOE": 10.5, "alias" : ["abby", "bob", "charlie"]]
-        let invalidJSONObject: [String:StatsigUserCustomTypeConvertible] =
+        let invalidJSONObject: [String: StatsigUserCustomTypeConvertible] =
             ["company": "Statsig", "invalid": String(bytes: [0xD8, 0x00] as [UInt8], encoding: String.Encoding.utf16BigEndian)!]
 
         describe("creating a new StatsigUser") {
@@ -26,7 +26,7 @@ class StatsigUserSpec: QuickSpec {
                 expect(validUserWithID).toNot(beNil())
                 expect(validUserWithID.userID) == "12345"
                 expect(validUserWithID.statsigEnvironment) == [:]
-                expect(validUserWithID.toDictionary().count) == 2
+                expect(validUserWithID.toDictionary(forLogging: false).count) == 2
             }
 
             it("is a valid user with custom attribute") {
@@ -39,6 +39,15 @@ class StatsigUserSpec: QuickSpec {
                 expect(customDict["company"] as? String) == "Statsig"
                 expect(customDict["YOE"] as? Double) == 10.5
                 expect(customDict["alias"] as? [String]) == ["abby", "bob", "charlie"]
+            }
+
+            it("drops private attributes for logging") {
+                let userWithPrivateAttributes = StatsigUser(userID: "12345", privateAttributes: validJSONObject)
+                let user = StatsigUser(userID: "12345")
+
+                let userWithPrivateDict = userWithPrivateAttributes.toDictionary(forLogging: true)
+                expect(userWithPrivateDict.count) == user.toDictionary(forLogging: true).count
+                expect(userWithPrivateDict["privateAttributes"]).to(beNil())
             }
 
             it("is a user with invalid custom attribute") {

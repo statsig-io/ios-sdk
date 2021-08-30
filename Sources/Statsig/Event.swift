@@ -75,7 +75,7 @@ struct Event {
     func toDictionary() -> [String: Any] {
         var dict = [String:Any]()
         dict["eventName"] = name
-        dict["user"] = user.toDictionary()
+        dict["user"] = user.toDictionary(forLogging: true)
         dict["time"] = time
         if let value = value {
             dict["value"] = value

@@ -18,7 +18,8 @@ public final class ObjcStatsigUser : NSObject {
                       country: String? = nil,
                       locale: String? = nil,
                       appVersion: String? = nil,
-                      custom: [String: Any]? = nil) {
+                      custom: [String: Any]? = nil,
+                      privateAttributes: [String: Any]? = nil) {
         var filteredCustom = [String: StatsigUserCustomTypeConvertible]();
         if let custom = custom {
             custom.forEach({ (key, value) in
@@ -30,7 +31,25 @@ public final class ObjcStatsigUser : NSObject {
             })
         }
 
-        self.user = StatsigUser(userID: userID, email: email, ip: ip, country: country, locale: locale,
-                                appVersion: appVersion, custom: filteredCustom.isEmpty ? nil : filteredCustom);
+        var filteredPrivateAttributes = [String: StatsigUserCustomTypeConvertible]();
+        if let privateAttributes = privateAttributes {
+            privateAttributes.forEach({ (key, value) in
+                if let v = convertToUserCustomType(value) {
+                    filteredPrivateAttributes[key] = v;
+                } else {
+                    print("[Statsig]: the entry for key \(key) is dropped because it is not of a supported type.")
+                }
+            })
+        }
+
+        self.user = StatsigUser(
+            userID: userID,
+            email: email,
+            ip: ip,
+            country: country,
+            locale: locale,
+            appVersion: appVersion,
+            custom: filteredCustom.isEmpty ? nil : filteredCustom,
+            privateAttributes: filteredPrivateAttributes.isEmpty ? nil : filteredPrivateAttributes);
     }
 }
