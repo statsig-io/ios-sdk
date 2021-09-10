@@ -24,7 +24,9 @@ class InternalStoreSpec: QuickSpec {
                 expect(cache.gates.count).to(equal(2))
                 expect(cache.configs.count).to(equal(1))
 
-                expect(store.checkGate(gateName: "gate_name_1")?.value).to(beFalse())
+                let gate1 = store.checkGate(gateName: "gate_name_1")
+                expect(gate1?.value).to(beFalse())
+                expect(gate1?.secondaryExposures[0]).to(equal(["gate": "employee", "gateValue": "true", "ruleID": "rule_id_employee"]))
                 expect(store.checkGate(gateName: "gate_name_2")?.value).to(beTrue())
                 expect(store.getConfig(configName: "config")?.getValue(forKey: "str", defaultValue: "wrong")).to(equal("string"))
 

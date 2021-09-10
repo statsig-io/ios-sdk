@@ -30,11 +30,13 @@ class EventSpec: QuickSpec {
                     gateName: "show_coupon",
                     gateValue: true,
                     ruleID: "default",
+                    secondaryExposures: [["gate": "employee", "gateValue": "true", "ruleID": "rule_id_employee"]],
                     disableCurrentVCLogging: false)
 
                 expect(gateExposure.name) == "statsig::gate_exposure"
                 expect(gateExposure.value).to(beNil())
                 expect(gateExposure.metadata) == ["gate": "show_coupon", "gateValue": String(true), "ruleID": "default"]
+                expect(gateExposure.secondaryExposures![0]).to(equal(["gate": "employee", "gateValue": "true", "ruleID": "rule_id_employee"]))
                 expect(Int(gateExposure.time / 1000)) == Int(NSDate().timeIntervalSince1970)
             }
 
@@ -43,11 +45,13 @@ class EventSpec: QuickSpec {
                     user: StatsigUser(),
                     configName: "my_config",
                     ruleID: "default",
+                    secondaryExposures: [],
                     disableCurrentVCLogging: false)
 
                 expect(configExposure.name) == "statsig::config_exposure"
                 expect(configExposure.value).to(beNil())
                 expect(configExposure.metadata) == ["config": "my_config", "ruleID": "default"]
+                expect(configExposure.secondaryExposures).to(equal([]))
                 expect(Int(configExposure.time / 1000)) == Int(NSDate().timeIntervalSince1970)
             }
 

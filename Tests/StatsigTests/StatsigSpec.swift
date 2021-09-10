@@ -10,7 +10,13 @@ import OHHTTPStubsSwift
 class StatsigSpec: QuickSpec {
     static let mockUserValues: [String: Any] = [
         "feature_gates": [
-            "gate_name_1".sha256(): ["value": false, "rule_id": "rule_id_1"],
+            "gate_name_1".sha256(): [
+                "value": false,
+                "rule_id": "rule_id_1",
+                "secondary_exposures": [
+                    ["gate": "employee", "gateValue": "true", "ruleID": "rule_id_employee"]
+                ]
+            ],
             "gate_name_2".sha256(): ["value": true, "rule_id": "rule_id_2"]
         ],
         "dynamic_configs": [

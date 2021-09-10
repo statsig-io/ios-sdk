@@ -45,6 +45,7 @@ public class Statsig {
                 gateName: gateName,
                 gateValue: gate?.value ?? false,
                 ruleID: gate?.ruleID ?? "",
+                secondaryExposures: gate?.secondaryExposures ?? [],
                 disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
         return gate?.value ?? false
     }
@@ -69,6 +70,7 @@ public class Statsig {
                 user: sharedInstance.currentUser,
                 configName: configName,
                 ruleID: config?.ruleID ?? "",
+                secondaryExposures: config?.secondaryExposures ?? [],
                 disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
         return config!
     }

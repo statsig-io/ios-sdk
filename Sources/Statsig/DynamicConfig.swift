@@ -4,11 +4,13 @@ public struct DynamicConfig {
     public var name: String
     public var value: [String: Any]
     var ruleID: String
+    let secondaryExposures: [[String: String]]
 
     init(configName: String, configObj: [String: Any] = [:]) {
         self.name = configName;
         self.ruleID = configObj["rule_id"] as? String ?? "";
         self.value = configObj["value"] as? [String: Any] ?? [:];
+        self.secondaryExposures = configObj["secondary_exposures"] as? [[String: String]] ?? []
     }
 
     public func getValue<T: StatsigDynamicConfigValue>(forKey: String, defaultValue: T) -> T {
