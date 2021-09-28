@@ -34,7 +34,7 @@ public class Statsig {
             print("[Statsig]: Must start Statsig first and wait for it to complete before calling checkGate. Returning false as the default.")
             return false
         }
-        var gate = sharedInstance.store.checkGate(gateName: gateName)
+        var gate = sharedInstance.store.checkGate(forName: gateName)
         if gate == nil {
             print("[Statsig]: The feature gate with name \(gateName) does not exist. Returning false as the default.")
             gate = FeatureGate(name: gateName, value: false, ruleID: "")
@@ -50,16 +50,33 @@ public class Statsig {
         return gate?.value ?? false
     }
 
-    public static func getExperiment(_ experimentName: String) -> DynamicConfig {
-        return getConfig(experimentName)
+    public static func getExperiment(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
+        guard let sharedInstance = sharedInstance else {
+            print("[Statsig]: Must start Statsig first and wait for it to complete before calling getExperiment. Returning a dummy DynamicConfig that will only return default values.")
+            return DynamicConfig(configName: experimentName)
+        }
+        var experiment = sharedInstance.store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
+        if experiment == nil {
+            print("[Statsig]: The experiment with name \(experimentName) does not exist. Returning a dummy DynamicConfig that will only return default values.")
+            experiment = DynamicConfig(configName: experimentName)
+        }
+
+        sharedInstance.logger.log(
+            Event.configExposure(
+                user: sharedInstance.currentUser,
+                configName: experimentName,
+                ruleID: experiment?.ruleID ?? "",
+                secondaryExposures: experiment?.secondaryExposures ?? [],
+                disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
+        return experiment!
     }
     
     public static func getConfig(_ configName: String) -> DynamicConfig {
         guard let sharedInstance = sharedInstance else {
-            print("[Statsig]: Must start Statsig first and wait for it to complete before calling getConfig or getExperiment. Returning a dummy DynamicConfig that will only return default values.")
+            print("[Statsig]: Must start Statsig first and wait for it to complete before calling getConfig. Returning a dummy DynamicConfig that will only return default values.")
             return DynamicConfig(configName: configName)
         }
-        var config = sharedInstance.store.getConfig(configName: configName)
+        var config = sharedInstance.store.getConfig(forName: configName)
         if config == nil {
             print("[Statsig]: The config with name \(configName) does not exist. Returning a dummy DynamicConfig that will only return default values.")
             config = DynamicConfig(configName: configName)
@@ -94,6 +111,9 @@ public class Statsig {
             return
         }
 
+        if sharedInstance.currentUser.userID != user.userID {
+            InternalStore.deleteStickyUserValues()
+        }
         sharedInstance.currentUser = normalizeUser(user, options: sharedInstance.statsigOptions)
         sharedInstance.logger.user = sharedInstance.currentUser
         sharedInstance.fetchAndScheduleSyncing(completion: completion)

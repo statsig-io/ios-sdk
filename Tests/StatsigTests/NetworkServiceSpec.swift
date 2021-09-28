@@ -13,7 +13,7 @@ class NetworkServiceSpec: QuickSpec {
             let sdkKey = "client-api-key"
             afterEach {
                 HTTPStubs.removeAllStubs()
-                InternalStore.deleteLocalStorage()
+                InternalStore.deleteAllLocalStorage()
             }
 
             it("should send the correct request data when calling fetchInitialValues()") {

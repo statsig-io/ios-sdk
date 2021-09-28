@@ -116,7 +116,7 @@ class NetworkService {
                let responseDict = json as? [String: Any],
                let hasUpdates = responseDict["has_updates"] as? Bool,
                hasUpdates {
-                self.store.set(values: UserValues(data: responseDict), time: responseDict["time"] as? Double)
+                self.store.set(values: responseDict, time: responseDict["time"] as? Double)
             }
 
             completion?()
@@ -149,7 +149,7 @@ class NetworkService {
                let responseData = responseData,
                let json = try? JSONSerialization.jsonObject(with: responseData, options: []),
                let responseDict = json as? [String: Any] {
-                self.store.set(values: UserValues(data: responseDict), time: responseDict["time"] as? Double)
+                self.store.set(values: responseDict, time: responseDict["time"] as? Double)
             }
 
             DispatchQueue.main.async {

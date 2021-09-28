@@ -27,13 +27,13 @@ class StatsigSpec: QuickSpec {
     override func spec() {
         describe("starting Statsig") {
             beforeEach {
-                InternalStore.deleteLocalStorage()
+                InternalStore.deleteAllLocalStorage()
             }
 
             afterEach {
                 HTTPStubs.removeAllStubs()
                 Statsig.shutdown()
-                InternalStore.deleteLocalStorage()
+                InternalStore.deleteAllLocalStorage()
             }
 
             context("when starting with invalid SDK keys") {
