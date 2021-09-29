@@ -55,13 +55,14 @@ class InternalStore {
                 (stickyUserExperiments[nameHash] ?? stickyDeviceExperiments[nameHash]) as? [String: Any] {
                 // If experiment is no longer active, we invalidate the sticky value that was used previously for the user
                 if let latestValue = getConfig(forName: forName), !latestValue.isExperimentActive {
-                    stickyUserExperiments.removeValue(forKey: nameHash)
-                    stickyDeviceExperiments.removeValue(forKey: nameHash)
-                    saveStickyValues()
+                    removeStickyValue(forKey: nameHash)
                     return latestValue
                 } else {
                     return DynamicConfig(configName: forName, configObj: stickyValue)
                 }
+            }
+            if !keepDeviceValue {
+                removeStickyValue(forKey: nameHash)
             }
             if let latestValue = getConfig(forName: forName) {
                 // When all of the 3 conditions are true, we save the value on device for the user for the duration of the experiment:
@@ -88,14 +89,21 @@ class InternalStore {
         UserDefaults.standard.setValue(cache, forKey: InternalStore.localStorageKey)
     }
 
+    func removeStickyValue(forKey: String) {
+        stickyUserExperiments.removeValue(forKey: forKey)
+        stickyDeviceExperiments.removeValue(forKey: forKey)
+        saveStickyValues()
+    }
+
+    func deleteStickyUserValues() {
+        stickyUserExperiments = [String: Any]()
+        UserDefaults.standard.removeObject(forKey: InternalStore.stickyUserExperimentsKey)
+    }
+
     static func deleteAllLocalStorage() {
         UserDefaults.standard.removeObject(forKey: InternalStore.localStorageKey)
         UserDefaults.standard.removeObject(forKey: InternalStore.stickyUserExperimentsKey)
         UserDefaults.standard.removeObject(forKey: InternalStore.stickyDeviceExperimentsKey)
-    }
-
-    static func deleteStickyUserValues() {
-        UserDefaults.standard.removeObject(forKey: InternalStore.stickyUserExperimentsKey)
     }
 
     private func saveStickyValues() {

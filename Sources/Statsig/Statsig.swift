@@ -112,7 +112,7 @@ public class Statsig {
         }
 
         if sharedInstance.currentUser.userID != user.userID {
-            InternalStore.deleteStickyUserValues()
+            sharedInstance.store.deleteStickyUserValues()
         }
         sharedInstance.currentUser = normalizeUser(user, options: sharedInstance.statsigOptions)
         sharedInstance.logger.user = sharedInstance.currentUser
