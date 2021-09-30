@@ -4,31 +4,20 @@ import CommonCrypto
 
 class InternalStore {
     private static let localStorageKey = "com.Statsig.InternalStore.localStorageKey"
+    private static let stickyUserIDKey = "com.Statsig.InternalStore.stickyUserIDKey"
     private static let stickyUserExperimentsKey = "com.Statsig.InternalStore.stickyUserExperimentsKey"
     private static let stickyDeviceExperimentsKey = "com.Statsig.InternalStore.stickyDeviceExperimentsKey"
-    var cache: [String: Any]
-    var stickyUserExperiments: [String: Any]
-    var stickyDeviceExperiments: [String: Any]
+    var stickyUserID: String?
+    var cache: [String: Any]!
+    var stickyUserExperiments: [String: Any]!
+    var stickyDeviceExperiments: [String: Any]!
     var updatedTime: Double = 0 // in milliseconds - retrieved from and sent to server in milliseconds
 
-    init() {
-        if let localCache = UserDefaults.standard.dictionary(forKey: InternalStore.localStorageKey) {
-            cache = localCache
-        } else {
-            cache = [String: Any]()
-        }
-
-        if let userExpCache = UserDefaults.standard.dictionary(forKey: InternalStore.stickyUserExperimentsKey) {
-            stickyUserExperiments = userExpCache
-        } else {
-            stickyUserExperiments = [String: Any]()
-        }
-
-        if let deviceExpCache = UserDefaults.standard.dictionary(forKey: InternalStore.stickyDeviceExperimentsKey) {
-            stickyDeviceExperiments = deviceExpCache
-        } else {
-            stickyDeviceExperiments = [String: Any]()
-        }
+    init(userID: String?) {
+        cache = UserDefaults.standard.dictionary(forKey: InternalStore.localStorageKey) ?? [String: Any]()
+        stickyDeviceExperiments =
+            UserDefaults.standard.dictionary(forKey: InternalStore.stickyDeviceExperimentsKey) ?? [String: Any]()
+        loadAndResetStickyUserValuesIfNeeded(newUserID: userID)
     }
 
     func checkGate(forName: String) -> FeatureGate? {
@@ -95,9 +84,19 @@ class InternalStore {
         saveStickyValues()
     }
 
-    func deleteStickyUserValues() {
-        stickyUserExperiments = [String: Any]()
-        UserDefaults.standard.removeObject(forKey: InternalStore.stickyUserExperimentsKey)
+    func loadAndResetStickyUserValuesIfNeeded(newUserID: String?) {
+        stickyUserID = UserDefaults.standard.string(forKey: InternalStore.stickyUserIDKey)
+        if stickyUserID == newUserID {
+            // If user ID is unchanged, just grab the sticky values
+            stickyUserExperiments = UserDefaults.standard.dictionary(forKey: InternalStore.stickyUserExperimentsKey) ?? [String: Any]()
+        } else {
+            // Otherwise, update the ID in memory, and in cache
+            stickyUserID = newUserID
+            UserDefaults.standard.set(newUserID, forKey: InternalStore.stickyUserIDKey)
+            // Also resets sticky user values in memory and cache
+            stickyUserExperiments = [String: Any]()
+            UserDefaults.standard.removeObject(forKey: InternalStore.stickyUserExperimentsKey)
+        }
     }
 
     static func deleteAllLocalStorage() {

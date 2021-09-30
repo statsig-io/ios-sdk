@@ -111,9 +111,7 @@ public class Statsig {
             return
         }
 
-        if sharedInstance.currentUser.userID != user.userID {
-            sharedInstance.store.deleteStickyUserValues()
-        }
+        sharedInstance.store.loadAndResetStickyUserValuesIfNeeded(newUserID: user.userID)
         sharedInstance.currentUser = normalizeUser(user, options: sharedInstance.statsigOptions)
         sharedInstance.logger.user = sharedInstance.currentUser
         sharedInstance.fetchAndScheduleSyncing(completion: completion)
@@ -132,7 +130,7 @@ public class Statsig {
         self.sdkKey = sdkKey;
         self.currentUser = Statsig.normalizeUser(user, options: options)
         self.statsigOptions = options ?? StatsigOptions();
-        self.store = InternalStore()
+        self.store = InternalStore(userID: currentUser.userID)
         self.networkService = NetworkService(sdkKey: sdkKey, options: self.statsigOptions, store: store)
         self.logger = EventLogger(user: currentUser, networkService: networkService)
 

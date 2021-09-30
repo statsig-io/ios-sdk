@@ -19,7 +19,7 @@ class EventSpec: QuickSpec {
                 let event = Event(user: StatsigUser(), name: "purchase", value:1.23,
                                   metadata: ["item_name": "no_ads"], disableCurrentVCLogging: false)
                 expect(event.name) == "purchase"
-                expect(event.value as! Double).to(equal(1.23))
+                expect(event.value as? Double).to(equal(1.23))
                 expect(event.metadata) == ["item_name": "no_ads"]
                 expect(Int(event.time / 1000)) == Int(NSDate().timeIntervalSince1970)
             }

@@ -10,19 +10,19 @@ class InternalStoreSpec: QuickSpec {
             }
 
             it("is nil initially") {
-                let store = InternalStore()
+                let store = InternalStore(userID: nil)
                 expect(store.cache.count).to(equal(0))
             }
 
             it("sets value in UserDefaults correctly and persists between initialization") {
-                let store = InternalStore()
+                let store = InternalStore(userID: nil)
                 store.set(values: StatsigSpec.mockUserValues)
 
-                let store2 = InternalStore()
+                let store2 = InternalStore(userID: nil)
                 let cache = store2.cache
                 expect(cache).toNot(beNil())
-                expect((cache["feature_gates"] as! [String: [String: Any]]).count).to(equal(2))
-                expect((cache["dynamic_configs"] as! [String: [String: Any]]).count).to(equal(1))
+                expect((cache!["feature_gates"] as! [String: [String: Any]]).count).to(equal(2))
+                expect((cache!["dynamic_configs"] as! [String: [String: Any]]).count).to(equal(1))
 
                 let gate1 = store.checkGate(forName: "gate_name_1")
                 expect(gate1?.value).to(beFalse())
@@ -31,11 +31,11 @@ class InternalStoreSpec: QuickSpec {
                 expect(store.getConfig(forName: "config")?.getValue(forKey: "str", defaultValue: "wrong")).to(equal("string"))
 
                 InternalStore.deleteAllLocalStorage()
-                expect(InternalStore().cache.count).to(equal(0))
+                expect(InternalStore(userID: nil).cache.count).to(equal(0))
             }
 
             it("sets sticky experiment values correctly") {
-                let store = InternalStore()
+                let store = InternalStore(userID: nil)
                 let configKey = "config"
                 let hashConfigKey = configKey.sha256()!
 
@@ -149,7 +149,7 @@ class InternalStoreSpec: QuickSpec {
             }
 
             it("it deletes user level sticky values but not device level sticky values when requested") {
-                let store = InternalStore()
+                let store = InternalStore(userID: "jkw")
                 let expKey = "exp"
                 let hashedExpKey = expKey.sha256()!
 
@@ -182,7 +182,64 @@ class InternalStoreSpec: QuickSpec {
                 expect(deviceExp?.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v0"))
 
                 // Delete user sticky values (update user), change the latest values, now user should get updated values but device value stays the same
-                store.deleteStickyUserValues()
+                store.loadAndResetStickyUserValuesIfNeeded(newUserID: "tore")
+                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label" : "exp_v1"]
+                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label" : "device_exp_v1"]
+                store.set(values: values)
+
+                exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
+                deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
+                expect(exp?.getValue(forKey: "label", defaultValue: "")).to(equal("exp_v1"))
+                expect(deviceExp?.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v0"))
+
+                // Try to get value with keepDeviceValue set to false. Should get updated values
+                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label" : "exp_v2"]
+                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label" : "device_exp_v2"]
+                store.set(values: values)
+
+                exp = store.getExperiment(forName: expKey, keepDeviceValue: false)
+                deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: false)
+                expect(exp?.getValue(forKey: "label", defaultValue: "")).to(equal("exp_v2"))
+                expect(deviceExp?.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v2"))
+
+                InternalStore.deleteAllLocalStorage()
+            }
+
+            it("changing userID in between sessions should invalidate sticky values") {
+                var store = InternalStore(userID: "jkw")
+                let expKey = "exp"
+                let hashedExpKey = expKey.sha256()!
+
+                let deviceExpKey = "device_exp"
+                let hashedDeviceExpKey = deviceExpKey.sha256()!
+
+                var values: [String: [String: [String: Any]]] = [
+                    "dynamic_configs": [
+                        hashedExpKey: [
+                            "rule_id": "rule_id_1",
+                            "value": [ "label": "exp_v0" ],
+                            "is_device_based": false,
+                            "is_user_in_experiment": true,
+                            "is_experiment_active": true,
+                        ],
+                        hashedDeviceExpKey: [
+                            "rule_id": "rule_id_1",
+                            "value": [ "label": "device_exp_v0" ],
+                            "is_device_based": true,
+                            "is_user_in_experiment": true,
+                            "is_experiment_active": true,
+                        ],
+                    ]
+                ]
+                store.set(values: values)
+
+                var exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
+                var deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
+                expect(exp?.getValue(forKey: "label", defaultValue: "")).to(equal("exp_v0"))
+                expect(deviceExp?.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v0"))
+
+                // Re-initialize store with a different ID, change the latest values, now user should get updated values but device value stays the same
+                store = InternalStore(userID: "tore")
                 values["dynamic_configs"]![hashedExpKey]!["value"] = ["label" : "exp_v1"]
                 values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label" : "device_exp_v1"]
                 store.set(values: values)

@@ -11,7 +11,7 @@ class EventLoggerSpec: QuickSpec {
     override func spec() {
         describe("using EventLogger") {
             let sdkKey = "client-api-key"
-            let ns = NetworkService(sdkKey: sdkKey, options: StatsigOptions(), store: InternalStore())
+            let ns = NetworkService(sdkKey: sdkKey, options: StatsigOptions(), store: InternalStore(userID: "jkw"))
             let user = StatsigUser(userID: "jkw")
             let event1 = Event(user: user, name: "test_event1", value: 1, disableCurrentVCLogging: false)
             let event2 = Event(user: user, name: "test_event2", value: 2, disableCurrentVCLogging: false)
