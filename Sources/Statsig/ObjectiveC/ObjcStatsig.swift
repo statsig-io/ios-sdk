@@ -40,7 +40,11 @@ public final class ObjcStatsig : NSObject {
     }
 
     @objc public static func getExperiment(forName: String) -> ObjcStatsigDynamicConfig {
-        return ObjcStatsigDynamicConfig(withConfig: Statsig.getConfig(forName))
+        return ObjcStatsigDynamicConfig(withConfig: Statsig.getExperiment(forName, keepDeviceValue: false))
+    }
+
+    @objc public static func getExperiment(forName: String, keepDeviceValue: Bool) -> ObjcStatsigDynamicConfig {
+        return ObjcStatsigDynamicConfig(withConfig: Statsig.getExperiment(forName, keepDeviceValue: keepDeviceValue))
     }
 
     @objc public static func getConfig(forName: String) -> ObjcStatsigDynamicConfig {
