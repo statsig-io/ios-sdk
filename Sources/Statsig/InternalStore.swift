@@ -40,34 +40,30 @@ class InternalStore {
 
     func getExperiment(forName: String, keepDeviceValue: Bool) -> DynamicConfig? {
         if let nameHash = forName.sha256() {
-            if keepDeviceValue, let stickyValue =
-                (stickyUserExperiments[nameHash] ?? stickyDeviceExperiments[nameHash]) as? [String: Any] {
-                // If experiment is no longer active, we invalidate the sticky value that was used previously for the user
-                if let latestValue = getConfig(forName: forName), !latestValue.isExperimentActive {
-                    removeStickyValue(forKey: nameHash)
-                    return latestValue
-                } else {
-                    return DynamicConfig(configName: forName, configObj: stickyValue)
-                }
-            }
-            if !keepDeviceValue {
+            let stickyValue = (stickyUserExperiments[nameHash] ?? stickyDeviceExperiments[nameHash]) as? [String: Any]
+            let latestValue = getConfig(forName: forName)
+
+            // If flag is false, or experiment is NOT active, simply remove the sticky experiment value, and return the latest value
+            if !keepDeviceValue || latestValue?.isExperimentActive == false {
                 removeStickyValue(forKey: nameHash)
-            }
-            if let latestValue = getConfig(forName: forName) {
-                // When all of the 3 conditions are true, we save the value on device for the user for the duration of the experiment:
-                // 1. getExperiment caller asks to "keepDeviceValue", i.e. keepDeviceValue == true,
-                // 2. the experiment is still active,
-                // 3. the current user is in the experiment.
-                if keepDeviceValue && latestValue.isExperimentActive && latestValue.isUserInExperiment {
-                    if latestValue.isDeviceBased {
-                        stickyDeviceExperiments[nameHash] = latestValue.rawValue
-                    } else {
-                        stickyUserExperiments[nameHash] = latestValue.rawValue
-                    }
-                    saveStickyValues()
-                }
                 return latestValue
             }
+
+            // If sticky value is already in cache, use it
+            if let stickyValue = stickyValue {
+                return DynamicConfig(configName: forName, configObj: stickyValue)
+            }
+
+            // The user has NOT been exposed before. If is IN this ACTIVE experiment, then we save the value as sticky
+            if let latestValue = latestValue, latestValue.isExperimentActive, latestValue.isUserInExperiment {
+                if latestValue.isDeviceBased {
+                    stickyDeviceExperiments[nameHash] = latestValue.rawValue
+                } else {
+                    stickyUserExperiments[nameHash] = latestValue.rawValue
+                }
+                saveStickyValues()
+            }
+            return latestValue
         }
         return nil
     }
