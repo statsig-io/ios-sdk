@@ -6,6 +6,7 @@ import OHHTTPStubs
 import OHHTTPStubsSwift
 
 @testable import Statsig
+import SwiftUI
 
 class StatsigSpec: QuickSpec {
     static let mockUserValues: [String: Any] = [
@@ -241,15 +242,127 @@ class StatsigSpec: QuickSpec {
                 }
 
                 it("correctly shuts down") {
-                    var trueBool: Bool?
-                    var dc: DynamicConfig?
-                    Statsig.start(sdkKey: "client-api-key") { errorMessage in
-                        Statsig.shutdown()
-                        trueBool = Statsig.checkGate(gateName2)
-                        dc = Statsig.getConfig(configName)
+                    stub(condition: isPath("/v1/initialize")) { _ in
+                        return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
                     }
-                    expect(trueBool).toEventually(beFalse())
-                    expect(NSDictionary(dictionary: dc!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
+
+                    var events: [[String: Any]] = []
+                    stub(condition: isPath("/v1/log_event")) { request in
+                        let actualRequestHttpBody = try! JSONSerialization.jsonObject(
+                            with: request.ohhttpStubs_httpBody!,
+                            options: []) as! [String: Any]
+                        events = actualRequestHttpBody["events"] as! [[String: Any]]
+                        return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
+                    }
+
+                    var gate: Bool?
+                    var config: DynamicConfig?
+                    var exp: DynamicConfig?
+                    waitUntil { done in
+                        Statsig.start(sdkKey: "client-api-key", user: StatsigUser(userID: "123", email: "123@statsig.com"))
+                        { errorMessage in
+                            gate = Statsig.checkGate(gateName2)
+                            exp = Statsig.getExperiment(configName)
+                            config = Statsig.getConfig(configName)
+                            Statsig.logEvent("test_event", value: 1, metadata: ["key": "value1"])
+                            Statsig.logEvent("test_event_2", value: "1", metadata: ["key": "value2"])
+                            Statsig.logEvent("test_event_3", metadata: ["key": "value3"])
+                            Statsig.shutdown()
+                            done()
+                        }
+                    }
+
+                    expect(gate).to(beTrue())
+                    expect(NSDictionary(dictionary: config!.value)).to(
+                        equal(
+                            NSDictionary(dictionary: DynamicConfigSpec.TestMixedConfig["value"] as! [String: Any])
+                        )
+                    )
+                    expect(NSDictionary(dictionary: exp!.value)).to(
+                        equal(
+                            NSDictionary(dictionary: DynamicConfigSpec.TestMixedConfig["value"] as! [String: Any])
+                        )
+                    )
+
+                    expect(events.count).to(equal(6))
+
+                    var event = events[0]
+                    var user = event["user"] as! [String: Any]
+                    var metadata = event["metadata"] as! [String: String]?
+                    var secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
+                    var value = event["value"]
+
+                    expect(event["eventName"] as? String).to(equal(Event.statsigPrefix + Event.gateExposureEventName))
+                    expect(user["userID"] as? String).to(equal("123"))
+                    expect(user["email"] as? String).to(equal("123@statsig.com"))
+                    expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["gate": "gate_name_2", "gateValue": "true", "ruleID": "rule_id_2"])))
+                    expect(secondaryExposures).to(equal([]))
+                    expect(value).to(beNil())
+
+                    event = events[1]
+                    user = event["user"] as! [String: Any]
+                    metadata = event["metadata"] as! [String: String]?
+                    secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
+                    value = event["value"]
+
+                    expect(event["eventName"] as? String).to(equal(Event.statsigPrefix + Event.configExposureEventName))
+                    expect(user["userID"] as? String).to(equal("123"))
+                    expect(user["email"] as? String).to(equal("123@statsig.com"))
+                    expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["config": "config", "ruleID": "default"])))
+                    expect(secondaryExposures).to(equal([]))
+                    expect(value).to(beNil())
+
+                    event = events[2]
+                    user = event["user"] as! [String: Any]
+                    metadata = event["metadata"] as! [String: String]?
+                    secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
+                    value = event["value"]
+
+                    expect(event["eventName"] as? String).to(equal(Event.statsigPrefix + Event.configExposureEventName))
+                    expect(user["userID"] as? String).to(equal("123"))
+                    expect(user["email"] as? String).to(equal("123@statsig.com"))
+                    expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["config": "config", "ruleID": "default"])))
+                    expect(secondaryExposures).to(equal([]))
+                    expect(value).to(beNil())
+
+                    event = events[3]
+                    user = event["user"] as! [String: Any]
+                    metadata = event["metadata"] as! [String: String]?
+                    secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
+                    value = event["value"]
+
+                    expect(event["eventName"] as? String).to(equal("test_event"))
+                    expect(user["userID"] as? String).to(equal("123"))
+                    expect(user["email"] as? String).to(equal("123@statsig.com"))
+                    expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["key": "value1"])))
+                    expect(secondaryExposures).to(beNil())
+                    expect(value as? Int).to(equal(1))
+
+                    event = events[4]
+                    user = event["user"] as! [String: Any]
+                    metadata = event["metadata"] as! [String: String]?
+                    secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
+                    value = event["value"]
+
+                    expect(event["eventName"] as? String).to(equal("test_event_2"))
+                    expect(user["userID"] as? String).to(equal("123"))
+                    expect(user["email"] as? String).to(equal("123@statsig.com"))
+                    expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["key": "value2"])))
+                    expect(secondaryExposures).to(beNil())
+                    expect(value as? String).to(equal("1"))
+
+                    event = events[5]
+                    user = event["user"] as! [String: Any]
+                    metadata = event["metadata"] as! [String: String]?
+                    secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
+                    value = event["value"]
+
+                    expect(event["eventName"] as? String).to(equal("test_event_3"))
+                    expect(user["userID"] as? String).to(equal("123"))
+                    expect(user["email"] as? String).to(equal("123@statsig.com"))
+                    expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["key": "value3"])))
+                    expect(secondaryExposures).to(beNil())
+                    expect(value).to(beNil())
                 }
             }
         }
