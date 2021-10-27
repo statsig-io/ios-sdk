@@ -48,6 +48,10 @@ public struct StatsigUser {
         self.deviceEnvironment = DeviceEnvironment().get()
     }
 
+    mutating func setStableID(_ overrideStableID: String) {
+        deviceEnvironment = DeviceEnvironment().get(overrideStableID)
+    }
+
     func toDictionary(forLogging: Bool) -> [String: Any?] {
         var dict = [String: Any?]()
         dict["userID"] = self.userID

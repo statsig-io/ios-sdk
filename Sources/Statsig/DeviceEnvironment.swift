@@ -7,7 +7,7 @@ struct DeviceEnvironment {
 
     var deviceOS: String = "iOS"
     var sdkType: String = "ios-client"
-    var sdkVersion: String = "1.6.1"
+    var sdkVersion: String = "1.7.0"
     var sessionID: String? { UUID().uuidString }
     var systemVersion: String { UIDevice.current.systemVersion }
     var systemName: String { UIDevice.current.systemName }
@@ -29,16 +29,13 @@ struct DeviceEnvironment {
         }
     }
 
-    var stableID: String {
-        if let stableID = UserDefaults.standard.string(forKey: stableIDKey) {
-            return stableID
-        }
-        let newStableID = UUID().uuidString
-        UserDefaults.standard.setValue(newStableID, forKey: stableIDKey)
-        return newStableID
+    func getStableID(_ overrideStableID: String? = nil) -> String {
+        let stableID = overrideStableID ?? UserDefaults.standard.string(forKey: stableIDKey) ?? UUID().uuidString
+        UserDefaults.standard.setValue(stableID, forKey: stableIDKey)
+        return stableID
     }
     
-    func get() -> [String: String?] {
+    func get(_ overrideStableID: String? = nil) -> [String: String?] {
         return [
             "appIdentifier": appIdentifier,
             "appVersion": appVersion,
@@ -49,7 +46,7 @@ struct DeviceEnvironment {
             "sdkType": sdkType,
             "sdkVersion": sdkVersion,
             "sessionID": sessionID,
-            "stableID": stableID,
+            "stableID": getStableID(overrideStableID),
             "systemVersion": systemVersion,
             "systemName": systemName
         ]

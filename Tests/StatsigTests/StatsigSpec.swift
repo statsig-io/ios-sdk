@@ -247,23 +247,29 @@ class StatsigSpec: QuickSpec {
                     }
 
                     var events: [[String: Any]] = []
+                    var statsigMetadata: [String: String?] = [:]
                     stub(condition: isPath("/v1/log_event")) { request in
                         let actualRequestHttpBody = try! JSONSerialization.jsonObject(
                             with: request.ohhttpStubs_httpBody!,
                             options: []) as! [String: Any]
                         events = actualRequestHttpBody["events"] as! [[String: Any]]
+                        statsigMetadata = actualRequestHttpBody["statsigMetadata"] as! [String: String?]
                         return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
                     }
 
                     var gate: Bool?
                     var config: DynamicConfig?
                     var exp: DynamicConfig?
+                    var stableID: String?
                     waitUntil { done in
-                        Statsig.start(sdkKey: "client-api-key", user: StatsigUser(userID: "123", email: "123@statsig.com"))
+                        Statsig.start(sdkKey: "client-api-key",
+                                      user: StatsigUser(userID: "123", email: "123@statsig.com"),
+                                      options: StatsigOptions(overrideStableID: "custom_stable_id"))
                         { errorMessage in
                             gate = Statsig.checkGate(gateName2)
                             exp = Statsig.getExperiment(configName)
                             config = Statsig.getConfig(configName)
+                            stableID = Statsig.getStableID()
                             Statsig.logEvent("test_event", value: 1, metadata: ["key": "value1"])
                             Statsig.logEvent("test_event_2", value: "1", metadata: ["key": "value2"])
                             Statsig.logEvent("test_event_3", metadata: ["key": "value3"])
@@ -284,7 +290,7 @@ class StatsigSpec: QuickSpec {
                         )
                     )
 
-                    expect(events.count).to(equal(6))
+                    expect(events.count).toEventually(equal(6))
 
                     var event = events[0]
                     var user = event["user"] as! [String: Any]
@@ -363,6 +369,10 @@ class StatsigSpec: QuickSpec {
                     expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["key": "value3"])))
                     expect(secondaryExposures).to(beNil())
                     expect(value).to(beNil())
+
+                    // validate stable ID
+                    expect(statsigMetadata["stableID"]).to(equal("custom_stable_id"))
+                    expect(stableID).to(equal("custom_stable_id"))
                 }
             }
         }

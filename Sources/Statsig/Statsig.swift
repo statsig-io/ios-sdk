@@ -126,6 +126,13 @@ public class Statsig {
         sharedInstance = nil
     }
 
+    public static func getStableID() -> String? {
+        if let sharedInstance = sharedInstance {
+            return sharedInstance.currentUser.deviceEnvironment["stableID"] ?? nil
+        }
+        return nil
+    }
+
     private init(sdkKey: String, user: StatsigUser?, options: StatsigOptions?, completion: completionBlock) {
         self.sdkKey = sdkKey;
         self.currentUser = Statsig.normalizeUser(user, options: options)
@@ -226,6 +233,9 @@ public class Statsig {
     private static func normalizeUser(_ user: StatsigUser?, options: StatsigOptions?) -> StatsigUser {
         var normalized = user ?? StatsigUser()
         normalized.statsigEnvironment = options?.environment ?? [:]
+        if let stableID = options?.overrideStableID {
+            normalized.setStableID(stableID)
+        }
         return normalized
     }
 
