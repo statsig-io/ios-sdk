@@ -2,7 +2,7 @@ import Foundation
 
 import UIKit
 
-struct Event {
+class Event {
     let name: String
     let value: Any?
     let metadata: [String: String]?
@@ -28,9 +28,12 @@ struct Event {
         self.value = value
         self.metadata = metadata
         self.secondaryExposures = secondaryExposures
-        if !disableCurrentVCLogging,
-           let vc = UIApplication.shared.keyWindow?.rootViewController {
-            self.statsigMetadata = [Event.currentVCKey: "\(vc.classForCoder)"]
+        if !disableCurrentVCLogging {
+            DispatchQueue.main.async { [weak self] in
+                if let self = self, let vc = UIApplication.shared.keyWindow?.rootViewController {
+                    self.statsigMetadata = [Event.currentVCKey: "\(vc.classForCoder)"]
+                }
+            }
         }
     }
 
