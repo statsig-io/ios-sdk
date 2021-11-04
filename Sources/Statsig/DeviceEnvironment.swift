@@ -34,7 +34,7 @@ struct DeviceEnvironment {
         UserDefaults.standard.setValue(stableID, forKey: stableIDKey)
         return stableID
     }
-    
+
     func get(_ overrideStableID: String? = nil) -> [String: String?] {
         return [
             "appIdentifier": appIdentifier,

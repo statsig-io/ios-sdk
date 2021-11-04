@@ -1,4 +1,4 @@
-import Foundation;
+import Foundation
 
 @objc public class StatsigEnvironment: NSObject {
     @objc public enum EnvironmentTier: Int {

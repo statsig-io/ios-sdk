@@ -1,9 +1,9 @@
 import Foundation
 
-import Quick
 import Nimble
 import OHHTTPStubs
 import OHHTTPStubsSwift
+import Quick
 
 @testable import Statsig
 
@@ -117,7 +117,7 @@ class EventLoggerSpec: QuickSpec {
                 let savedData: [Data]?
                 var resendData: [Data] = []
 
-                waitUntil() { done in
+                waitUntil { done in
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         done()
                     }
@@ -130,10 +130,9 @@ class EventLoggerSpec: QuickSpec {
                     return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 403))
                 }
 
-
                 EventLogger(user: user, networkService: ns)
 
-                waitUntil() { done in
+                waitUntil { done in
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         done()
                     }

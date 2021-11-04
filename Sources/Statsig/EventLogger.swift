@@ -29,7 +29,7 @@ class EventLogger {
             self.requestQueue += failedRequestsData
         }
     }
-    
+
     func log(_ event: Event) {
         eventQueue.append(event)
 
@@ -37,11 +37,11 @@ class EventLogger {
             eventQueue.removeFirst()
         }
 
-        if eventQueue.count >= self.flushBatchSize {
+        if eventQueue.count >= flushBatchSize {
             flush()
         } else {
             flushTimer?.invalidate()
-            flushTimer = Timer.scheduledTimer(withTimeInterval: flushInterval, repeats: false) { [weak self] timer in
+            flushTimer = Timer.scheduledTimer(withTimeInterval: flushInterval, repeats: false) { [weak self] _ in
                 guard let self = self else { return }
                 self.flush()
             }

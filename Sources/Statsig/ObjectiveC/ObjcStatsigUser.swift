@@ -1,15 +1,15 @@
 import Foundation
 
 @objc(StatsigUser)
-public final class ObjcStatsigUser : NSObject {
-    var user : StatsigUser;
+public final class ObjcStatsigUser: NSObject {
+    var user: StatsigUser
 
     @objc override public init() {
-        self.user = StatsigUser();
+        self.user = StatsigUser()
     }
 
     @objc public init(userID: String) {
-        self.user = StatsigUser(userID: userID);
+        self.user = StatsigUser(userID: userID)
     }
 
     @objc public init(userID: String? = nil,
@@ -19,27 +19,28 @@ public final class ObjcStatsigUser : NSObject {
                       locale: String? = nil,
                       appVersion: String? = nil,
                       custom: [String: Any]? = nil,
-                      privateAttributes: [String: Any]? = nil) {
-        var filteredCustom = [String: StatsigUserCustomTypeConvertible]();
+                      privateAttributes: [String: Any]? = nil)
+    {
+        var filteredCustom = [String: StatsigUserCustomTypeConvertible]()
         if let custom = custom {
-            custom.forEach({ (key, value) in
+            custom.forEach { key, value in
                 if let v = convertToUserCustomType(value) {
-                    filteredCustom[key] = v;
+                    filteredCustom[key] = v
                 } else {
                     print("[Statsig]: the entry for key \(key) is dropped because it is not of a supported type.")
                 }
-            })
+            }
         }
 
-        var filteredPrivateAttributes = [String: StatsigUserCustomTypeConvertible]();
+        var filteredPrivateAttributes = [String: StatsigUserCustomTypeConvertible]()
         if let privateAttributes = privateAttributes {
-            privateAttributes.forEach({ (key, value) in
+            privateAttributes.forEach { key, value in
                 if let v = convertToUserCustomType(value) {
-                    filteredPrivateAttributes[key] = v;
+                    filteredPrivateAttributes[key] = v
                 } else {
                     print("[Statsig]: the entry for key \(key) is dropped because it is not of a supported type.")
                 }
-            })
+            }
         }
 
         self.user = StatsigUser(
@@ -50,6 +51,6 @@ public final class ObjcStatsigUser : NSObject {
             locale: locale,
             appVersion: appVersion,
             custom: filteredCustom.isEmpty ? nil : filteredCustom,
-            privateAttributes: filteredPrivateAttributes.isEmpty ? nil : filteredPrivateAttributes);
+            privateAttributes: filteredPrivateAttributes.isEmpty ? nil : filteredPrivateAttributes)
     }
 }

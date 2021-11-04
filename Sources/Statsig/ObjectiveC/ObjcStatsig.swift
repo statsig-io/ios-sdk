@@ -1,7 +1,7 @@
 import Foundation
 
 @objc(Statsig)
-public final class ObjcStatsig : NSObject {
+public final class ObjcStatsig: NSObject {
     @objc public static func start(withSDKKey: String) {
         Statsig.start(sdkKey: withSDKKey)
     }
@@ -31,7 +31,8 @@ public final class ObjcStatsig : NSObject {
     }
 
     @objc public static func start(withSDKKey: String, user: ObjcStatsigUser, options: ObjcStatsigOptions,
-                                   completion: completionBlock) {
+                                   completion: completionBlock)
+    {
         Statsig.start(sdkKey: withSDKKey, user: user.user, options: options.optionsInternal, completion: completion)
     }
 

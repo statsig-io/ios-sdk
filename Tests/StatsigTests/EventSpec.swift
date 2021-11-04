@@ -1,7 +1,7 @@
 import Foundation
 
-import Quick
 import Nimble
+import Quick
 @testable import Statsig
 
 class EventSpec: QuickSpec {
@@ -16,14 +16,14 @@ class EventSpec: QuickSpec {
             }
 
             it("creates events with value and metadata as expected") {
-                let event = Event(user: StatsigUser(), name: "purchase", value:1.23,
+                let event = Event(user: StatsigUser(), name: "purchase", value: 1.23,
                                   metadata: ["item_name": "no_ads"], disableCurrentVCLogging: false)
                 expect(event.name) == "purchase"
                 expect(event.value as? Double).to(equal(1.23))
                 expect(event.metadata) == ["item_name": "no_ads"]
                 expect(Int(event.time / 1000)) == Int(NSDate().timeIntervalSince1970)
             }
-            
+
             it("has helper functions that create gate exposure events correctly") {
                 let gateExposure = Event.gateExposure(
                     user: StatsigUser(),

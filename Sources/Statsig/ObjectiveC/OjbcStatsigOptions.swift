@@ -1,8 +1,8 @@
 import Foundation
 
 @objc(StatsigOptions)
-public final class ObjcStatsigOptions : NSObject {
-    var optionsInternal : StatsigOptions;
+public final class ObjcStatsigOptions: NSObject {
+    var optionsInternal: StatsigOptions
 
     @objc override public init() {
         self.optionsInternal = StatsigOptions()
@@ -27,10 +27,11 @@ public final class ObjcStatsigOptions : NSObject {
     @objc public init(initTimeout: Double,
                       disableCurrentVCLogging: Bool,
                       environment: StatsigEnvironment,
-                      enableAutoValueUpdate: Bool) {
+                      enableAutoValueUpdate: Bool)
+    {
         self.optionsInternal = StatsigOptions(initTimeout: initTimeout,
-                                      disableCurrentVCLogging: disableCurrentVCLogging,
-                                      environment: environment,
-                                      enableAutoValueUpdate: enableAutoValueUpdate)
+                                              disableCurrentVCLogging: disableCurrentVCLogging,
+                                              environment: environment,
+                                              enableAutoValueUpdate: enableAutoValueUpdate)
     }
 }

@@ -1,17 +1,18 @@
 import Foundation
 
 public class StatsigOptions {
-    public var initTimeout = 3.0;
-    public var disableCurrentVCLogging = false;
-    public var enableAutoValueUpdate = false;
-    public var overrideStableID: String? = nil;
-    var environment: [String: String] = [:];
+    public var initTimeout = 3.0
+    public var disableCurrentVCLogging = false
+    public var enableAutoValueUpdate = false
+    public var overrideStableID: String?
+    var environment: [String: String] = [:]
 
     public init(initTimeout: Double? = 3.0,
                 disableCurrentVCLogging: Bool? = false,
                 environment: StatsigEnvironment? = nil,
                 enableAutoValueUpdate: Bool? = false,
-                overrideStableID: String? = nil) {
+                overrideStableID: String? = nil)
+    {
         if let initTimeout = initTimeout, initTimeout >= 0 {
             self.initTimeout = initTimeout
         }

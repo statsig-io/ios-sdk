@@ -1,12 +1,12 @@
 import Foundation
 
-enum StatsigError : Error {
+enum StatsigError: Error {
     case invalidJSONParam(String)
     case invalidRequestURL(String)
     case tooManyRequests(String)
 }
 
-extension StatsigError : LocalizedError {
+extension StatsigError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidJSONParam(let paramName):

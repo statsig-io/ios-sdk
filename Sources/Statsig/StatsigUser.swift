@@ -14,13 +14,14 @@ public struct StatsigUser {
     var deviceEnvironment: [String: String?]
 
     public init(userID: String? = nil,
-         email: String? = nil,
-         ip: String? = nil,
-         country: String? = nil,
-         locale: String? = nil,
-         appVersion: String? = nil,
-         custom: [String: StatsigUserCustomTypeConvertible]? = nil,
-         privateAttributes: [String: StatsigUserCustomTypeConvertible]? = nil) {
+                email: String? = nil,
+                ip: String? = nil,
+                country: String? = nil,
+                locale: String? = nil,
+                appVersion: String? = nil,
+                custom: [String: StatsigUserCustomTypeConvertible]? = nil,
+                privateAttributes: [String: StatsigUserCustomTypeConvertible]? = nil)
+    {
         self.userID = userID
         self.email = email
         self.ip = ip
@@ -49,7 +50,7 @@ public struct StatsigUser {
     }
 
     mutating func setStableID(_ overrideStableID: String) {
-        deviceEnvironment = DeviceEnvironment().get(overrideStableID)
+        self.deviceEnvironment = DeviceEnvironment().get(overrideStableID)
     }
 
     func toDictionary(forLogging: Bool) -> [String: Any?] {

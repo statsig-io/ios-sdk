@@ -1,9 +1,9 @@
 import Foundation
 
-import Quick
 import Nimble
 import OHHTTPStubs
 import OHHTTPStubsSwift
+import Quick
 
 @testable import Statsig
 import SwiftUI
@@ -81,9 +81,9 @@ class StatsigSpec: QuickSpec {
                 let nonExistentConfigName = "non_existent_config"
 
                 it("only makes 1 network request if start() is called multiple times") {
-                    var requestCount = 0;
+                    var requestCount = 0
                     stub(condition: isHost("api.statsig.com")) { _ in
-                        requestCount += 1;
+                        requestCount += 1
                         return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
                     }
 
@@ -95,12 +95,12 @@ class StatsigSpec: QuickSpec {
                 }
 
                 it("make only 1 network request in 11 seconds when enableAutoValueUpdate is not set to true") {
-                    var requestCount = 0;
-                    var lastSyncTime: Double = 0;
+                    var requestCount = 0
+                    var lastSyncTime: Double = 0
                     let now = NSDate().timeIntervalSince1970
 
                     stub(condition: isHost("api.statsig.com")) { request in
-                        requestCount += 1;
+                        requestCount += 1
 
                         let httpBody = try! JSONSerialization.jsonObject(
                             with: request.ohhttpStubs_httpBody!,
@@ -118,12 +118,12 @@ class StatsigSpec: QuickSpec {
                 }
 
                 it("makes 2 network requests in 11 seconds and updates internal store's updatedTime correctly each time when enableAutoValueUpdate is true") {
-                    var requestCount = 0;
-                    var lastSyncTime: Double = 0;
+                    var requestCount = 0
+                    var lastSyncTime: Double = 0
                     let now = NSDate().timeIntervalSince1970
 
                     stub(condition: isHost("api.statsig.com")) { request in
-                        requestCount += 1;
+                        requestCount += 1
 
                         let httpBody = try! JSONSerialization.jsonObject(
                             with: request.ohhttpStubs_httpBody!,
@@ -146,7 +146,7 @@ class StatsigSpec: QuickSpec {
 
                 it("works correctly with a valid JSON response") {
                     stub(condition: isHost("api.statsig.com")) { _ in
-                        return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
+                        HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
                     }
 
                     var gate1: Bool?
@@ -155,7 +155,7 @@ class StatsigSpec: QuickSpec {
                     var dc: DynamicConfig?
                     var exp: DynamicConfig?
                     var nonExistentDC: DynamicConfig?
-                    Statsig.start(sdkKey: "client-api-key") { errorMessage in
+                    Statsig.start(sdkKey: "client-api-key") { _ in
                         gate1 = Statsig.checkGate(gateName1)
                         gate2 = Statsig.checkGate(gateName2)
                         nonExistentGate = Statsig.checkGate(nonExistentGateName)
@@ -178,7 +178,7 @@ class StatsigSpec: QuickSpec {
 
                 it("times out if the request took too long and responds early with default values, when there is no local cache") {
                     stub(condition: isHost("api.statsig.com")) { _ in
-                        return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
+                        HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
                             .responseTime(4.0)
                     }
 
@@ -208,7 +208,7 @@ class StatsigSpec: QuickSpec {
 
                 it("times out and returns value from local cache") {
                     stub(condition: isHost("api.statsig.com")) { _ in
-                        return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
+                        HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
                     }
 
                     var gate: Bool?
@@ -218,14 +218,14 @@ class StatsigSpec: QuickSpec {
                     var nonExistentDC: DynamicConfig?
 
                     // First call start() to fetch and store values in local storage
-                    Statsig.start(sdkKey: "client-api-key") { errorMessage in
+                    Statsig.start(sdkKey: "client-api-key") { _ in
                         // shutdown client to call start() again, and makes response slow so we can test early timeout with cached return
                         Statsig.shutdown()
                         stub(condition: isHost("api.statsig.com")) { _ in
-                            return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil).responseTime(3)
+                            HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil).responseTime(3)
                         }
 
-                        Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(initTimeout: 0.1)) { errorMessage in
+                        Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(initTimeout: 0.1)) { _ in
                             gate = Statsig.checkGate(gateName2)
                             nonExistentGate = Statsig.checkGate(nonExistentGateName)
                             dc = Statsig.getConfig(configName)
@@ -243,7 +243,7 @@ class StatsigSpec: QuickSpec {
 
                 it("correctly shuts down") {
                     stub(condition: isPath("/v1/initialize")) { _ in
-                        return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
+                        HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
                     }
 
                     var events: [[String: Any]] = []
@@ -265,7 +265,7 @@ class StatsigSpec: QuickSpec {
                         Statsig.start(sdkKey: "client-api-key",
                                       user: StatsigUser(userID: "123", email: "123@statsig.com"),
                                       options: StatsigOptions(overrideStableID: "custom_stable_id"))
-                        { errorMessage in
+                        { _ in
                             gate = Statsig.checkGate(gateName2)
                             exp = Statsig.getExperiment(configName)
                             config = Statsig.getConfig(configName)

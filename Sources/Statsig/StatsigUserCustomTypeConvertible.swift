@@ -2,13 +2,13 @@ import Foundation
 
 public protocol StatsigUserCustomTypeConvertible {}
 
-extension Bool : StatsigUserCustomTypeConvertible {}
+extension Bool: StatsigUserCustomTypeConvertible {}
 
-extension Double : StatsigUserCustomTypeConvertible {}
+extension Double: StatsigUserCustomTypeConvertible {}
 
-extension String : StatsigUserCustomTypeConvertible {}
+extension String: StatsigUserCustomTypeConvertible {}
 
-extension Array : StatsigUserCustomTypeConvertible where Element == String {}
+extension Array: StatsigUserCustomTypeConvertible where Element == String {}
 
 func convertToUserCustomType(_ value: Any) -> StatsigUserCustomTypeConvertible? {
     if let array = value as? [String] {

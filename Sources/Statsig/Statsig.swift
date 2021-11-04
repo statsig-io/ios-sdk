@@ -14,10 +14,11 @@ public class Statsig {
     private var logger: EventLogger
     private var syncTimer: Timer?
 
-    static let maxEventNameLength = 64;
-    
+    static let maxEventNameLength = 64
+
     public static func start(sdkKey: String, user: StatsigUser? = nil, options: StatsigOptions? = nil,
-                             completion: completionBlock = nil) {
+                             completion: completionBlock = nil)
+    {
         if sharedInstance != nil {
             completion?("Statsig has already started!")
             return
@@ -28,7 +29,7 @@ public class Statsig {
         }
         sharedInstance = Statsig(sdkKey: sdkKey, user: user, options: options, completion: completion)
     }
-    
+
     public static func checkGate(_ gateName: String) -> Bool {
         guard let sharedInstance = sharedInstance else {
             print("[Statsig]: Must start Statsig first and wait for it to complete before calling checkGate. Returning false as the default.")
@@ -70,7 +71,7 @@ public class Statsig {
                 disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
         return experiment!
     }
-    
+
     public static func getConfig(_ configName: String) -> DynamicConfig {
         guard let sharedInstance = sharedInstance else {
             print("[Statsig]: Must start Statsig first and wait for it to complete before calling getConfig. Returning a dummy DynamicConfig that will only return default values.")
@@ -116,7 +117,7 @@ public class Statsig {
         sharedInstance.logger.user = sharedInstance.currentUser
         sharedInstance.fetchAndScheduleSyncing(completion: completion)
     }
-    
+
     public static func shutdown() {
         if sharedInstance == nil {
             return
@@ -134,11 +135,11 @@ public class Statsig {
     }
 
     private init(sdkKey: String, user: StatsigUser?, options: StatsigOptions?, completion: completionBlock) {
-        self.sdkKey = sdkKey;
+        self.sdkKey = sdkKey
         self.currentUser = Statsig.normalizeUser(user, options: options)
-        self.statsigOptions = options ?? StatsigOptions();
+        self.statsigOptions = options ?? StatsigOptions()
         self.store = InternalStore(userID: currentUser.userID)
-        self.networkService = NetworkService(sdkKey: sdkKey, options: self.statsigOptions, store: store)
+        self.networkService = NetworkService(sdkKey: sdkKey, options: statsigOptions, store: store)
         self.logger = EventLogger(user: currentUser, networkService: networkService)
 
         fetchAndScheduleSyncing(completion: completion)
@@ -160,15 +161,15 @@ public class Statsig {
         syncTimer?.invalidate()
 
         let currentUser = self.currentUser
-        let shouldScheduleSync = self.statsigOptions.enableAutoValueUpdate
+        let shouldScheduleSync = statsigOptions.enableAutoValueUpdate
         networkService.fetchInitialValues(for: currentUser) { [weak self] errorMessage in
             if let self = self {
                 if let errorMessage = errorMessage {
                     self.logger.log(Event.statsigInternalEvent(
-                                        user: self.currentUser,
-                                        name: "fetch_values_failed",
-                                        value: nil,
-                                        metadata: ["error": errorMessage]))
+                        user: self.currentUser,
+                        name: "fetch_values_failed",
+                        value: nil,
+                        metadata: ["error": errorMessage]))
                 }
                 if shouldScheduleSync {
                     self.scheduleRepeatingSync()
@@ -181,12 +182,12 @@ public class Statsig {
 
     private func scheduleRepeatingSync() {
         let currentUser = self.currentUser
-        self.syncTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [weak self] timer in
+        syncTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [weak self] _ in
             guard let self = self else { return }
             self.networkService.fetchUpdatedValues(for: currentUser, since: self.store.updatedTime)
-            { [weak self] in
-                self?.scheduleRepeatingSync()
-            }
+                { [weak self] in
+                    self?.scheduleRepeatingSync()
+                }
         }
     }
 
@@ -213,8 +214,7 @@ public class Statsig {
                     name: eventName,
                     value: value,
                     metadata: nil,
-                    disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging
-                )
+                    disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging)
             )
             return
         }
@@ -225,8 +225,7 @@ public class Statsig {
                 name: eventName,
                 value: value,
                 metadata: metadata,
-                disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging
-            )
+                disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging)
         )
     }
 

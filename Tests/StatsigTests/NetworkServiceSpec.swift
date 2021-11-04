@@ -1,9 +1,9 @@
 import Foundation
 
-import Quick
 import Nimble
 import OHHTTPStubs
 import OHHTTPStubsSwift
+import Quick
 
 @testable import Statsig
 
@@ -28,7 +28,7 @@ class NetworkServiceSpec: QuickSpec {
                 }
 
                 let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(userID: "jkw"))
-                ns.fetchInitialValues(for: StatsigUser(userID: "jkw", privateAttributes:["email": "something@somethingelse.com"]), completion: nil)
+                ns.fetchInitialValues(for: StatsigUser(userID: "jkw", privateAttributes: ["email": "something@somethingelse.com"]), completion: nil)
                 let now = NSDate().timeIntervalSince1970
 
                 expect(actualRequestHttpBody?.keys).toEventually(contain("user", "statsigMetadata"))
@@ -54,12 +54,12 @@ class NetworkServiceSpec: QuickSpec {
 
                 let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(userID: "jkw"))
                 let now = NSDate().timeIntervalSince1970 * 1000
-                waitUntil { done in 
+                waitUntil { done in
                     ns.fetchUpdatedValues(for: StatsigUser(userID: "jkw"), since: now) {
                         done()
                     }
                 }
-                
+
                 expect(actualRequestHttpBody?.keys).to(contain("user", "statsigMetadata", "lastSyncTimeForUser"))
                 expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).to(equal(sdkKey))
                 expect(actualRequest?.httpMethod).to(equal("POST"))
@@ -83,13 +83,13 @@ class NetworkServiceSpec: QuickSpec {
                 }
 
                 let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(userID: "jkw"))
-                let user = StatsigUser(userID: "jkw", privateAttributes:["email": "something@somethingelse.com"])
+                let user = StatsigUser(userID: "jkw", privateAttributes: ["email": "something@somethingelse.com"])
                 waitUntil { done in
                     ns.sendEvents(forUser: user, events: [Event(user: user, name: "test_event", value: 9.99, disableCurrentVCLogging: false)])
-                    { errorMessage, jsonData in
-                        returnedRequestData = jsonData
-                        done()
-                    }
+                        { _, jsonData in
+                            returnedRequestData = jsonData
+                            done()
+                        }
                 }
 
                 expect(actualRequestHttpBody?.keys).toEventually(contain("user", "statsigMetadata", "events"))
@@ -146,16 +146,16 @@ class NetworkServiceSpec: QuickSpec {
             }
 
             it("should be rate limited to a max of 10 concurrent requests") {
-                var requestCount = 0;
-                stub(condition: isHost("api.statsig.com")) { request in
-                    requestCount += 1;
+                var requestCount = 0
+                stub(condition: isHost("api.statsig.com")) { _ in
+                    requestCount += 1
                     return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil).responseTime(1000)
                 }
                 let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(userID: "jkw"))
                 for index in 1...20 {
                     let user = StatsigUser(userID: String(index))
                     ns.sendEvents(forUser: user, events: [Event(user: user, name: "test_event", value: index,
-                                                                disableCurrentVCLogging: false)]) {_, _ in}
+                                                                disableCurrentVCLogging: false)]) { _, _ in }
                 }
                 expect(requestCount).toEventually(equal(10))
             }

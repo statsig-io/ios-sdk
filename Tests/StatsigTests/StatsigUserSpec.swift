@@ -1,11 +1,11 @@
-import Quick
 import Nimble
+import Quick
 @testable import Statsig
 
 class StatsigUserSpec: QuickSpec {
     override func spec() {
         let validJSONObject: [String: StatsigUserCustomTypeConvertible] =
-            ["company": "Statsig", "YOE": 10.5, "alias" : ["abby", "bob", "charlie"]]
+            ["company": "Statsig", "YOE": 10.5, "alias": ["abby", "bob", "charlie"]]
         let invalidJSONObject: [String: StatsigUserCustomTypeConvertible] =
             ["company": "Statsig", "invalid": String(bytes: [0xD8, 0x00] as [UInt8], encoding: String.Encoding.utf16BigEndian)!]
 
@@ -30,7 +30,7 @@ class StatsigUserSpec: QuickSpec {
             }
 
             it("is a valid user with custom attribute") {
-                let validUserWithCustom = StatsigUser(userID: "12345",custom: validJSONObject)
+                let validUserWithCustom = StatsigUser(userID: "12345", custom: validJSONObject)
                 expect(validUserWithCustom).toNot(beNil())
                 expect(validUserWithCustom.userID) == "12345"
 
@@ -51,7 +51,7 @@ class StatsigUserSpec: QuickSpec {
             }
 
             it("is a user with invalid custom attribute") {
-                let validUserInvalidCustom = StatsigUser(userID: "12345",custom: invalidJSONObject)
+                let validUserInvalidCustom = StatsigUser(userID: "12345", custom: invalidJSONObject)
                 expect(validUserInvalidCustom).toNot(beNil())
                 expect(validUserInvalidCustom.userID) == "12345"
                 expect(validUserInvalidCustom.custom).to(beNil())

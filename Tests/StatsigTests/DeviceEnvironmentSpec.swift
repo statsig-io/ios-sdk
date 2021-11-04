@@ -1,7 +1,7 @@
 import Foundation
 
-import Quick
 import Nimble
+import Quick
 @testable import Statsig
 
 class DeviceEnvironmentSpec: QuickSpec {

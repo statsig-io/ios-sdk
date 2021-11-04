@@ -1,5 +1,5 @@
-import Quick
 import Nimble
+import Quick
 @testable import Statsig
 
 class InternalStoreSpec: QuickSpec {
@@ -52,29 +52,29 @@ class InternalStoreSpec: QuickSpec {
                     "dynamic_configs": [
                         hashConfigKey: [
                             "rule_id": "default",
-                            "value": [ "key": "value" ]
+                            "value": ["key": "value"],
                         ],
                         hashedExpKey: [
                             "rule_id": "rule_id_1",
-                            "value": [ "label": "exp_v0" ],
+                            "value": ["label": "exp_v0"],
                             "is_device_based": false,
                             "is_user_in_experiment": true,
                             "is_experiment_active": true,
                         ],
                         hashedDeviceExpKey: [
                             "rule_id": "rule_id_1",
-                            "value": [ "label": "device_exp_v0" ],
+                            "value": ["label": "device_exp_v0"],
                             "is_device_based": true,
                             "is_user_in_experiment": true,
                             "is_experiment_active": true,
                         ],
                         hashedNonStickyExpKey: [
                             "rule_id": "rule_id_1",
-                            "value": [ "label": "non_stick_v0" ],
+                            "value": ["label": "non_stick_v0"],
                             "is_user_in_experiment": true,
                             "is_experiment_active": true,
                         ],
-                    ]
+                    ],
                 ]
                 store.set(values: values)
 
@@ -86,9 +86,9 @@ class InternalStoreSpec: QuickSpec {
                 expect(nonStickExp?.getValue(forKey: "label", defaultValue: "")).to(equal("non_stick_v0"))
 
                 // Change the values, now user should get updated values
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label" : "exp_v1"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label" : "device_exp_v1"]
-                values["dynamic_configs"]![hashedNonStickyExpKey]!["value"] = ["label" : "non_stick_v1"]
+                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"]
+                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v1"]
+                values["dynamic_configs"]![hashedNonStickyExpKey]!["value"] = ["label": "non_stick_v1"]
                 store.set(values: values)
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
@@ -99,9 +99,9 @@ class InternalStoreSpec: QuickSpec {
                 expect(nonStickExp?.getValue(forKey: "label", defaultValue: "")).to(equal("non_stick_v1"))
 
                 // change the values again, but this time the value should be sticky from last time, except for the non sticky one
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label" : "exp_v2"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label" : "device_exp_v2"]
-                values["dynamic_configs"]![hashedNonStickyExpKey]!["value"] = ["label" : "non_stick_v2"]
+                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v2"]
+                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v2"]
+                values["dynamic_configs"]![hashedNonStickyExpKey]!["value"] = ["label": "non_stick_v2"]
                 store.set(values: values)
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
@@ -112,9 +112,9 @@ class InternalStoreSpec: QuickSpec {
                 expect(nonStickExp?.getValue(forKey: "label", defaultValue: "")).to(equal("non_stick_v2"))
 
                 // Now we update the user to be no longer in the experiment, value should still be sticky
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label" : "exp_v3"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label" : "device_exp_v3"]
-                values["dynamic_configs"]![hashedNonStickyExpKey]!["value"] = ["label" : "non_stick_v3"]
+                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v3"]
+                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v3"]
+                values["dynamic_configs"]![hashedNonStickyExpKey]!["value"] = ["label": "non_stick_v3"]
 
                 values["dynamic_configs"]![hashedExpKey]!["is_user_in_experiment"] = false
                 values["dynamic_configs"]![hashedDeviceExpKey]!["is_user_in_experiment"] = false
@@ -129,9 +129,9 @@ class InternalStoreSpec: QuickSpec {
                 expect(nonStickExp?.getValue(forKey: "label", defaultValue: "")).to(equal("non_stick_v3"))
 
                 // Then we update the experiment to not be active, value should NOT be sticky
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label" : "exp_v4"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label" : "device_exp_v4"]
-                values["dynamic_configs"]![hashedNonStickyExpKey]!["value"] = ["label" : "non_stick_v4"]
+                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v4"]
+                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v4"]
+                values["dynamic_configs"]![hashedNonStickyExpKey]!["value"] = ["label": "non_stick_v4"]
 
                 values["dynamic_configs"]![hashedExpKey]!["is_experiment_active"] = false
                 values["dynamic_configs"]![hashedDeviceExpKey]!["is_experiment_active"] = false
@@ -160,19 +160,19 @@ class InternalStoreSpec: QuickSpec {
                     "dynamic_configs": [
                         hashedExpKey: [
                             "rule_id": "rule_id_1",
-                            "value": [ "label": "exp_v0" ],
+                            "value": ["label": "exp_v0"],
                             "is_device_based": false,
                             "is_user_in_experiment": true,
                             "is_experiment_active": true,
                         ],
                         hashedDeviceExpKey: [
                             "rule_id": "rule_id_1",
-                            "value": [ "label": "device_exp_v0" ],
+                            "value": ["label": "device_exp_v0"],
                             "is_device_based": true,
                             "is_user_in_experiment": true,
                             "is_experiment_active": true,
                         ],
-                    ]
+                    ],
                 ]
                 store.set(values: values)
 
@@ -183,8 +183,8 @@ class InternalStoreSpec: QuickSpec {
 
                 // Delete user sticky values (update user), change the latest values, now user should get updated values but device value stays the same
                 store.loadAndResetStickyUserValuesIfNeeded(newUserID: "tore")
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label" : "exp_v1"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label" : "device_exp_v1"]
+                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"]
+                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v1"]
                 store.set(values: values)
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
@@ -193,8 +193,8 @@ class InternalStoreSpec: QuickSpec {
                 expect(deviceExp?.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v0"))
 
                 // Try to get value with keepDeviceValue set to false. Should get updated values
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label" : "exp_v2"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label" : "device_exp_v2"]
+                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v2"]
+                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v2"]
                 store.set(values: values)
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: false)
@@ -217,19 +217,19 @@ class InternalStoreSpec: QuickSpec {
                     "dynamic_configs": [
                         hashedExpKey: [
                             "rule_id": "rule_id_1",
-                            "value": [ "label": "exp_v0" ],
+                            "value": ["label": "exp_v0"],
                             "is_device_based": false,
                             "is_user_in_experiment": true,
                             "is_experiment_active": true,
                         ],
                         hashedDeviceExpKey: [
                             "rule_id": "rule_id_1",
-                            "value": [ "label": "device_exp_v0" ],
+                            "value": ["label": "device_exp_v0"],
                             "is_device_based": true,
                             "is_user_in_experiment": true,
                             "is_experiment_active": true,
                         ],
-                    ]
+                    ],
                 ]
                 store.set(values: values)
 
@@ -240,8 +240,8 @@ class InternalStoreSpec: QuickSpec {
 
                 // Re-initialize store with a different ID, change the latest values, now user should get updated values but device value stays the same
                 store = InternalStore(userID: "tore")
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label" : "exp_v1"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label" : "device_exp_v1"]
+                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"]
+                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v1"]
                 store.set(values: values)
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
@@ -250,8 +250,8 @@ class InternalStoreSpec: QuickSpec {
                 expect(deviceExp?.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v0"))
 
                 // Try to get value with keepDeviceValue set to false. Should get updated values
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label" : "exp_v2"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label" : "device_exp_v2"]
+                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v2"]
+                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v2"]
                 store.set(values: values)
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: false)

@@ -1,10 +1,10 @@
-import Quick
 import Nimble
-import XCTest
+import Quick
 @testable import Statsig
+import XCTest
 
 class DynamicConfigSpec: QuickSpec {
-    static let TestMixedConfig : [String: Any] =
+    static let TestMixedConfig: [String: Any] =
         [
             "rule_id": "default",
             "value":
@@ -16,8 +16,8 @@ class DynamicConfigSpec: QuickSpec {
                     "strArray": ["1", "2"],
                     "mixedArray": [1, "2"],
                     "dict": ["key": "value"],
-                    "mixedDict": ["keyStr": "string", "keyInt": 2, "keyArr": [1,2], "keyDouble": 1.23, "keyDict": ["k": "v"]],
-                ]
+                    "mixedDict": ["keyStr": "string", "keyInt": 2, "keyArr": [1, 2], "keyDouble": 1.23, "keyDict": ["k": "v"]],
+                ],
         ]
     override func spec() {
         describe("dummy config works as expected") {
@@ -77,9 +77,9 @@ class DynamicConfigSpec: QuickSpec {
                 expect(dc.getValue(forKey: "int", defaultValue: 1.0)) == 1.0
                 expect(dc.getValue(forKey: "int", defaultValue: "1")) == "1"
 
-                expect(dc.getValue(forKey: "strArray", defaultValue: [1,2,3])) == [1,2,3]
+                expect(dc.getValue(forKey: "strArray", defaultValue: [1, 2, 3])) == [1, 2, 3]
 
-                expect(dc.getValue(forKey: "mixedArray", defaultValue: [1,2,3])) == [1,2,3]
+                expect(dc.getValue(forKey: "mixedArray", defaultValue: [1, 2, 3])) == [1, 2, 3]
 
                 expect(dc.getValue(forKey: "dict", defaultValue: ["key": 3])) == ["key": 3]
 
@@ -91,7 +91,7 @@ class DynamicConfigSpec: QuickSpec {
                 expect(dc.getValue(forKey: "wrong_key", defaultValue: true)) == true
                 expect(dc.getValue(forKey: "wrong_key", defaultValue: "false")) == "false"
                 expect(dc.getValue(forKey: "wrong_key", defaultValue: 1.23)) == 1.23
-                expect(dc.getValue(forKey: "wrong_key", defaultValue: [1,2,3])) == [1,2,3]
+                expect(dc.getValue(forKey: "wrong_key", defaultValue: [1, 2, 3])) == [1, 2, 3]
                 expect(dc.getValue(forKey: "wrong_key", defaultValue: ["key": 3])) == ["key": 3]
                 expect(dc.getValue(forKey: "wrong_key", defaultValue: ["key": "value"])) == ["key": "value"]
             }

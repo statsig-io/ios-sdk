@@ -11,9 +11,9 @@ public struct DynamicConfig {
     let rawValue: [String: Any]
 
     init(configName: String, configObj: [String: Any] = [:]) {
-        self.name = configName;
-        self.ruleID = configObj["rule_id"] as? String ?? "";
-        self.value = configObj["value"] as? [String: Any] ?? [:];
+        self.name = configName
+        self.ruleID = configObj["rule_id"] as? String ?? ""
+        self.value = configObj["value"] as? [String: Any] ?? [:]
         self.secondaryExposures = configObj["secondary_exposures"] as? [[String: String]] ?? []
 
         self.isDeviceBased = configObj["is_device_based"] as? Bool ?? false

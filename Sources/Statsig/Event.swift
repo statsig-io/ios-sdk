@@ -16,12 +16,14 @@ class Event {
     static let gateExposureEventName = "gate_exposure"
     static let currentVCKey = "currentPage"
 
-    init(user: StatsigUser,
-         name: String,
-         value: Any? = nil,
-         metadata: [String: String]? = nil,
-         secondaryExposures: [[String: String]]? = nil,
-         disableCurrentVCLogging: Bool) {
+    init(
+        user: StatsigUser,
+        name: String,
+        value: Any? = nil,
+        metadata: [String: String]? = nil,
+        secondaryExposures: [[String: String]]? = nil,
+        disableCurrentVCLogging: Bool
+    ) {
         self.time = NSDate().timeIntervalSince1970 * 1000
         self.user = user
         self.name = name
@@ -47,11 +49,12 @@ class Event {
     ) -> Event {
         return Event(
             user: user,
-            name: self.statsigPrefix + name,
+            name: statsigPrefix + name,
             value: value,
             metadata: metadata,
             secondaryExposures: secondaryExposures,
-            disableCurrentVCLogging: disableCurrentVCLogging)
+            disableCurrentVCLogging: disableCurrentVCLogging
+        )
     }
 
     static func gateExposure(
@@ -68,7 +71,8 @@ class Event {
             value: nil,
             metadata: ["gate": gateName, "gateValue": String(gateValue), "ruleID": ruleID],
             secondaryExposures: secondaryExposures,
-            disableCurrentVCLogging: disableCurrentVCLogging)
+            disableCurrentVCLogging: disableCurrentVCLogging
+        )
     }
 
     static func configExposure(
@@ -84,11 +88,12 @@ class Event {
             value: nil,
             metadata: ["config": configName, "ruleID": ruleID],
             secondaryExposures: secondaryExposures,
-            disableCurrentVCLogging: disableCurrentVCLogging)
+            disableCurrentVCLogging: disableCurrentVCLogging
+        )
     }
 
     func toDictionary() -> [String: Any] {
-        var dict = [String:Any]()
+        var dict = [String: Any]()
         dict["eventName"] = name
         dict["user"] = user.toDictionary(forLogging: true)
         dict["time"] = time

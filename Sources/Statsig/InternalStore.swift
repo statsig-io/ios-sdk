@@ -109,7 +109,7 @@ class InternalStore {
 
 extension String {
     func sha256() -> String? {
-        let data = Data(self.utf8)
+        let data = Data(utf8)
         var digest = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
         data.withUnsafeBytes {
             _ = CC_SHA256($0.baseAddress, CC_LONG(data.count), &digest)
