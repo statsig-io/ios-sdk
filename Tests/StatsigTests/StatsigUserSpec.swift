@@ -1,3 +1,4 @@
+import Foundation
 import Nimble
 import Quick
 @testable import Statsig
@@ -19,6 +20,7 @@ class StatsigUserSpec: QuickSpec {
                 expect(validEmptyUser.ip).to(beNil())
                 expect(validEmptyUser.custom).to(beNil())
                 expect(validEmptyUser.deviceEnvironment).toNot(beNil())
+                expect(validEmptyUser.customIDs).to(beNil())
             }
 
             it("is a valid user with ID provided") {
@@ -55,6 +57,12 @@ class StatsigUserSpec: QuickSpec {
                 expect(validUserInvalidCustom).toNot(beNil())
                 expect(validUserInvalidCustom.userID) == "12345"
                 expect(validUserInvalidCustom.custom).to(beNil())
+            }
+
+            it("keeps customIDs in the json") {
+                let user = StatsigUser(userID: "12345", customIDs: ["company_id": "998877"])
+                let json = user.toDictionary(forLogging: false)
+                expect(NSDictionary(dictionary: json["customIDs"] as! [String: String])).to(equal(NSDictionary(dictionary: ["company_id": "998877"])))
             }
         }
     }

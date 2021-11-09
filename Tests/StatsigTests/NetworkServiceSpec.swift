@@ -28,12 +28,17 @@ class NetworkServiceSpec: QuickSpec {
                 }
 
                 let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(userID: "jkw"))
-                ns.fetchInitialValues(for: StatsigUser(userID: "jkw", privateAttributes: ["email": "something@somethingelse.com"]), completion: nil)
+                ns.fetchInitialValues(for:
+                    StatsigUser(
+                        userID: "jkw",
+                        privateAttributes: ["email": "something@somethingelse.com"],
+                        customIDs: ["randomID": "ABCDE"]), completion: nil)
                 let now = NSDate().timeIntervalSince1970
 
                 expect(actualRequestHttpBody?.keys).toEventually(contain("user", "statsigMetadata"))
                 // make sure when fetching values we still use private attributes
                 expect((actualRequestHttpBody?["user"] as? [String: Any])!.keys).toEventually(contain("privateAttributes"))
+                expect(NSDictionary(dictionary: (actualRequestHttpBody?["user"] as? [String: Any])!["customIDs"] as! [String: String])).toEventually(equal(NSDictionary(dictionary: ["randomID": "ABCDE"])))
                 expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).toEventually(equal(sdkKey))
                 expect(Double(actualRequest?.allHTTPHeaderFields?["STATSIG-CLIENT-TIME"] ?? "0")! / 1000)
                     .toEventually(beCloseTo(now, within: 1))

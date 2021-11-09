@@ -9,6 +9,7 @@ public struct StatsigUser {
     public let appVersion: String?
     public let custom: [String: StatsigUserCustomTypeConvertible]?
     public let privateAttributes: [String: StatsigUserCustomTypeConvertible]?
+    public let customIDs: [String: String]?
 
     var statsigEnvironment: [String: String] = [:]
     var deviceEnvironment: [String: String?]
@@ -20,7 +21,8 @@ public struct StatsigUser {
                 locale: String? = nil,
                 appVersion: String? = nil,
                 custom: [String: StatsigUserCustomTypeConvertible]? = nil,
-                privateAttributes: [String: StatsigUserCustomTypeConvertible]? = nil)
+                privateAttributes: [String: StatsigUserCustomTypeConvertible]? = nil,
+                customIDs: [String: String]? = nil)
     {
         self.userID = userID
         self.email = email
@@ -28,6 +30,7 @@ public struct StatsigUser {
         self.country = country
         self.locale = locale
         self.appVersion = appVersion
+        self.customIDs = customIDs
 
         if let custom = custom, JSONSerialization.isValidJSONObject(custom) {
             self.custom = custom
@@ -63,6 +66,7 @@ public struct StatsigUser {
         dict["appVersion"] = self.appVersion
         dict["custom"] = self.custom
         dict["statsigEnvironment"] = self.statsigEnvironment
+        dict["customIDs"] = self.customIDs
 
         if !forLogging {
             dict["privateAttributes"] = self.privateAttributes
