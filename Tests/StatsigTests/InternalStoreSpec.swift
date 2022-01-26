@@ -37,16 +37,16 @@ class InternalStoreSpec: QuickSpec {
             it("sets sticky experiment values correctly") {
                 let store = InternalStore(userID: nil)
                 let configKey = "config"
-                let hashConfigKey = configKey.sha256()!
+                let hashConfigKey = configKey.sha256()
 
                 let expKey = "exp"
-                let hashedExpKey = expKey.sha256()!
+                let hashedExpKey = expKey.sha256()
 
                 let deviceExpKey = "device_exp"
-                let hashedDeviceExpKey = deviceExpKey.sha256()!
+                let hashedDeviceExpKey = deviceExpKey.sha256()
 
                 let nonStickyExpKey = "exp_non_stick"
-                let hashedNonStickyExpKey = nonStickyExpKey.sha256()!
+                let hashedNonStickyExpKey = nonStickyExpKey.sha256()
 
                 var values: [String: [String: [String: Any]]] = [
                     "dynamic_configs": [
@@ -151,10 +151,10 @@ class InternalStoreSpec: QuickSpec {
             it("it deletes user level sticky values but not device level sticky values when requested") {
                 let store = InternalStore(userID: "jkw")
                 let expKey = "exp"
-                let hashedExpKey = expKey.sha256()!
+                let hashedExpKey = expKey.sha256()
 
                 let deviceExpKey = "device_exp"
-                let hashedDeviceExpKey = deviceExpKey.sha256()!
+                let hashedDeviceExpKey = deviceExpKey.sha256()
 
                 var values: [String: [String: [String: Any]]] = [
                     "dynamic_configs": [
@@ -208,10 +208,10 @@ class InternalStoreSpec: QuickSpec {
             it("changing userID in between sessions should invalidate sticky values") {
                 var store = InternalStore(userID: "jkw")
                 let expKey = "exp"
-                let hashedExpKey = expKey.sha256()!
+                let hashedExpKey = expKey.sha256()
 
                 let deviceExpKey = "device_exp"
-                let hashedDeviceExpKey = deviceExpKey.sha256()!
+                let hashedDeviceExpKey = deviceExpKey.sha256()
 
                 var values: [String: [String: [String: Any]]] = [
                     "dynamic_configs": [

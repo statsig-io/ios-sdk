@@ -31,10 +31,11 @@ class EventLogger {
     }
 
     func log(_ event: Event) {
-        eventQueue.append(event)
-
-        while eventQueue.count > maxEventQueueSize {
-            eventQueue.removeFirst()
+        // Stop appending events to the queue if the queue size has grown too big and cannot be flushed for some reason
+        if (eventQueue.count > maxEventQueueSize) {
+            eventQueue = Array(eventQueue.prefix(maxEventQueueSize))
+        } else {
+            eventQueue.append(event)
         }
 
         if eventQueue.count >= flushBatchSize {

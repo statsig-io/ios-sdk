@@ -13,6 +13,7 @@ public class Statsig {
     private var networkService: NetworkService
     private var logger: EventLogger
     private var syncTimer: Timer?
+    private var loggedExposures: Set<String>
 
     static let maxEventNameLength = 64
 
@@ -40,14 +41,21 @@ public class Statsig {
             print("[Statsig]: The feature gate with name \(gateName) does not exist. Returning false as the default.")
             gate = FeatureGate(name: gateName, value: false, ruleID: "")
         }
-        sharedInstance.logger.log(
-            Event.gateExposure(
-                user: sharedInstance.currentUser,
-                gateName: gateName,
-                gateValue: gate?.value ?? false,
-                ruleID: gate?.ruleID ?? "",
-                secondaryExposures: gate?.secondaryExposures ?? [],
-                disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
+        let gateValue = gate?.value ?? false
+        let ruleID = gate?.ruleID ?? ""
+        let dedupeKey = String(format: "%@;%@;%@", gateName, gateValue ? "true" : "false", ruleID)
+        if !sharedInstance.loggedExposures.contains(dedupeKey) {
+            sharedInstance.logger.log(
+                Event.gateExposure(
+                    user: sharedInstance.currentUser,
+                    gateName: gateName,
+                    gateValue: gateValue,
+                    ruleID: ruleID,
+                    secondaryExposures: gate?.secondaryExposures ?? [],
+                    disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
+            sharedInstance.loggedExposures.insert(dedupeKey)
+        }
+
         return gate?.value ?? false
     }
 
@@ -62,13 +70,18 @@ public class Statsig {
             experiment = DynamicConfig(configName: experimentName)
         }
 
-        sharedInstance.logger.log(
-            Event.configExposure(
-                user: sharedInstance.currentUser,
-                configName: experimentName,
-                ruleID: experiment?.ruleID ?? "",
-                secondaryExposures: experiment?.secondaryExposures ?? [],
-                disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
+        let ruleID = experiment?.ruleID ?? ""
+        let dedupeKey = String(format: "%@;%@", experimentName, ruleID)
+        if !sharedInstance.loggedExposures.contains(dedupeKey) {
+            sharedInstance.logger.log(
+                Event.configExposure(
+                    user: sharedInstance.currentUser,
+                    configName: experimentName,
+                    ruleID: ruleID,
+                    secondaryExposures: experiment?.secondaryExposures ?? [],
+                    disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
+            sharedInstance.loggedExposures.insert(dedupeKey)
+        }
         return experiment!
     }
 
@@ -83,13 +96,17 @@ public class Statsig {
             config = DynamicConfig(configName: configName)
         }
 
-        sharedInstance.logger.log(
-            Event.configExposure(
-                user: sharedInstance.currentUser,
-                configName: configName,
-                ruleID: config?.ruleID ?? "",
-                secondaryExposures: config?.secondaryExposures ?? [],
-                disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
+        let ruleID = config?.ruleID ?? ""
+        let dedupeKey = String(format: "%@;%@", configName, ruleID)
+        if !sharedInstance.loggedExposures.contains(dedupeKey) {
+            sharedInstance.logger.log(
+                Event.configExposure(
+                    user: sharedInstance.currentUser,
+                    configName: configName,
+                    ruleID: config?.ruleID ?? "",
+                    secondaryExposures: config?.secondaryExposures ?? [],
+                    disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
+        }
         return config!
     }
 
@@ -112,6 +129,7 @@ public class Statsig {
             return
         }
 
+        sharedInstance.loggedExposures.removeAll()
         sharedInstance.store.loadAndResetStickyUserValuesIfNeeded(newUserID: user.userID)
         sharedInstance.currentUser = normalizeUser(user, options: sharedInstance.statsigOptions)
         sharedInstance.logger.user = sharedInstance.currentUser
@@ -141,6 +159,7 @@ public class Statsig {
         self.store = InternalStore(userID: currentUser.userID)
         self.networkService = NetworkService(sdkKey: sdkKey, options: statsigOptions, store: store)
         self.logger = EventLogger(user: currentUser, networkService: networkService)
+        self.loggedExposures = Set<String>()
 
         fetchAndScheduleSyncing(completion: completion)
 

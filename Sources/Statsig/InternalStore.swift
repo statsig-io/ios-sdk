@@ -12,6 +12,7 @@ class InternalStore {
     var stickyUserExperiments: [String: Any]!
     var stickyDeviceExperiments: [String: Any]!
     var updatedTime: Double = 0 // in milliseconds - retrieved from and sent to server in milliseconds
+    var nameHashes = [String: String]()
 
     init(userID: String?) {
         cache = UserDefaults.standard.dictionary(forKey: InternalStore.localStorageKey) ?? [String: Any]()
@@ -20,52 +21,54 @@ class InternalStore {
         loadAndResetStickyUserValuesIfNeeded(newUserID: userID)
     }
 
+    func hash(_ forName: String) -> String {
+        let hashed = nameHashes[forName] ?? forName.sha256()
+        nameHashes[forName] = hashed
+        return hashed
+    }
+
     func checkGate(forName: String) -> FeatureGate? {
-        if let nameHash = forName.sha256() {
-            if let gates = cache["feature_gates"] as? [String: [String: Any]], let gateObj = gates[nameHash] {
-                return FeatureGate(name: forName, gateObj: gateObj)
-            }
+        let hashedKey = hash(forName)
+        if let gates = cache["feature_gates"] as? [String: [String: Any]], let gateObj = gates[hashedKey] {
+            return FeatureGate(name: forName, gateObj: gateObj)
         }
         return nil
     }
 
     func getConfig(forName: String) -> DynamicConfig? {
-        if let nameHash = forName.sha256() {
-            if let configs = cache["dynamic_configs"] as? [String: [String: Any]], let configObj = configs[nameHash] {
-                return DynamicConfig(configName: forName, configObj: configObj)
-            }
+        let hashedKey = hash(forName)
+        if let configs = cache["dynamic_configs"] as? [String: [String: Any]], let configObj = configs[hashedKey] {
+            return DynamicConfig(configName: forName, configObj: configObj)
         }
         return nil
     }
 
     func getExperiment(forName: String, keepDeviceValue: Bool) -> DynamicConfig? {
-        if let nameHash = forName.sha256() {
-            let stickyValue = (stickyUserExperiments[nameHash] ?? stickyDeviceExperiments[nameHash]) as? [String: Any]
-            let latestValue = getConfig(forName: forName)
+        let hashedKey = hash(forName)
+        let stickyValue = (stickyUserExperiments[hashedKey] ?? stickyDeviceExperiments[hashedKey]) as? [String: Any]
+        let latestValue = getConfig(forName: forName)
 
-            // If flag is false, or experiment is NOT active, simply remove the sticky experiment value, and return the latest value
-            if !keepDeviceValue || latestValue?.isExperimentActive == false {
-                removeStickyValue(forKey: nameHash)
-                return latestValue
-            }
-
-            // If sticky value is already in cache, use it
-            if let stickyValue = stickyValue {
-                return DynamicConfig(configName: forName, configObj: stickyValue)
-            }
-
-            // The user has NOT been exposed before. If is IN this ACTIVE experiment, then we save the value as sticky
-            if let latestValue = latestValue, latestValue.isExperimentActive, latestValue.isUserInExperiment {
-                if latestValue.isDeviceBased {
-                    stickyDeviceExperiments[nameHash] = latestValue.rawValue
-                } else {
-                    stickyUserExperiments[nameHash] = latestValue.rawValue
-                }
-                saveStickyValues()
-            }
+        // If flag is false, or experiment is NOT active, simply remove the sticky experiment value, and return the latest value
+        if !keepDeviceValue || latestValue?.isExperimentActive == false {
+            removeStickyValue(forKey: hashedKey)
             return latestValue
         }
-        return nil
+
+        // If sticky value is already in cache, use it
+        if let stickyValue = stickyValue {
+            return DynamicConfig(configName: forName, configObj: stickyValue)
+        }
+
+        // The user has NOT been exposed before. If is IN this ACTIVE experiment, then we save the value as sticky
+        if let latestValue = latestValue, latestValue.isExperimentActive, latestValue.isUserInExperiment {
+            if latestValue.isDeviceBased {
+                stickyDeviceExperiments[hashedKey] = latestValue.rawValue
+            } else {
+                stickyUserExperiments[hashedKey] = latestValue.rawValue
+            }
+            saveStickyValues()
+        }
+        return latestValue
     }
 
     func set(values: [String: Any], time: Double? = nil) {
@@ -108,7 +111,7 @@ class InternalStore {
 }
 
 extension String {
-    func sha256() -> String? {
+    func sha256() -> String {
         let data = Data(utf8)
         var digest = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
         data.withUnsafeBytes {

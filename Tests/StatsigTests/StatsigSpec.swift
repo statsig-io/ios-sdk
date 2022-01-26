@@ -267,14 +267,18 @@ class StatsigSpec: QuickSpec {
                                       options: StatsigOptions(overrideStableID: "custom_stable_id"))
                         { _ in
                             gate = Statsig.checkGate(gateName2)
+                            Statsig.checkGate(gateName2) // should not create an exposure, deduped
                             exp = Statsig.getExperiment(configName)
-                            config = Statsig.getConfig(configName)
+                            config = Statsig.getConfig(configName) // should not create an exposure, deduped
                             stableID = Statsig.getStableID()
                             Statsig.logEvent("test_event", value: 1, metadata: ["key": "value1"])
                             Statsig.logEvent("test_event_2", value: "1", metadata: ["key": "value2"])
                             Statsig.logEvent("test_event_3", metadata: ["key": "value3"])
-                            Statsig.shutdown()
-                            done()
+                            Statsig.updateUser(StatsigUser(userID: "123", email: "123@statsig.com")) { errorMessage in
+                                Statsig.checkGate(gateName2) // should create an exposure, no longer dedupe after updating user
+                                Statsig.shutdown()
+                                done()
+                            }
                         }
                     }
 
@@ -324,19 +328,6 @@ class StatsigSpec: QuickSpec {
                     secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
                     value = event["value"]
 
-                    expect(event["eventName"] as? String).to(equal(Event.statsigPrefix + Event.configExposureEventName))
-                    expect(user["userID"] as? String).to(equal("123"))
-                    expect(user["email"] as? String).to(equal("123@statsig.com"))
-                    expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["config": "config", "ruleID": "default"])))
-                    expect(secondaryExposures).to(equal([]))
-                    expect(value).to(beNil())
-
-                    event = events[3]
-                    user = event["user"] as! [String: Any]
-                    metadata = event["metadata"] as! [String: String]?
-                    secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
-                    value = event["value"]
-
                     expect(event["eventName"] as? String).to(equal("test_event"))
                     expect(user["userID"] as? String).to(equal("123"))
                     expect(user["email"] as? String).to(equal("123@statsig.com"))
@@ -344,7 +335,7 @@ class StatsigSpec: QuickSpec {
                     expect(secondaryExposures).to(beNil())
                     expect(value as? Int).to(equal(1))
 
-                    event = events[4]
+                    event = events[3]
                     user = event["user"] as! [String: Any]
                     metadata = event["metadata"] as! [String: String]?
                     secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
@@ -357,7 +348,7 @@ class StatsigSpec: QuickSpec {
                     expect(secondaryExposures).to(beNil())
                     expect(value as? String).to(equal("1"))
 
-                    event = events[5]
+                    event = events[4]
                     user = event["user"] as! [String: Any]
                     metadata = event["metadata"] as! [String: String]?
                     secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
@@ -368,6 +359,19 @@ class StatsigSpec: QuickSpec {
                     expect(user["email"] as? String).to(equal("123@statsig.com"))
                     expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["key": "value3"])))
                     expect(secondaryExposures).to(beNil())
+                    expect(value).to(beNil())
+
+                    event = events[5]
+                    user = event["user"] as! [String: Any]
+                    metadata = event["metadata"] as! [String: String]?
+                    secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
+                    value = event["value"]
+
+                    expect(event["eventName"] as? String).to(equal(Event.statsigPrefix + Event.gateExposureEventName))
+                    expect(user["userID"] as? String).to(equal("123"))
+                    expect(user["email"] as? String).to(equal("123@statsig.com"))
+                    expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["gate": "gate_name_2", "gateValue": "true", "ruleID": "rule_id_2"])))
+                    expect(secondaryExposures).to(equal([]))
                     expect(value).to(beNil())
 
                     // validate stable ID
