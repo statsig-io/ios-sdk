@@ -43,7 +43,7 @@ public class Statsig {
         }
         let gateValue = gate?.value ?? false
         let ruleID = gate?.ruleID ?? ""
-        let dedupeKey = String(format: "%@;%@;%@", gateName, gateValue ? "true" : "false", ruleID)
+        let dedupeKey = gateName + (gateValue ? "true" : "false") + ruleID
         if !sharedInstance.loggedExposures.contains(dedupeKey) {
             sharedInstance.logger.log(
                 Event.gateExposure(
@@ -71,7 +71,7 @@ public class Statsig {
         }
 
         let ruleID = experiment?.ruleID ?? ""
-        let dedupeKey = String(format: "%@;%@", experimentName, ruleID)
+        let dedupeKey = experimentName + ruleID
         if !sharedInstance.loggedExposures.contains(dedupeKey) {
             sharedInstance.logger.log(
                 Event.configExposure(
@@ -97,7 +97,7 @@ public class Statsig {
         }
 
         let ruleID = config?.ruleID ?? ""
-        let dedupeKey = String(format: "%@;%@", configName, ruleID)
+        let dedupeKey = configName + ruleID
         if !sharedInstance.loggedExposures.contains(dedupeKey) {
             sharedInstance.logger.log(
                 Event.configExposure(
