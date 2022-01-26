@@ -2,7 +2,7 @@ import Foundation
 
 class EventLogger {
     private static let loggingRequestUserDefaultsKey = "com.Statsig.EventLogger.loggingRequestUserDefaultsKey"
-    var flushBatchSize: Int = 10
+    var flushBatchSize: Int = 50
     var flushInterval: Double = 60
     let maxEventQueueSize: Int = 1000
 
@@ -54,7 +54,6 @@ class EventLogger {
         if eventQueue.isEmpty {
             return
         }
-
         let oldQueue = eventQueue
         eventQueue = [Event]()
         networkService.sendEvents(forUser: user, events: oldQueue) { [weak self] errorMessage, requestData in

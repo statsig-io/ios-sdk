@@ -13,7 +13,7 @@ public class Statsig {
     private var networkService: NetworkService
     private var logger: EventLogger
     private var syncTimer: Timer?
-    private var loggedExposures: Set<String>
+    private var loggedExposures: [String: TimeInterval]
 
     static let maxEventNameLength = 64
 
@@ -44,7 +44,8 @@ public class Statsig {
         let gateValue = gate?.value ?? false
         let ruleID = gate?.ruleID ?? ""
         let dedupeKey = gateName + (gateValue ? "true" : "false") + ruleID
-        if !sharedInstance.loggedExposures.contains(dedupeKey) {
+
+        if shouldLogExposure(key: dedupeKey) {
             sharedInstance.logger.log(
                 Event.gateExposure(
                     user: sharedInstance.currentUser,
@@ -53,7 +54,6 @@ public class Statsig {
                     ruleID: ruleID,
                     secondaryExposures: gate?.secondaryExposures ?? [],
                     disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
-            sharedInstance.loggedExposures.insert(dedupeKey)
         }
 
         return gate?.value ?? false
@@ -72,7 +72,7 @@ public class Statsig {
 
         let ruleID = experiment?.ruleID ?? ""
         let dedupeKey = experimentName + ruleID
-        if !sharedInstance.loggedExposures.contains(dedupeKey) {
+        if shouldLogExposure(key: dedupeKey) {
             sharedInstance.logger.log(
                 Event.configExposure(
                     user: sharedInstance.currentUser,
@@ -80,7 +80,6 @@ public class Statsig {
                     ruleID: ruleID,
                     secondaryExposures: experiment?.secondaryExposures ?? [],
                     disableCurrentVCLogging: sharedInstance.statsigOptions.disableCurrentVCLogging))
-            sharedInstance.loggedExposures.insert(dedupeKey)
         }
         return experiment!
     }
@@ -98,7 +97,7 @@ public class Statsig {
 
         let ruleID = config?.ruleID ?? ""
         let dedupeKey = configName + ruleID
-        if !sharedInstance.loggedExposures.contains(dedupeKey) {
+        if shouldLogExposure(key: dedupeKey) {
             sharedInstance.logger.log(
                 Event.configExposure(
                     user: sharedInstance.currentUser,
@@ -159,7 +158,7 @@ public class Statsig {
         self.store = InternalStore(userID: currentUser.userID)
         self.networkService = NetworkService(sdkKey: sdkKey, options: statsigOptions, store: store)
         self.logger = EventLogger(user: currentUser, networkService: networkService)
-        self.loggedExposures = Set<String>()
+        self.loggedExposures = [String: TimeInterval]()
 
         fetchAndScheduleSyncing(completion: completion)
 
@@ -255,6 +254,18 @@ public class Statsig {
             normalized.setStableID(stableID)
         }
         return normalized
+    }
+
+    private static func shouldLogExposure(key: String) -> Bool {
+        guard let sharedInstance = sharedInstance else { return false }
+        let now = NSDate().timeIntervalSince1970
+        if let lastTime = sharedInstance.loggedExposures[key], lastTime >= now - 3600 {
+            // if the last time the exposure was logged was less than 1 hour ago, do not log exposure
+            return false
+        }
+
+        sharedInstance.loggedExposures[key] = now
+        return true
     }
 
     @objc private func appWillBackground() {
