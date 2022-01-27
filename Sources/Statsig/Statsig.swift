@@ -259,8 +259,8 @@ public class Statsig {
     private static func shouldLogExposure(key: String) -> Bool {
         guard let sharedInstance = sharedInstance else { return false }
         let now = NSDate().timeIntervalSince1970
-        if let lastTime = sharedInstance.loggedExposures[key], lastTime >= now - 3600 {
-            // if the last time the exposure was logged was less than 1 hour ago, do not log exposure
+        if let lastTime = sharedInstance.loggedExposures[key], lastTime >= now - 600 {
+            // if the last time the exposure was logged was less than 10 mins ago, do not log exposure
             return false
         }
 
