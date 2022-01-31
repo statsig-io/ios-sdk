@@ -139,7 +139,7 @@ public class Statsig {
         if sharedInstance == nil {
             return
         }
-        sharedInstance?.logger.flush()
+        sharedInstance?.logger.flush(shutdown: true)
         sharedInstance?.syncTimer?.invalidate()
         sharedInstance = nil
     }

@@ -9,18 +9,16 @@ class NetworkService {
     let sdkKey: String
     let statsigOptions: StatsigOptions
     var store: InternalStore
-    var rateLimiter: [String: Int]
 
     private final let apiHost = "api.statsig.com"
     private final let initializeAPIPath = "/v1/initialize"
-    private final let logEventAPIPath = "/v1/log_event"
+    private final let logEventAPIPath = "/v1/rgstr"
     private final let networkRetryErrorCodes = [408, 500, 502, 503, 504, 522, 524, 599]
 
     init(sdkKey: String, options: StatsigOptions, store: InternalStore) {
         self.sdkKey = sdkKey
         self.statsigOptions = options
         self.store = store
-        self.rateLimiter = [String: Int]()
     }
 
     private func sendRequest(forType: requestType,
@@ -56,7 +54,6 @@ class NetworkService {
             completion(nil, nil, StatsigError.invalidRequestURL(forType.rawValue))
             return
         }
-        let urlString = requestURL.absoluteString
 
         var request = URLRequest(url: requestURL)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -65,42 +62,26 @@ class NetworkService {
         request.httpBody = requestData
         request.httpMethod = "POST"
 
-        if let pendingRequestCount = rateLimiter[urlString] {
-            // limit to at most 10 pending requests for the same URL at a time
-            if pendingRequestCount >= 10 {
-                completion(nil, nil, StatsigError.tooManyRequests(urlString))
-                return
-            }
-            rateLimiter[urlString] = pendingRequestCount + 1
-        } else {
-            rateLimiter[urlString] = 1
-        }
-
-        send(request: request, retry: retry) { [weak self] responseData, response, error in
-            if let self = self {
-                self.rateLimiter[urlString] = max((self.rateLimiter[urlString] ?? 0) - 1, 0)
-            }
-            DispatchQueue.main.async {
-                completion(responseData, response, error)
-            }
+        send(request: request, retry: retry) { responseData, response, error in
+            completion(responseData, response, error)
         }
     }
 
-    func send(request: URLRequest, retry: Int = 0, backoff: Double = 0.5, completion: @escaping (Data?, URLResponse?, Error?) -> Void) {
-        let task = URLSession.shared.dataTask(with: request) { [weak self] responseData, response, error in
-            if retry > 0,
-               let self = self,
-               let statusCode = (response as? HTTPURLResponse)?.statusCode,
-               self.networkRetryErrorCodes.contains(statusCode)
-            {
-                DispatchQueue.main.asyncAfter(deadline: .now() + backoff) {
+    func send(request: URLRequest, retry: Int = 0, backoff: Double = 1, completion: @escaping (Data?, URLResponse?, Error?) -> Void) {
+        DispatchQueue.main.async {
+            let task = URLSession.shared.dataTask(with: request) { [weak self] responseData, response, error in
+                if retry > 0,
+                   let self = self,
+                   let statusCode = (response as? HTTPURLResponse)?.statusCode,
+                   self.networkRetryErrorCodes.contains(statusCode)
+                {
                     self.send(request: request, retry: retry - 1, backoff: backoff * 2, completion: completion)
+                } else {
+                    completion(responseData, response, error)
                 }
-            } else {
-                completion(responseData, response, error)
             }
+            task.resume()
         }
-        task.resume()
     }
 
     func fetchUpdatedValues(for user: StatsigUser, since: Double, completion: (() -> Void)?) {
@@ -117,10 +98,13 @@ class NetworkService {
                let hasUpdates = responseDict["has_updates"] as? Bool,
                hasUpdates
             {
-                self.store.set(values: responseDict, time: responseDict["time"] as? Double)
+                DispatchQueue.main.async {
+                    self.store.set(values: responseDict, time: responseDict["time"] as? Double)
+                }
             }
-
-            completion?()
+            DispatchQueue.main.async {
+                completion?()
+            }
         }
     }
 
@@ -137,7 +121,7 @@ class NetworkService {
             "user": user.toDictionary(forLogging: false),
             "statsigMetadata": user.deviceEnvironment
         ]
-        sendRequest(forType: .initialize, requestBody: params, retry: 5) { [weak self] responseData, response, error in
+        sendRequest(forType: .initialize, requestBody: params, retry: 3) { [weak self] responseData, response, error in
             var errorMessage: String?
             if let error = error {
                 errorMessage = error.localizedDescription
@@ -151,7 +135,9 @@ class NetworkService {
                let json = try? JSONSerialization.jsonObject(with: responseData, options: []),
                let responseDict = json as? [String: Any]
             {
-                self.store.set(values: responseDict, time: responseDict["time"] as? Double)
+                DispatchQueue.main.async {
+                    self.store.set(values: responseDict, time: responseDict["time"] as? Double)
+                }
             }
 
             DispatchQueue.main.async {

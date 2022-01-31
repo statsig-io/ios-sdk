@@ -23,15 +23,13 @@ class EventLoggerSpec: QuickSpec {
             }
 
             it("should add events to internal queue and send once flush timer hits") {
-                let logger = EventLogger(user: user, networkService: ns)
-                logger.flushInterval = 1
+                let logger = EventLogger(user: user, networkService: ns, flushInterval: 1)
                 logger.log(event1)
                 logger.log(event2)
                 logger.log(event3)
 
                 var actualRequest: URLRequest?
                 var actualRequestHttpBody: [String: Any]?
-
                 stub(condition: isHost("api.statsig.com")) { request in
                     actualRequest = request
                     actualRequestHttpBody = try! JSONSerialization.jsonObject(
@@ -41,7 +39,7 @@ class EventLoggerSpec: QuickSpec {
                 }
 
                 waitUntil(timeout: .seconds(2)) { done in
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    logger.queue.asyncAfter(deadline: .now() + 1) {
                         done()
                     }
                 }
@@ -50,7 +48,7 @@ class EventLoggerSpec: QuickSpec {
                 expect((actualRequestHttpBody?["events"] as? [Any])?.count).toEventually(equal(3))
                 expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).toEventually(equal(sdkKey))
                 expect(actualRequest?.httpMethod).toEventually(equal("POST"))
-                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/log_event"))
+                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/rgstr"))
             }
 
             it("should add events to internal queue and send once it passes max batch size") {
@@ -75,15 +73,14 @@ class EventLoggerSpec: QuickSpec {
                 expect((actualRequestHttpBody?["events"] as? [Any])?.count).toEventually(equal(3))
                 expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).toEventually(equal(sdkKey))
                 expect(actualRequest?.httpMethod).toEventually(equal("POST"))
-                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/log_event"))
+                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/rgstr"))
             }
 
             it("should send events with flush()") {
-                let logger = EventLogger(user: user, networkService: ns)
+                let logger = EventLogger(user: user, networkService: ns, flushInterval: 10)
                 logger.log(event1)
                 logger.log(event2)
                 logger.log(event3)
-                logger.flushInterval = 10
                 logger.flushBatchSize = 10
                 logger.flush()
 
@@ -102,15 +99,14 @@ class EventLoggerSpec: QuickSpec {
                 expect((actualRequestHttpBody?["events"] as? [Any])?.count).toEventually(equal(3))
                 expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).toEventually(equal(sdkKey))
                 expect(actualRequest?.httpMethod).toEventually(equal("POST"))
-                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/log_event"))
+                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/rgstr"))
             }
 
             it("should save failed to send requests locally during shutdown, and load and resend local requests during startup") {
-                let logger = EventLogger(user: user, networkService: ns)
+                let logger = EventLogger(user: user, networkService: ns, flushInterval: 10)
                 logger.log(event1)
                 logger.log(event2)
                 logger.log(event3)
-                logger.flushInterval = 10
                 logger.flushBatchSize = 10
                 logger.flush(shutdown: true)
 

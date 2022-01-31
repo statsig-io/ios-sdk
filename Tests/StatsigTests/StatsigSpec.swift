@@ -248,7 +248,7 @@ class StatsigSpec: QuickSpec {
 
                     var events: [[String: Any]] = []
                     var statsigMetadata: [String: String?] = [:]
-                    stub(condition: isPath("/v1/log_event")) { request in
+                    stub(condition: isPath("/v1/rgstr")) { request in
                         let actualRequestHttpBody = try! JSONSerialization.jsonObject(
                             with: request.ohhttpStubs_httpBody!,
                             options: []) as! [String: Any]
