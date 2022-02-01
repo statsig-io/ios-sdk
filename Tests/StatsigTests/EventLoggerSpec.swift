@@ -23,7 +23,8 @@ class EventLoggerSpec: QuickSpec {
             }
 
             it("should add events to internal queue and send once flush timer hits") {
-                let logger = EventLogger(user: user, networkService: ns, flushInterval: 1)
+                let logger = EventLogger(user: user, networkService: ns)
+                logger.start(flushInterval: 1)
                 logger.log(event1)
                 logger.log(event2)
                 logger.log(event3)
@@ -77,7 +78,8 @@ class EventLoggerSpec: QuickSpec {
             }
 
             it("should send events with flush()") {
-                let logger = EventLogger(user: user, networkService: ns, flushInterval: 10)
+                let logger = EventLogger(user: user, networkService: ns)
+                logger.start(flushInterval: 10)
                 logger.log(event1)
                 logger.log(event2)
                 logger.log(event3)
@@ -103,12 +105,13 @@ class EventLoggerSpec: QuickSpec {
             }
 
             it("should save failed to send requests locally during shutdown, and load and resend local requests during startup") {
-                let logger = EventLogger(user: user, networkService: ns, flushInterval: 10)
+                let logger = EventLogger(user: user, networkService: ns)
+                logger.start(flushInterval: 10)
                 logger.log(event1)
                 logger.log(event2)
                 logger.log(event3)
                 logger.flushBatchSize = 10
-                logger.flush(shutdown: true)
+                logger.stop()
 
                 let savedData: [Data]?
                 var resendData: [Data] = []

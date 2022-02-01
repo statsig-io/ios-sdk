@@ -139,7 +139,7 @@ public class Statsig {
         if sharedInstance == nil {
             return
         }
-        sharedInstance?.logger.flush(shutdown: true)
+        sharedInstance?.logger.stop()
         sharedInstance?.syncTimer?.invalidate()
         sharedInstance = nil
     }
@@ -158,6 +158,7 @@ public class Statsig {
         self.store = InternalStore(userID: currentUser.userID)
         self.networkService = NetworkService(sdkKey: sdkKey, options: statsigOptions, store: store)
         self.logger = EventLogger(user: currentUser, networkService: networkService)
+        self.logger.start()
         self.loggedExposures = [String: TimeInterval]()
 
         fetchAndScheduleSyncing(completion: completion)
@@ -172,6 +173,12 @@ public class Statsig {
             self,
             selector: #selector(appWillTerminate),
             name: UIApplication.willTerminateNotification,
+            object: nil)
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appWillForeground),
+            name: UIApplication.willEnterForegroundNotification,
             object: nil)
     }
 
@@ -268,12 +275,16 @@ public class Statsig {
         return true
     }
 
+    @objc private func appWillForeground() {
+        logger.start()
+    }
+
     @objc private func appWillBackground() {
-        logger.flush(shutdown: true)
+        logger.stop()
     }
 
     @objc private func appWillTerminate() {
-        logger.flush(shutdown: true)
+        logger.stop()
     }
 
     deinit {

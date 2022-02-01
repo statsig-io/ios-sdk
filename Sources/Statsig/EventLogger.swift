@@ -15,7 +15,7 @@ class EventLogger {
 
     let queue = DispatchQueue(label: eventQueueLabel, qos: .userInitiated)
 
-    init(user: StatsigUser, networkService: NetworkService, flushInterval: Double = 60) {
+    init(user: StatsigUser, networkService: NetworkService) {
         self.events = [Event]()
         self.requestQueue = [Data]()
         self.user = user
@@ -31,11 +31,6 @@ class EventLogger {
             DispatchQueue.main.async {
                 self.requestQueue += failedRequestsData
             }
-        }
-
-        flushTimer = Timer.scheduledTimer(withTimeInterval: flushInterval, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            self.flush()
         }
     }
 
@@ -54,15 +49,23 @@ class EventLogger {
         }
     }
 
-    func flush(shutdown: Bool = false) {
-        if (shutdown) {
-            queue.sync {
-                self.flushInternal(shutdown: shutdown)
-            }
-        } else {
-            queue.async {
-                self.flushInternal(shutdown: shutdown)
-            }
+    func start(flushInterval: Double = 60) {
+        flushTimer = Timer.scheduledTimer(withTimeInterval: flushInterval, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            self.flush()
+        }
+    }
+
+    func stop() {
+        flushTimer?.invalidate()
+        queue.sync {
+            self.flushInternal(shutdown: true)
+        }
+    }
+
+    func flush() {
+        queue.async {
+            self.flushInternal(shutdown: false)
         }
     }
 
