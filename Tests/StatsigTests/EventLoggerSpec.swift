@@ -40,7 +40,7 @@ class EventLoggerSpec: QuickSpec {
                 }
 
                 waitUntil(timeout: .seconds(2)) { done in
-                    logger.queue.asyncAfter(deadline: .now() + 1) {
+                    logger.logQueue.asyncAfter(deadline: .now() + 1) {
                         done()
                     }
                 }

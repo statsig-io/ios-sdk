@@ -147,7 +147,7 @@ class NetworkServiceSpec: QuickSpec {
                 expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).toEventually(equal(sdkKey))
                 expect(actualRequest?.httpMethod).toEventually(equal("POST"))
                 expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/rgstr"))
-                expect(actualRequestData).toEventually(equal(returnedRequestData))
+                expect(actualRequestData.count).toEventually(equal(returnedRequestData.count))
             }
         }
     }

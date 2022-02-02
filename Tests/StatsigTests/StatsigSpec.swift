@@ -47,11 +47,15 @@ class StatsigSpec: QuickSpec {
                     var error: String?
                     var gate: Bool?
                     var config: DynamicConfig?
-                    Statsig.start(sdkKey: "invalid_sdk_key", options: StatsigOptions()) { errorMessage in
-                        error = errorMessage
-                        gate = Statsig.checkGate("show_coupon")
-                        config = Statsig.getConfig("my_config")
+                    waitUntil { done in
+                        Statsig.start(sdkKey: "invalid_sdk_key", options: StatsigOptions()) { errorMessage in
+                            error = errorMessage
+                            gate = Statsig.checkGate("show_coupon")
+                            config = Statsig.getConfig("my_config")
+                            done()
+                        }
                     }
+
                     expect(error).toEventually(contain("403"))
                     expect(gate).toEventually(beFalse())
                     expect(NSDictionary(dictionary: config!.value)).toEventually(equal(NSDictionary(dictionary: [:])))

@@ -5,6 +5,7 @@ import UIKit
 public typealias completionBlock = ((_ errorMessage: String?) -> Void)?
 
 public class Statsig {
+    private static let exposureDedupeQueueLabel = "com.Statsig.exposureDedupeQueue"
     private static var sharedInstance: Statsig?
     private var sdkKey: String
     private var currentUser: StatsigUser
@@ -14,6 +15,8 @@ public class Statsig {
     private var logger: EventLogger
     private var syncTimer: Timer?
     private var loggedExposures: [String: TimeInterval]
+
+    private let exposureDedupeQueue = DispatchQueue(label: exposureDedupeQueueLabel, qos: .userInitiated, attributes: .concurrent)
 
     static let maxEventNameLength = 64
 
@@ -128,7 +131,9 @@ public class Statsig {
             return
         }
 
-        sharedInstance.loggedExposures.removeAll()
+        sharedInstance.exposureDedupeQueue.sync {
+            sharedInstance.loggedExposures.removeAll()
+        }
         sharedInstance.store.loadAndResetStickyUserValuesIfNeeded(newUserID: user.userID)
         sharedInstance.currentUser = normalizeUser(user, options: sharedInstance.statsigOptions)
         sharedInstance.logger.user = sharedInstance.currentUser
@@ -265,14 +270,16 @@ public class Statsig {
 
     private static func shouldLogExposure(key: String) -> Bool {
         guard let sharedInstance = sharedInstance else { return false }
-        let now = NSDate().timeIntervalSince1970
-        if let lastTime = sharedInstance.loggedExposures[key], lastTime >= now - 600 {
-            // if the last time the exposure was logged was less than 10 mins ago, do not log exposure
-            return false
-        }
+        return sharedInstance.exposureDedupeQueue.sync { () -> Bool in
+            let now = NSDate().timeIntervalSince1970
+            if let lastTime = sharedInstance.loggedExposures[key], lastTime >= now - 600 {
+                // if the last time the exposure was logged was less than 10 mins ago, do not log exposure
+                return false
+            }
 
-        sharedInstance.loggedExposures[key] = now
-        return true
+            sharedInstance.loggedExposures[key] = now
+            return true
+        }
     }
 
     @objc private func appWillForeground() {

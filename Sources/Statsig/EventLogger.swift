@@ -13,7 +13,7 @@ class EventLogger {
     var user: StatsigUser
     let networkService: NetworkService
 
-    let queue = DispatchQueue(label: eventQueueLabel, qos: .userInitiated)
+    let logQueue = DispatchQueue(label: eventQueueLabel, qos: .userInitiated)
 
     init(user: StatsigUser, networkService: NetworkService) {
         self.events = [Event]()
@@ -35,7 +35,7 @@ class EventLogger {
     }
 
     func log(_ event: Event) {
-        queue.sync { [weak self] in
+        logQueue.sync { [weak self] in
             guard let self = self else { return }
             if (self.events.count > self.maxEventQueueSize) {
                 self.events = Array(self.events.prefix(self.maxEventQueueSize))
@@ -58,13 +58,13 @@ class EventLogger {
 
     func stop() {
         flushTimer?.invalidate()
-        queue.sync {
+        logQueue.sync {
             self.flushInternal(shutdown: true)
         }
     }
 
     func flush() {
-        queue.async {
+        logQueue.async {
             self.flushInternal(shutdown: false)
         }
     }
@@ -92,14 +92,15 @@ class EventLogger {
                 return
             }
 
-            self.queue.async {
+            self.logQueue.sync {
                 self.events = oldEvents + self.events // add old events back to the queue if request fails
                 self.flushBatchSize = min(self.events.count * 2, self.maxEventQueueSize)
-                if let errorMessage = errorMessage, !self.loggedErrorMessage.contains(errorMessage) {
-                    self.loggedErrorMessage.insert(errorMessage)
-                    self.log(Event.statsigInternalEvent(user: self.user, name: "log_event_failed", value: nil,
-                                                        metadata: ["error": errorMessage]))
-                }
+            }
+
+            if let errorMessage = errorMessage, !self.loggedErrorMessage.contains(errorMessage) {
+                self.loggedErrorMessage.insert(errorMessage)
+                self.log(Event.statsigInternalEvent(user: self.user, name: "log_event_failed", value: nil,
+                                                    metadata: ["error": errorMessage]))
             }
         }
     }

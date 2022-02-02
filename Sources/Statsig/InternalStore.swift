@@ -7,94 +7,103 @@ class InternalStore {
     private static let stickyUserIDKey = "com.Statsig.InternalStore.stickyUserIDKey"
     private static let stickyUserExperimentsKey = "com.Statsig.InternalStore.stickyUserExperimentsKey"
     private static let stickyDeviceExperimentsKey = "com.Statsig.InternalStore.stickyDeviceExperimentsKey"
+    private static let storeQueueLabel = "com.Statsig.storeQueue"
+
     var stickyUserID: String?
     var cache: [String: Any]!
     var stickyUserExperiments: [String: Any]!
     var stickyDeviceExperiments: [String: Any]!
     var updatedTime: Double = 0 // in milliseconds - retrieved from and sent to server in milliseconds
-    var nameHashes = [String: String]()
+
+    let storeQueue = DispatchQueue(label: storeQueueLabel, qos: .userInitiated, attributes: .concurrent)
 
     init(userID: String?) {
         cache = UserDefaults.standard.dictionary(forKey: InternalStore.localStorageKey) ?? [String: Any]()
         stickyDeviceExperiments =
             UserDefaults.standard.dictionary(forKey: InternalStore.stickyDeviceExperimentsKey) ?? [String: Any]()
         loadAndResetStickyUserValuesIfNeeded(newUserID: userID)
-    }
 
-    func hash(_ forName: String) -> String {
-        let hashed = nameHashes[forName] ?? forName.sha256()
-        nameHashes[forName] = hashed
-        return hashed
     }
 
     func checkGate(forName: String) -> FeatureGate? {
-        let hashedKey = hash(forName)
-        if let gates = cache["feature_gates"] as? [String: [String: Any]], let gateObj = gates[hashedKey] {
-            return FeatureGate(name: forName, gateObj: gateObj)
+        storeQueue.sync {
+            let hashedKey = forName.sha256()
+            if let gates = cache["feature_gates"] as? [String: [String: Any]], let gateObj = gates[hashedKey] {
+                return FeatureGate(name: forName, gateObj: gateObj)
+            }
+            return nil
         }
-        return nil
     }
 
     func getConfig(forName: String) -> DynamicConfig? {
-        let hashedKey = hash(forName)
-        if let configs = cache["dynamic_configs"] as? [String: [String: Any]], let configObj = configs[hashedKey] {
-            return DynamicConfig(configName: forName, configObj: configObj)
+        storeQueue.sync {
+            let hashedKey = forName.sha256()
+            if let configs = cache["dynamic_configs"] as? [String: [String: Any]], let configObj = configs[hashedKey] {
+                return DynamicConfig(configName: forName, configObj: configObj)
+            }
+            return nil
         }
-        return nil
     }
 
     func getExperiment(forName: String, keepDeviceValue: Bool) -> DynamicConfig? {
-        let hashedKey = hash(forName)
-        let stickyValue = (stickyUserExperiments[hashedKey] ?? stickyDeviceExperiments[hashedKey]) as? [String: Any]
         let latestValue = getConfig(forName: forName)
 
-        // If flag is false, or experiment is NOT active, simply remove the sticky experiment value, and return the latest value
-        if !keepDeviceValue || latestValue?.isExperimentActive == false {
-            removeStickyValue(forKey: hashedKey)
+        return storeQueue.sync {
+            let hashedKey = forName.sha256()
+            let stickyValue = (stickyUserExperiments[hashedKey] ?? stickyDeviceExperiments[hashedKey]) as? [String: Any]
+
+            // If flag is false, or experiment is NOT active, simply remove the sticky experiment value, and return the latest value
+            if !keepDeviceValue || latestValue?.isExperimentActive == false {
+                stickyUserExperiments.removeValue(forKey: hashedKey)
+                stickyDeviceExperiments.removeValue(forKey: hashedKey)
+                saveStickyValues()
+                return latestValue
+            }
+
+            // If sticky value is already in cache, use it
+            if let stickyValue = stickyValue {
+                return DynamicConfig(configName: forName, configObj: stickyValue)
+            }
+
+            // The user has NOT been exposed before. If is IN this ACTIVE experiment, then we save the value as sticky
+            if let latestValue = latestValue, latestValue.isExperimentActive, latestValue.isUserInExperiment {
+                if latestValue.isDeviceBased {
+                    stickyDeviceExperiments[hashedKey] = latestValue.rawValue
+                } else {
+                    stickyUserExperiments[hashedKey] = latestValue.rawValue
+                }
+                saveStickyValues()
+            }
             return latestValue
         }
+    }
 
-        // If sticky value is already in cache, use it
-        if let stickyValue = stickyValue {
-            return DynamicConfig(configName: forName, configObj: stickyValue)
-        }
-
-        // The user has NOT been exposed before. If is IN this ACTIVE experiment, then we save the value as sticky
-        if let latestValue = latestValue, latestValue.isExperimentActive, latestValue.isUserInExperiment {
-            if latestValue.isDeviceBased {
-                stickyDeviceExperiments[hashedKey] = latestValue.rawValue
-            } else {
-                stickyUserExperiments[hashedKey] = latestValue.rawValue
+    func set(values: [String: Any], time: Double? = nil, completion: (() -> Void)? = nil) {
+        storeQueue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+            self.cache = values
+            self.updatedTime = time ?? self.updatedTime
+            UserDefaults.standard.setValue(self.cache, forKey: InternalStore.localStorageKey)
+            DispatchQueue.main.async {
+                completion?()
             }
-            saveStickyValues()
         }
-        return latestValue
-    }
-
-    func set(values: [String: Any], time: Double? = nil) {
-        cache = values
-        updatedTime = time ?? updatedTime
-        UserDefaults.standard.setValue(cache, forKey: InternalStore.localStorageKey)
-    }
-
-    func removeStickyValue(forKey: String) {
-        stickyUserExperiments.removeValue(forKey: forKey)
-        stickyDeviceExperiments.removeValue(forKey: forKey)
-        saveStickyValues()
     }
 
     func loadAndResetStickyUserValuesIfNeeded(newUserID: String?) {
-        stickyUserID = UserDefaults.standard.string(forKey: InternalStore.stickyUserIDKey)
-        if stickyUserID == newUserID {
-            // If user ID is unchanged, just grab the sticky values
-            stickyUserExperiments = UserDefaults.standard.dictionary(forKey: InternalStore.stickyUserExperimentsKey) ?? [String: Any]()
-        } else {
-            // Otherwise, update the ID in memory, and in cache
-            stickyUserID = newUserID
-            UserDefaults.standard.set(newUserID, forKey: InternalStore.stickyUserIDKey)
-            // Also resets sticky user values in memory and cache
-            stickyUserExperiments = [String: Any]()
-            UserDefaults.standard.removeObject(forKey: InternalStore.stickyUserExperimentsKey)
+        storeQueue.sync(flags: .barrier) {
+            stickyUserID = UserDefaults.standard.string(forKey: InternalStore.stickyUserIDKey)
+            if stickyUserID == newUserID {
+                // If user ID is unchanged, just grab the sticky values
+                stickyUserExperiments = UserDefaults.standard.dictionary(forKey: InternalStore.stickyUserExperimentsKey) ?? [String: Any]()
+            } else {
+                // Otherwise, update the ID in memory, and in cache
+                stickyUserID = newUserID
+                UserDefaults.standard.set(newUserID, forKey: InternalStore.stickyUserIDKey)
+                // Also resets sticky user values in memory and cache
+                stickyUserExperiments = [String: Any]()
+                UserDefaults.standard.removeObject(forKey: InternalStore.stickyUserExperimentsKey)
+            }
         }
     }
 

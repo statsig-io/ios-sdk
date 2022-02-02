@@ -16,7 +16,11 @@ class InternalStoreSpec: QuickSpec {
 
             it("sets value in UserDefaults correctly and persists between initialization") {
                 let store = InternalStore(userID: nil)
-                store.set(values: StatsigSpec.mockUserValues)
+                waitUntil(timeout: .seconds(1)) { done in
+                    store.set(values: StatsigSpec.mockUserValues) {
+                        done()
+                    }
+                }
 
                 let store2 = InternalStore(userID: nil)
                 let cache = store2.cache
@@ -231,7 +235,11 @@ class InternalStoreSpec: QuickSpec {
                         ],
                     ],
                 ]
-                store.set(values: values)
+                waitUntil { done in
+                    store.set(values: values) {
+                        done()
+                    }
+                }
 
                 var exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 var deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
@@ -242,7 +250,11 @@ class InternalStoreSpec: QuickSpec {
                 store = InternalStore(userID: "tore")
                 values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"]
                 values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v1"]
-                store.set(values: values)
+                waitUntil { done in
+                    store.set(values: values) {
+                        done()
+                    }
+                }
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
@@ -252,7 +264,11 @@ class InternalStoreSpec: QuickSpec {
                 // Try to get value with keepDeviceValue set to false. Should get updated values
                 values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v2"]
                 values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v2"]
-                store.set(values: values)
+                waitUntil { done in
+                    store.set(values: values) {
+                        done()
+                    }
+                }
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: false)
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: false)
