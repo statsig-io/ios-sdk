@@ -1,0 +1,25 @@
+name: Testbed UI
+
+on: pull_request
+
+jobs:
+  test:
+    name: Test
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Install XCBeautify
+        run: brew install xcbeautify
+
+      - name: Build and Test
+        run: |
+          STATSIG_CLIENT_KEY=$STATSIG_CLIENT_KEY \
+            xcodebuild clean test \
+            -scheme ios-sdk-testbed \
+            -project ios-sdk-testbed/ios-sdk-testbed.xcodeproj/ \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,name=iPhone SE (2nd generation),OS=15.2" \
+            | xcbeautify && exit ${PIPESTATUS[0]}
+        env:
+          STATSIG_CLIENT_KEY: ${{ secrets.IOS_SDK_E2E_CLIENT_KEY }}
