@@ -5,10 +5,10 @@ public struct DynamicConfig {
     public let value: [String: Any]
     let ruleID: String
     let secondaryExposures: [[String: String]]
-    let isDeviceBased: Bool
-    let isUserInExperiment: Bool
-    let isExperimentActive: Bool
-    let rawValue: [String: Any]
+    var isDeviceBased: Bool = false
+    var isUserInExperiment: Bool = false
+    var isExperimentActive: Bool = false
+    var rawValue: [String: Any] = [:]
 
     init(configName: String, configObj: [String: Any] = [:]) {
         self.name = configName
@@ -20,6 +20,13 @@ public struct DynamicConfig {
         self.isUserInExperiment = configObj["is_user_in_experiment"] as? Bool ?? false
         self.isExperimentActive = configObj["is_experiment_active"] as? Bool ?? false
         self.rawValue = configObj
+    }
+
+    init(configName: String, value: [String: Any], ruleID: String) {
+        self.name = configName
+        self.value = value
+        self.ruleID = ruleID
+        self.secondaryExposures = []
     }
 
     public func getValue<T: StatsigDynamicConfigValue>(forKey: String, defaultValue: T) -> T {

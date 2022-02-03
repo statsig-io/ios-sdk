@@ -159,15 +159,21 @@ class StatsigSpec: QuickSpec {
                     var dc: DynamicConfig?
                     var exp: DynamicConfig?
                     var nonExistentDC: DynamicConfig?
-                    Statsig.start(sdkKey: "client-api-key") { _ in
-                        gate1 = Statsig.checkGate(gateName1)
-                        gate2 = Statsig.checkGate(gateName2)
-                        nonExistentGate = Statsig.checkGate(nonExistentGateName)
 
-                        dc = Statsig.getConfig(configName)
-                        exp = Statsig.getExperiment(configName)
-                        nonExistentDC = Statsig.getConfig(nonExistentConfigName)
+                    waitUntil { done in
+                        Statsig.start(sdkKey: "client-api-key") { _ in
+                            gate1 = Statsig.checkGate(gateName1)
+                            gate2 = Statsig.checkGate(gateName2)
+                            nonExistentGate = Statsig.checkGate(nonExistentGateName)
+
+                            dc = Statsig.getConfig(configName)
+                            exp = Statsig.getExperiment(configName)
+                            nonExistentDC = Statsig.getConfig(nonExistentConfigName)
+
+                            done()
+                        }
                     }
+
 
                     expect(gate1).toEventually(beFalse())
                     expect(gate2).toEventually(beTrue())
@@ -178,6 +184,44 @@ class StatsigSpec: QuickSpec {
                     expect(NSDictionary(dictionary: exp!.value)).toEventually(
                         equal(NSDictionary(dictionary: DynamicConfigSpec.TestMixedConfig["value"] as! [String: Any])))
                     expect(NSDictionary(dictionary: nonExistentDC!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
+
+                    // Now add overrides on top and check if they work
+                    Statsig.overrideGate(gateName1, value: true)
+                    expect(Statsig.checkGate(gateName1)).to(beTrue())
+
+                    Statsig.overrideGate(gateName1, value: false)
+                    expect(Statsig.checkGate(gateName1)).to(beFalse())
+
+                    Statsig.overrideGate("gate_fake", value: true)
+                    expect(Statsig.checkGate("gate_fake")).to(beTrue())
+
+                    Statsig.overrideConfig(configName, value: ["param": "value"])
+                    expect(Statsig.getConfig(configName).getValue(forKey: "param", defaultValue: "wrong")).to(equal("value"))
+                    expect(Statsig.getExperiment(configName).getValue(forKey: "param", defaultValue: "wrong")).to(equal("value"))
+
+                    var overrides = Statsig.getAllOverrides()
+                    expect(overrides?.gates.keys.count).to(equal(2))
+                    expect(overrides?.gates[gateName1]).to(beFalse())
+                    expect(overrides?.gates["gate_fake"]).to(beTrue())
+
+                    expect(overrides?.configs.keys.count).to(equal(1))
+                    expect(NSDictionary(dictionary: overrides!.configs[configName]!)).to(equal(NSDictionary(dictionary: ["param": "value"])))
+
+                    Statsig.removeOverride(gateName1)
+                    expect(Statsig.checkGate(gateName1)).to(beFalse())
+
+                    Statsig.removeOverride(configName)
+                    expect(NSDictionary(dictionary: Statsig.getConfig(configName).value)).to(
+                        equal(NSDictionary(dictionary: DynamicConfigSpec.TestMixedConfig["value"] as! [String: Any])))
+
+                    overrides = Statsig.getAllOverrides()
+                    expect(overrides?.gates.keys.count).to(equal(1))
+                    expect(overrides?.configs.keys.count).to(equal(0))
+
+                    Statsig.removeAllOverrides()
+                    overrides = Statsig.getAllOverrides()
+                    expect(overrides?.gates.keys.count).to(equal(0))
+                    expect(overrides?.configs.keys.count).to(equal(0))
                 }
 
                 it("times out if the request took too long and responds early with default values, when there is no local cache") {

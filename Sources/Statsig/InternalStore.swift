@@ -2,31 +2,50 @@ import Foundation
 
 import CommonCrypto
 
+public struct StatsigOverrides {
+    public var gates: [String: Bool]
+    public var configs: [String: [String: Any]]
+
+    init(_ overrides: [String: Any]) {
+        self.gates = overrides[InternalStore.gatesKey] as? [String: Bool] ?? [:]
+        self.configs = overrides[InternalStore.configsKey] as? [String: [String: Any]] ?? [:]
+    }
+}
+
 class InternalStore {
     private static let localStorageKey = "com.Statsig.InternalStore.localStorageKey"
     private static let stickyUserIDKey = "com.Statsig.InternalStore.stickyUserIDKey"
     private static let stickyUserExperimentsKey = "com.Statsig.InternalStore.stickyUserExperimentsKey"
     private static let stickyDeviceExperimentsKey = "com.Statsig.InternalStore.stickyDeviceExperimentsKey"
+    private static let localOverridesKey = "com.Statsig.InternalStore.localOverridesKey"
     private static let storeQueueLabel = "com.Statsig.storeQueue"
+
+    static let gatesKey = "feature_gates"
+    static let configsKey = "dynamic_configs"
 
     var stickyUserID: String?
     var cache: [String: Any]!
     var stickyUserExperiments: [String: Any]!
     var stickyDeviceExperiments: [String: Any]!
+    var localOverrides: [String: Any]!
     var updatedTime: Double = 0 // in milliseconds - retrieved from and sent to server in milliseconds
 
     let storeQueue = DispatchQueue(label: storeQueueLabel, qos: .userInitiated, attributes: .concurrent)
 
     init(userID: String?) {
         cache = UserDefaults.standard.dictionary(forKey: InternalStore.localStorageKey) ?? [String: Any]()
+        localOverrides = UserDefaults.standard.dictionary(forKey: InternalStore.localOverridesKey)
+            ?? getEmptyOverrides()
         stickyDeviceExperiments =
             UserDefaults.standard.dictionary(forKey: InternalStore.stickyDeviceExperimentsKey) ?? [String: Any]()
         loadAndResetStickyUserValuesIfNeeded(newUserID: userID)
-
     }
 
     func checkGate(forName: String) -> FeatureGate? {
         storeQueue.sync {
+            if let override = (localOverrides[InternalStore.gatesKey] as? [String: Bool])?[forName] {
+                return FeatureGate(name: forName, value: override, ruleID: "override")
+            }
             let hashedKey = forName.sha256()
             if let gates = cache["feature_gates"] as? [String: [String: Any]], let gateObj = gates[hashedKey] {
                 return FeatureGate(name: forName, gateObj: gateObj)
@@ -37,6 +56,9 @@ class InternalStore {
 
     func getConfig(forName: String) -> DynamicConfig? {
         storeQueue.sync {
+            if let override = (localOverrides[InternalStore.configsKey] as? [String: [String: Any]])?[forName] {
+                return DynamicConfig(configName: forName, value: override, ruleID: "override")
+            }
             let hashedKey = forName.sha256()
             if let configs = cache["dynamic_configs"] as? [String: [String: Any]], let configObj = configs[hashedKey] {
                 return DynamicConfig(configName: forName, configObj: configObj)
@@ -49,6 +71,9 @@ class InternalStore {
         let latestValue = getConfig(forName: forName)
 
         return storeQueue.sync {
+            if let override = (localOverrides[InternalStore.configsKey] as? [String: [String: Any]])?[forName] {
+                return DynamicConfig(configName: forName, value: override, ruleID: "override")
+            }
             let hashedKey = forName.sha256()
             let stickyValue = (stickyUserExperiments[hashedKey] ?? stickyDeviceExperiments[hashedKey]) as? [String: Any]
 
@@ -111,11 +136,56 @@ class InternalStore {
         UserDefaults.standard.removeObject(forKey: InternalStore.localStorageKey)
         UserDefaults.standard.removeObject(forKey: InternalStore.stickyUserExperimentsKey)
         UserDefaults.standard.removeObject(forKey: InternalStore.stickyDeviceExperimentsKey)
+        UserDefaults.standard.removeObject(forKey: InternalStore.stickyUserIDKey)
+        UserDefaults.standard.removeObject(forKey: InternalStore.localOverridesKey)
     }
 
     private func saveStickyValues() {
         UserDefaults.standard.setValue(stickyUserExperiments, forKey: InternalStore.stickyUserExperimentsKey)
         UserDefaults.standard.setValue(stickyDeviceExperiments, forKey: InternalStore.stickyDeviceExperimentsKey)
+    }
+
+    // Local overrides functions
+    func overrideGate(_ gateName: String, _ value: Bool) {
+        storeQueue.async(flags: .barrier) { [weak self] in
+            self?.localOverrides[jsonDict: InternalStore.gatesKey]?[gateName] = value
+            self?.saveOverrides()
+        }
+    }
+
+    func overrideConfig(_ configName: String, _ value: [String: Any]) {
+        storeQueue.async(flags: .barrier) { [weak self] in
+            self?.localOverrides[jsonDict: InternalStore.configsKey]?[configName] = value
+            self?.saveOverrides()
+        }
+    }
+
+    func removeOverride(_ name: String) {
+        storeQueue.async(flags: .barrier) { [weak self] in
+            self?.localOverrides[jsonDict: InternalStore.gatesKey]?.removeValue(forKey: name)
+            self?.localOverrides[jsonDict: InternalStore.configsKey]?.removeValue(forKey: name)
+        }
+    }
+
+    func removeAllOverrides() {
+        storeQueue.async(flags: .barrier) { [weak self] in
+            self?.localOverrides = self?.getEmptyOverrides()
+            self?.saveOverrides()
+        }
+    }
+
+    func getAllOverrides() -> StatsigOverrides {
+        storeQueue.sync {
+            return StatsigOverrides(localOverrides)
+        }
+    }
+
+    private func saveOverrides() {
+        UserDefaults.standard.setValue(localOverrides, forKey: InternalStore.localOverridesKey)
+    }
+
+    private func getEmptyOverrides() -> [String: Any] {
+        return [InternalStore.gatesKey: [:], InternalStore.configsKey: [:]]
     }
 }
 
@@ -127,5 +197,17 @@ extension String {
             _ = CC_SHA256($0.baseAddress, CC_LONG(data.count), &digest)
         }
         return Data(digest).base64EncodedString()
+    }
+}
+
+// https://stackoverflow.com/a/41543070
+extension Dictionary {
+    subscript(jsonDict key: Key) -> [String:Any]? {
+        get {
+            return self[key] as? [String:Any]
+        }
+        set {
+            self[key] = newValue as? Value
+        }
     }
 }

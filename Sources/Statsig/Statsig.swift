@@ -156,6 +156,37 @@ public class Statsig {
         return nil
     }
 
+    public static func overrideGate(_ gateName: String, value: Bool) {
+        if let sharedInstance = sharedInstance {
+            sharedInstance.store.overrideGate(gateName, value)
+        }
+    }
+
+    public static func overrideConfig(_ configName: String, value: [String: Any]) {
+        if let sharedInstance = sharedInstance {
+            sharedInstance.store.overrideConfig(configName, value)
+        }
+    }
+
+    public static func removeOverride(_ name: String) {
+        if let sharedInstance = sharedInstance {
+            sharedInstance.store.removeOverride(name)
+        }
+    }
+
+    public static func removeAllOverrides() {
+        if let sharedInstance = sharedInstance {
+            sharedInstance.store.removeAllOverrides()
+        }
+    }
+
+    public static func getAllOverrides() -> StatsigOverrides? {
+        if let sharedInstance = sharedInstance {
+            return sharedInstance.store.getAllOverrides()
+        }
+        return StatsigOverrides([:])
+    }
+
     private init(sdkKey: String, user: StatsigUser?, options: StatsigOptions?, completion: completionBlock) {
         self.sdkKey = sdkKey
         self.currentUser = Statsig.normalizeUser(user, options: options)
