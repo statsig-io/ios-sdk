@@ -98,7 +98,7 @@ class NetworkService {
                let hasUpdates = responseDict["has_updates"] as? Bool,
                hasUpdates
             {
-                self.store.set(values: responseDict, time: responseDict["time"] as? Double, completion: completion)
+                self.store.set(values: responseDict, completion: completion)
             } else {
                 DispatchQueue.main.async {
                     completion?()
@@ -134,7 +134,7 @@ class NetworkService {
                let json = try? JSONSerialization.jsonObject(with: responseData, options: []),
                let responseDict = json as? [String: Any]
             {
-                self.store.set(values: responseDict, time: responseDict["time"] as? Double) {
+                self.store.set(values: responseDict) {
                     completionClone?(errorMessage)
                     completionClone = nil
                 }

@@ -148,6 +148,52 @@ class StatsigSpec: QuickSpec {
                     expect(Int(lastSyncTime / 1000)).toEventually(equal(Int(now)), timeout: .seconds(11))
                 }
 
+                it("works with local cache with different user cache keys") {
+                    stub(condition: isHost("api.statsig.com")) { _ in
+                        HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
+                    }
+
+                    let gateName = "gate_name_2"
+
+                    waitUntil { done in
+                        Statsig.start(sdkKey: "client-api-key", user: StatsigUser(userID: "jkw")) { _ in
+                            done()
+                        }
+                    }
+
+                    // gate should be true, using network response;
+                    expect(Statsig.checkGate(gateName)).to(beTrue())
+
+                    // the values are now cached for the first user. Now test when network is not available, and cache for the first user should NOT be used
+                    stub(condition: isHost("api.statsig.com")) { _ in
+                        let notConnectedError = NSError(domain: NSURLErrorDomain, code: 403)
+                        return HTTPStubsResponse(error: notConnectedError)
+                    }
+
+                    waitUntil { done in
+                        Statsig.updateUser(StatsigUser(userID: "jkw", customIDs: ["companyID": "statsig"])) { _ in
+                            done()
+                        }
+                    }
+                    // should only return the default value, because cache key, which uses userID AND customIDs, have changed
+                    expect(Statsig.checkGate(gateName)).to(beFalse())
+
+                    waitUntil { done in
+                        Statsig.updateUser(StatsigUser()) { _ in
+                            done()
+                        }
+                    }
+                    expect(Statsig.checkGate(gateName)).to(beFalse())
+
+                    // back to the original user, cache should now be used
+                    waitUntil { done in
+                        Statsig.updateUser(StatsigUser(userID: "jkw")) { _ in
+                            done()
+                        }
+                    }
+                    expect(Statsig.checkGate(gateName)).to(beTrue())
+                }
+
                 it("works correctly with a valid JSON response") {
                     stub(condition: isHost("api.statsig.com")) { _ in
                         HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)

@@ -134,8 +134,8 @@ public class Statsig {
         sharedInstance.exposureDedupeQueue.sync {
             sharedInstance.loggedExposures.removeAll()
         }
-        sharedInstance.store.loadAndResetStickyUserValuesIfNeeded(newUserID: user.userID)
         sharedInstance.currentUser = normalizeUser(user, options: sharedInstance.statsigOptions)
+        sharedInstance.store.updateUser(sharedInstance.currentUser)
         sharedInstance.logger.user = sharedInstance.currentUser
         sharedInstance.fetchAndScheduleSyncing(completion: completion)
     }
@@ -191,7 +191,7 @@ public class Statsig {
         self.sdkKey = sdkKey
         self.currentUser = Statsig.normalizeUser(user, options: options)
         self.statsigOptions = options ?? StatsigOptions()
-        self.store = InternalStore(userID: currentUser.userID)
+        self.store = InternalStore(self.currentUser)
         self.networkService = NetworkService(sdkKey: sdkKey, options: statsigOptions, store: store)
         self.logger = EventLogger(user: currentUser, networkService: networkService)
         self.logger.start()

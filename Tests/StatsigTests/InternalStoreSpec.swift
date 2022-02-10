@@ -1,29 +1,39 @@
+import Foundation
+
 import Nimble
 import Quick
 @testable import Statsig
 
 class InternalStoreSpec: QuickSpec {
+    private func cacheIsEmpty(_ cache: [String: Any]) -> Bool {
+        return
+            (cache[InternalStore.gatesKey] as! [String: Any]).count == 0
+                && (cache[InternalStore.configsKey] as! [String: Any]).count == 0
+                && (cache[InternalStore.stickyExpKey] as! [String: Any]).count == 0
+                && (cache["time"] as? Int) == 0
+    }
+
     override func spec() {
         describe("using internal store to save and retrieve values") {
             beforeEach {
                 InternalStore.deleteAllLocalStorage()
             }
 
-            it("is nil initially") {
-                let store = InternalStore(userID: nil)
-                expect(store.cache.count).to(equal(0))
+            it("is empty initially") {
+                let store = InternalStore(StatsigUser())
+                expect(self.cacheIsEmpty(store.cache.userCache)).to(beTrue())
             }
 
             it("sets value in UserDefaults correctly and persists between initialization") {
-                let store = InternalStore(userID: nil)
+                let store = InternalStore(StatsigUser())
                 waitUntil(timeout: .seconds(1)) { done in
                     store.set(values: StatsigSpec.mockUserValues) {
                         done()
                     }
                 }
 
-                let store2 = InternalStore(userID: nil)
-                let cache = store2.cache
+                let store2 = InternalStore(StatsigUser())
+                let cache = store2.cache.userCache
                 expect(cache).toNot(beNil())
                 expect((cache!["feature_gates"] as! [String: [String: Any]]).count).to(equal(2))
                 expect((cache!["dynamic_configs"] as! [String: [String: Any]]).count).to(equal(1))
@@ -35,11 +45,118 @@ class InternalStoreSpec: QuickSpec {
                 expect(store.getConfig(forName: "config")?.getValue(forKey: "str", defaultValue: "wrong")).to(equal("string"))
 
                 InternalStore.deleteAllLocalStorage()
-                expect(InternalStore(userID: nil).cache.count).to(equal(0))
+                expect(self.cacheIsEmpty(InternalStore(StatsigUser()).cache.userCache)).to(beTrue())
+            }
+
+            it("migrates old values to new cache") {
+                // set up deprecated cache
+                let configKey = "config"
+                let gateKey = "gate"
+                let hashConfigKey = configKey.sha256()
+                let hashGateKey = gateKey.sha256()
+                let values: [String: [String: Any]] = [
+                    "dynamic_configs": [
+                        hashConfigKey: [
+                            "rule_id": "default",
+                            "value": ["key": "value"],
+                            "is_user_in_experiment": true,
+                            "is_experiment_active": true,
+                        ],
+                    ],
+                    "feature_gates": [
+                        hashGateKey: ["value": true, "rule_id": "rule_id_2"]
+                    ]
+                ]
+                let stickyValues = [
+                    hashConfigKey: [
+                        "rule_id": "sticky",
+                        "value": ["key": "value_sticky"],
+                    ],
+                ]
+                UserDefaults.standard.setValue(values, forKey: InternalStore.DEPRECATED_localStorageKey)
+                UserDefaults.standard.setValue("jkw", forKey: InternalStore.DEPRECATED_stickyUserIDKey)
+                UserDefaults.standard.setValue(stickyValues, forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)
+
+                let store = InternalStore(StatsigUser(userID: "jkw"))
+                var gate = store.checkGate(forName: gateKey)
+                expect(gate!.value).to(beTrue())
+
+                var config = store.getConfig(forName: configKey)
+                expect(config!.getValue(forKey: "key", defaultValue: "")).to(equal("value"))
+
+                var exp = store.getExperiment(forName: configKey, keepDeviceValue: true)
+                expect(exp!.getValue(forKey: "key", defaultValue: "")).to(equal("value_sticky"))
+
+                // old values should be deleted
+                expect(UserDefaults.standard.dictionary(forKey: InternalStore.DEPRECATED_localStorageKey)).to(beNil())
+                expect(UserDefaults.standard.string(forKey: InternalStore.DEPRECATED_stickyUserIDKey)).to(beNil())
+                expect(UserDefaults.standard.dictionary(forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)).to(beNil())
+
+                // Update to new values; sticky should still be sticky
+                let newValues: [String: Any] = [
+                    "dynamic_configs": [
+                        hashConfigKey: [
+                            "rule_id": "default",
+                            "value": ["key": "value_new"],
+                            "is_user_in_experiment": true,
+                            "is_experiment_active": true,
+                        ],
+                    ],
+                    "feature_gates": [
+                        hashGateKey: ["value": false, "rule_id": "rule_id_2"]
+                    ],
+                    "time": 12345
+                ]
+                store.set(values: newValues)
+                gate = store.checkGate(forName: gateKey)
+                expect(gate!.value).to(beFalse())
+
+                config = store.getConfig(forName: configKey)
+                expect(config!.getValue(forKey: "key", defaultValue: "")).to(equal("value_new"))
+
+                exp = store.getExperiment(forName: configKey, keepDeviceValue: true)
+                expect(exp!.getValue(forKey: "key", defaultValue: "")).to(equal("value_sticky"))
+
+                exp = store.getExperiment(forName: configKey, keepDeviceValue: false)
+                expect(exp!.getValue(forKey: "key", defaultValue: "")).to(equal("value_new"))
+            }
+
+            it("does not migrate sticky values when user ID changes") {
+                // set up deprecated cache
+                let configKey = "config"
+                let gateKey = "gate"
+                let hashConfigKey = configKey.sha256()
+                let hashGateKey = gateKey.sha256()
+                let values: [String: [String: Any]] = [
+                    "dynamic_configs": [
+                        hashConfigKey: [
+                            "rule_id": "default",
+                            "value": ["key": "value"],
+                            "is_user_in_experiment": true,
+                            "is_experiment_active": true,
+                        ],
+                    ],
+                    "feature_gates": [
+                        hashGateKey: ["value": true, "rule_id": "rule_id_2"]
+                    ]
+                ]
+                let stickyValues = [
+                    hashConfigKey: [
+                        "rule_id": "sticky",
+                        "value": ["key": "value_sticky"],
+                    ],
+                ]
+                UserDefaults.standard.setValue(values, forKey: InternalStore.DEPRECATED_localStorageKey)
+                UserDefaults.standard.setValue("jkw", forKey: InternalStore.DEPRECATED_stickyUserIDKey)
+                UserDefaults.standard.setValue(stickyValues, forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)
+
+                let store = InternalStore(StatsigUser(userID: "not_jkw"))
+                let exp = store.getExperiment(forName: configKey, keepDeviceValue: true)
+                expect(exp!.getValue(forKey: "key", defaultValue: "")).to(equal("value"))
             }
 
             it("sets sticky experiment values correctly") {
-                let store = InternalStore(userID: nil)
+                let store = InternalStore(StatsigUser())
                 let configKey = "config"
                 let hashConfigKey = configKey.sha256()
 
@@ -153,7 +270,7 @@ class InternalStoreSpec: QuickSpec {
             }
 
             it("it deletes user level sticky values but not device level sticky values when requested") {
-                let store = InternalStore(userID: "jkw")
+                let store = InternalStore(StatsigUser(userID: "jkw"))
                 let expKey = "exp"
                 let hashedExpKey = expKey.sha256()
 
@@ -186,7 +303,7 @@ class InternalStoreSpec: QuickSpec {
                 expect(deviceExp?.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v0"))
 
                 // Delete user sticky values (update user), change the latest values, now user should get updated values but device value stays the same
-                store.loadAndResetStickyUserValuesIfNeeded(newUserID: "tore")
+                store.updateUser(StatsigUser(userID: "tore"))
                 values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"]
                 values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v1"]
                 store.set(values: values)
@@ -210,7 +327,7 @@ class InternalStoreSpec: QuickSpec {
             }
 
             it("changing userID in between sessions should invalidate sticky values") {
-                var store = InternalStore(userID: "jkw")
+                var store = InternalStore(StatsigUser(userID: "jkw"))
                 let expKey = "exp"
                 let hashedExpKey = expKey.sha256()
 
@@ -247,7 +364,7 @@ class InternalStoreSpec: QuickSpec {
                 expect(deviceExp?.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v0"))
 
                 // Re-initialize store with a different ID, change the latest values, now user should get updated values but device value stays the same
-                store = InternalStore(userID: "tore")
+                store = InternalStore(StatsigUser(userID: "tore"))
                 values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"]
                 values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v1"]
                 waitUntil { done in
@@ -274,6 +391,16 @@ class InternalStoreSpec: QuickSpec {
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: false)
                 expect(exp?.getValue(forKey: "label", defaultValue: "")).to(equal("exp_v2"))
                 expect(deviceExp?.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v2"))
+
+                // update user ID back, should get old values
+                store.updateUser(StatsigUser(userID: "jkw"))
+                exp = store.getExperiment(forName: expKey, keepDeviceValue: false)
+                expect(exp?.getValue(forKey: "label", defaultValue: "")).to(equal("exp_v0"))
+
+                // add a custom ID, now should get default value because cache key is different
+                store.updateUser(StatsigUser(userID: "jkw", customIDs: ["id_type_1": "123456"]))
+                exp = store.getExperiment(forName: expKey, keepDeviceValue: false)
+                expect(exp).to(beNil())
 
                 InternalStore.deleteAllLocalStorage()
             }

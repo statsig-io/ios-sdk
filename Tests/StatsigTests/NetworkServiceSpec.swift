@@ -27,7 +27,7 @@ class NetworkServiceSpec: QuickSpec {
                     return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
                 }
 
-                let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(userID: "jkw"))
+                let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(StatsigUser(userID: "jkw")))
                 ns.fetchInitialValues(for:
                     StatsigUser(
                         userID: "jkw",
@@ -57,7 +57,7 @@ class NetworkServiceSpec: QuickSpec {
                     return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
                 }
 
-                let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(userID: "jkw"))
+                let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(StatsigUser(userID: "jkw")))
                 let now = NSDate().timeIntervalSince1970 * 1000
                 waitUntil { done in
                     ns.fetchUpdatedValues(for: StatsigUser(userID: "jkw"), since: now) {
@@ -87,7 +87,7 @@ class NetworkServiceSpec: QuickSpec {
                     return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 403))
                 }
 
-                let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(userID: "jkw"))
+                let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(StatsigUser(userID: "jkw")))
                 let user = StatsigUser(userID: "jkw", privateAttributes: ["email": "something@somethingelse.com"])
                 waitUntil { done in
                     ns.sendEvents(forUser: user, events: [Event(user: user, name: "test_event", value: 9.99, disableCurrentVCLogging: false)])
@@ -124,7 +124,7 @@ class NetworkServiceSpec: QuickSpec {
                     return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 403))
                 }
 
-                let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(userID: "jkw"))
+                let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(StatsigUser(userID: "jkw")))
                 let user = StatsigUser(userID: "jkw")
                 var data = [Data]()
                 for index in 1...10 {
