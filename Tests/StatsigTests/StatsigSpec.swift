@@ -2,8 +2,11 @@ import Foundation
 
 import Nimble
 import OHHTTPStubs
-import OHHTTPStubsSwift
 import Quick
+
+#if !COCOAPODS
+import OHHTTPStubsSwift
+#endif
 
 @testable import Statsig
 import SwiftUI
@@ -471,6 +474,52 @@ class StatsigSpec: QuickSpec {
                     // validate stable ID
                     expect(statsigMetadata["stableID"]).to(equal("custom_stable_id"))
                     expect(stableID).to(equal("custom_stable_id"))
+                }
+            }
+
+            describe("handling null") {
+                stub(condition: isPath("/v1/initialize")) { _ in
+                    var mock = StatsigSpec.mockUserValues
+                    mock[jsonDict: "dynamic_configs"]?["null_value_config".sha256()] = [
+                        "rule_id": "default",
+                        "value":
+                            [
+                                "str": "string",
+                                "null": nil
+                            ]
+                    ]
+
+                    return HTTPStubsResponse(jsonObject: mock, statusCode: 200, headers: nil)
+                }
+
+                it("works when initialize contains null") {
+                    waitUntil { done in
+                        Statsig.start(sdkKey: "client-api-key") { _ in
+                            let config = Statsig.getConfig("null_value_config")
+
+                            let defaultVal = config.getValue(forKey: "null", defaultValue: "default")
+                            expect(defaultVal).to(equal("default"))
+                            done()
+                        }
+                    }
+                }
+
+                it("works when override contains null") {
+                    waitUntil { done in
+                        Statsig.start(sdkKey: "client-api-key") { _ in
+
+                            let dict = ["foo": nil] as [String : Any?]
+                            Statsig.overrideConfig("config", value: dict as [String: Any])
+
+                            Statsig.start(sdkKey: "client-api-key") { _ in
+                                let config = Statsig.getConfig("config")
+
+                                let defaultVal = config.getValue(forKey: "foo", defaultValue: "default")
+                                expect(defaultVal).to(equal("default"))
+                                done()
+                            }
+                        }
+                    }
                 }
             }
         }

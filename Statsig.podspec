@@ -1,7 +1,7 @@
 Pod::Spec.new do |spec|
 
   spec.name         = "Statsig"
-  spec.version      = "1.8.0"
+  spec.version      = "1.8.1"
   spec.summary      = "Statsig enables developers to ship code faster and more safely."
   spec.description  = <<-DESC
                    Statsig enables developers to ship code faster and more safely by providing:
@@ -25,4 +25,12 @@ Pod::Spec.new do |spec|
   spec.source_files  = "Sources/**/*.swift"
 
   spec.swift_version = '5.0'
+
+  spec.test_spec 'Tests' do |test_spec|
+      test_spec.source_files = 'Tests/StatsigTests/**/*.{swift}'
+      test_spec.dependency 'Nimble'
+      test_spec.dependency 'Quick'
+      test_spec.dependency 'OHHTTPStubs'
+      test_spec.dependency 'OHHTTPStubs/Swift'
+  end
 end

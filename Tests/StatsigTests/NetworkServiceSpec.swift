@@ -2,8 +2,11 @@ import Foundation
 
 import Nimble
 import OHHTTPStubs
-import OHHTTPStubsSwift
 import Quick
+
+#if !COCOAPODS
+import OHHTTPStubsSwift
+#endif
 
 @testable import Statsig
 

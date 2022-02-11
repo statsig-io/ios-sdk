@@ -12,6 +12,33 @@ public struct StatsigOverrides {
     }
 }
 
+extension UserDefaults {
+    func setDictionarySafe(_ dict: [String: Any], forKey key: String) {
+        do {
+            let json = try JSONSerialization.data(withJSONObject: dict)
+            UserDefaults.standard.set(json, forKey: key)
+        } catch {
+            print("[Statsig]: Failed to save to cache")
+        }
+    }
+
+    func dictionarySafe(forKey key: String) -> [String: Any]? {
+        do {
+            guard let data = UserDefaults.standard.data(forKey: key) else {
+                return nil
+            }
+
+            guard let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                return nil
+            }
+
+            return dict
+        } catch {
+            return nil
+        }
+    }
+}
+
 struct StatsigValuesCache {
     var cacheByID: [String: [String: Any]]!
     var userCacheKey: String!
@@ -19,11 +46,8 @@ struct StatsigValuesCache {
     var stickyDeviceExperiments: [String: [String: Any]]!
 
     init(_ user: StatsigUser) {
-        cacheByID =
-            UserDefaults.standard.dictionary(forKey: InternalStore.localStorageKey) as? [String: [String: Any]] ?? [:]
-        stickyDeviceExperiments =
-            UserDefaults.standard.dictionary(forKey: InternalStore.stickyDeviceExperimentsKey)
-                as? [String: [String: Any]] ?? [:]
+        cacheByID = loadDictMigratingIfRequired(forKey: InternalStore.localStorageKey)
+        stickyDeviceExperiments = loadDictMigratingIfRequired(forKey: InternalStore.stickyDeviceExperimentsKey)
 
         setUserCacheKey(user)
         migrateLegacyStickyExperimentValues(user)
@@ -68,7 +92,7 @@ struct StatsigValuesCache {
         userCache[InternalStore.configsKey] = values[InternalStore.configsKey]
         userCache["time"] = values["time"] as? Double ?? userCache["time"]
         cacheByID[userCacheKey] = userCache
-        UserDefaults.standard.setValue(cacheByID, forKey: InternalStore.localStorageKey)
+        UserDefaults.standard.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
     }
 
     mutating func saveStickyExperimentIfNeeded(_ expName: String, _ latestValue: DynamicConfig) {
@@ -92,8 +116,8 @@ struct StatsigValuesCache {
     }
 
     private func saveToUserDefaults() {
-        UserDefaults.standard.setValue(cacheByID, forKey: InternalStore.localStorageKey)
-        UserDefaults.standard.setValue(stickyDeviceExperiments, forKey: InternalStore.stickyDeviceExperimentsKey)
+        UserDefaults.standard.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
+        UserDefaults.standard.setDictionarySafe(stickyDeviceExperiments, forKey: InternalStore.stickyDeviceExperimentsKey)
     }
 
     private mutating func setUserCacheKey(_ user: StatsigUser) {
@@ -115,6 +139,20 @@ struct StatsigValuesCache {
                 ]
         }
         userCache = cacheByID[userCacheKey]!
+    }
+
+    private func loadDictMigratingIfRequired(forKey key: String) -> [String: [String: Any]] {
+        if let dict = UserDefaults.standard.dictionarySafe(forKey: key) as? [String: [String: Any]] {
+            return dict
+        }
+
+        // Load and Migrate Legacy
+        if let dict = UserDefaults.standard.dictionary(forKey: key) as? [String: [String: Any]] {
+            UserDefaults.standard.setDictionarySafe(dict, forKey: key)
+            return dict
+        }
+
+        return [:]
     }
 
     private mutating func migrateLegacyStickyExperimentValues(_ currentUser: StatsigUser) {
@@ -162,7 +200,7 @@ class InternalStore {
 
     init(_ user: StatsigUser) {
         cache = StatsigValuesCache(user)
-        localOverrides = UserDefaults.standard.dictionary(forKey: InternalStore.localOverridesKey)
+        localOverrides = UserDefaults.standard.dictionarySafe(forKey: InternalStore.localOverridesKey)
             ?? getEmptyOverrides()
     }
 
@@ -272,7 +310,7 @@ class InternalStore {
     }
 
     private func saveOverrides() {
-        UserDefaults.standard.setValue(localOverrides, forKey: InternalStore.localOverridesKey)
+        UserDefaults.standard.setDictionarySafe(localOverrides, forKey: InternalStore.localOverridesKey)
     }
 
     private func getEmptyOverrides() -> [String: Any] {

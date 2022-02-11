@@ -404,6 +404,56 @@ class InternalStoreSpec: QuickSpec {
 
                 InternalStore.deleteAllLocalStorage()
             }
+
+            it("migrates non serialized caches") {
+                let expKey = "exp"
+                let hashedExpKey = expKey.sha256()
+
+                let stickyExpKey = "sticky_exp"
+                let hashedStickyExpKey = stickyExpKey.sha256()
+
+                let cacheByID: [String: Any] = [
+                    "jkw": [
+                        "dynamic_configs": [
+                            hashedExpKey: [
+                                "rule_id": "rule_id_1",
+                                "value": ["label": "exp_v0"],
+                                "is_device_based": false,
+                                "is_user_in_experiment": true,
+                                "is_experiment_active": true,
+                            ],
+                        ],
+                        "sticky_experiments": [:],
+                        "time": 0
+                    ]
+                ]
+
+                let stickyDeviceExperiments: [String: Any] = [
+                    hashedStickyExpKey: [
+                        "value":
+                            ["label": "device_exp_v0"]
+                        ,
+                        "is_experiment_active": true,
+                        "is_device_based": true,
+                        "is_user_in_experiment": true,
+                        "rule_id": "rule_id_1"
+                    ]
+                ]
+
+                // Save a value in the deprecated style
+                UserDefaults.standard.setValue(cacheByID, forKey: InternalStore.localStorageKey)
+                UserDefaults.standard.setValue(stickyDeviceExperiments, forKey: InternalStore.stickyDeviceExperimentsKey)
+                UserDefaults.standard.synchronize()
+
+                let store = InternalStore(StatsigUser(userID: "jkw"))
+                let config = store.getConfig(forName:expKey)
+                let val = config?.getValue(forKey: "label", defaultValue: "invalid")
+                expect(val).to(equal("exp_v0"))
+
+                let stickyConfig = store.getExperiment(forName: stickyExpKey, keepDeviceValue: true)
+                let stickyVal = stickyConfig?.getValue(forKey: "label", defaultValue: "invalid")
+                expect(stickyVal).to(equal("device_exp_v0"))
+            }
         }
     }
 }
