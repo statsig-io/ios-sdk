@@ -4,10 +4,10 @@ public struct DynamicConfig {
     public let name: String
     public let value: [String: Any]
     public let ruleID: String
+    let secondaryExposures: [[String: String]]
     public let isUserInExperiment: Bool
     public let isExperimentActive: Bool
 
-    let secondaryExposures: [[String: String]]
     var isDeviceBased: Bool = false
     var rawValue: [String: Any] = [:]
 

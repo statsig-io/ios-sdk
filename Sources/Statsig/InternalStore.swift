@@ -196,7 +196,7 @@ class InternalStore {
     var cache: StatsigValuesCache
     var localOverrides: [String: Any]!
     var updatedTime: Double { cache.getLastUpdatedTime() }
-    let storeQueue = DispatchQueue(label: storeQueueLabel, qos: .userInitiated)
+    let storeQueue = DispatchQueue(label: storeQueueLabel, qos: .userInitiated, attributes: .concurrent)
 
     init(_ user: StatsigUser) {
         cache = StatsigValuesCache(user)
@@ -232,7 +232,9 @@ class InternalStore {
 
             // If flag is false, or experiment is NOT active, simply remove the sticky experiment value, and return the latest value
             if !keepDeviceValue || latestValue?.isExperimentActive == false {
-                cache.removeStickyExperiment(forName)
+               storeQueue.async(flags: .barrier) { [weak self] in
+                   self?.cache.removeStickyExperiment(forName)
+               }
                 return latestValue
             }
 
@@ -243,7 +245,9 @@ class InternalStore {
 
             // The user has NOT been exposed before. If is IN this ACTIVE experiment, then we save the value as sticky
             if let latestValue = latestValue {
-                cache.saveStickyExperimentIfNeeded(forName, latestValue)
+               storeQueue.async(flags: .barrier) { [weak self] in
+                   self?.cache.saveStickyExperimentIfNeeded(forName, latestValue)
+               }
             }
             return latestValue
         }

@@ -16,7 +16,7 @@ public class Statsig {
     private var syncTimer: Timer?
     private var loggedExposures: [String: TimeInterval]
 
-    private let exposureDedupeQueue = DispatchQueue(label: exposureDedupeQueueLabel, qos: .userInitiated)
+    private let exposureDedupeQueue = DispatchQueue(label: exposureDedupeQueueLabel, qos: .userInitiated, attributes: .concurrent)
 
     static let maxEventNameLength = 64
 
@@ -131,14 +131,14 @@ public class Statsig {
             return
         }
 
-        sharedInstance.exposureDedupeQueue.sync {
+        sharedInstance.exposureDedupeQueue.async(flags: .barrier) {
             sharedInstance.loggedExposures.removeAll()
         }
 
-      sharedInstance.currentUser = normalizeUser(user, options: sharedInstance.statsigOptions)
-      sharedInstance.store.updateUser(sharedInstance.currentUser)
-      sharedInstance.logger.user = sharedInstance.currentUser
-      sharedInstance.fetchAndScheduleSyncing(completion: completion)
+        sharedInstance.currentUser = normalizeUser(user, options: sharedInstance.statsigOptions)
+        sharedInstance.store.updateUser(sharedInstance.currentUser)
+        sharedInstance.logger.user = sharedInstance.currentUser
+        sharedInstance.fetchAndScheduleSyncing(completion: completion)
     }
 
     public static func shutdown() {
@@ -309,7 +309,9 @@ public class Statsig {
                 return false
             }
 
-            sharedInstance.loggedExposures[key] = now
+            sharedInstance.exposureDedupeQueue.async(flags: .barrier) {
+                sharedInstance.loggedExposures[key] = now
+            }
             return true
         }
     }
