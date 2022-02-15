@@ -66,7 +66,7 @@ class ThreadTestTableViewController: UITableViewController {
             ],
         ]
 
-        keys = Array(configs.keys).sorted()
+        keys = ["Start", "Experiments", "Gates", "Log", "Configs", "Stable ID", "Update User", "Shutdown"]
     }
 
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {

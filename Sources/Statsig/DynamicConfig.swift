@@ -3,11 +3,12 @@ import Foundation
 public struct DynamicConfig {
     public let name: String
     public let value: [String: Any]
-    let ruleID: String
+    public let ruleID: String
+    public let isUserInExperiment: Bool
+    public let isExperimentActive: Bool
+
     let secondaryExposures: [[String: String]]
     var isDeviceBased: Bool = false
-    var isUserInExperiment: Bool = false
-    var isExperimentActive: Bool = false
     var rawValue: [String: Any] = [:]
 
     init(configName: String, configObj: [String: Any] = [:]) {
@@ -27,6 +28,9 @@ public struct DynamicConfig {
         self.value = value
         self.ruleID = ruleID
         self.secondaryExposures = []
+
+        self.isExperimentActive = false
+        self.isUserInExperiment = false
     }
 
     public func getValue<T: StatsigDynamicConfigValue>(forKey: String, defaultValue: T) -> T {

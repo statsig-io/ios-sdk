@@ -196,7 +196,7 @@ class InternalStore {
     var cache: StatsigValuesCache
     var localOverrides: [String: Any]!
     var updatedTime: Double { cache.getLastUpdatedTime() }
-    let storeQueue = DispatchQueue(label: storeQueueLabel, qos: .userInitiated, attributes: .concurrent)
+    let storeQueue = DispatchQueue(label: storeQueueLabel, qos: .userInitiated)
 
     init(_ user: StatsigUser) {
         cache = StatsigValuesCache(user)
