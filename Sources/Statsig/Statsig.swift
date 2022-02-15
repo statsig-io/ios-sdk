@@ -321,7 +321,9 @@ public class Statsig {
     }
 
     @objc private func appWillBackground() {
-        logger.stop()
+        DispatchQueue.global().async { [weak self] in
+            self?.logger.stop()
+        }
     }
 
     @objc private func appWillTerminate() {
