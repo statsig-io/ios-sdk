@@ -132,7 +132,7 @@ class EventLoggerSpec: QuickSpec {
                     return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 403))
                 }
 
-                EventLogger(user: user, networkService: ns)
+                _ = EventLogger(user: user, networkService: ns)
 
                 waitUntil { done in
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

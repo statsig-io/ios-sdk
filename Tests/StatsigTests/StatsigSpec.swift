@@ -364,7 +364,7 @@ class StatsigSpec: QuickSpec {
                                       options: StatsigOptions(overrideStableID: "custom_stable_id"))
                         { _ in
                             gate = Statsig.checkGate(gateName2)
-                            Statsig.checkGate(gateName2) // should not create an exposure, deduped
+                            _ = Statsig.checkGate(gateName2) // should not create an exposure, deduped
                             exp = Statsig.getExperiment(configName)
                             config = Statsig.getConfig(configName) // should not create an exposure, deduped
                             stableID = Statsig.getStableID()
@@ -372,7 +372,7 @@ class StatsigSpec: QuickSpec {
                             Statsig.logEvent("test_event_2", value: "1", metadata: ["key": "value2"])
                             Statsig.logEvent("test_event_3", metadata: ["key": "value3"])
                             Statsig.updateUser(StatsigUser(userID: "123", email: "123@statsig.com")) { errorMessage in
-                                Statsig.checkGate(gateName2) // should create an exposure, no longer dedupe after updating user
+                                _ = Statsig.checkGate(gateName2) // should create an exposure, no longer dedupe after updating user
                                 Statsig.shutdown()
                                 done()
                             }

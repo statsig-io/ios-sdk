@@ -64,7 +64,7 @@ class EventSpec: QuickSpec {
                     disableCurrentVCLogging: false)
 
                 expect(internalEvent.name) == "statsig::network_failure"
-                expect(internalEvent.value as! Int).to(equal(10))
+                expect(internalEvent.value as? Int).to(equal(10))
                 expect(internalEvent.metadata).to(beNil())
                 expect(Int(internalEvent.time / 1000)) == Int(NSDate().timeIntervalSince1970)
             }
