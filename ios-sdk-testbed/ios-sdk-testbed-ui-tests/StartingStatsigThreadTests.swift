@@ -3,6 +3,9 @@ import XCTest
 
 class StartingStatsigThreadsTests: XCTestCase {
     func begin() {
+        let key = ProcessInfo.processInfo.environment["STATSIG_CLIENT_KEY"]
+        XCTAssertEqual(key?.starts(with: "client-"), true, "Invalid Client Key Provided")
+
         let app = XCUIApplication()
         app.launchEnvironment = ProcessInfo.processInfo.environment
         app.launch()

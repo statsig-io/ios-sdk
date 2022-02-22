@@ -11,7 +11,8 @@ class TopLevelMethodsThreadTests: XCTestCase {
     }
 
     func begin() {
-        XCTAssertNotNil(ProcessInfo.processInfo.environment["STATSIG_CLIENT_KEY"], "No Client Key Provided")
+        let key = ProcessInfo.processInfo.environment["STATSIG_CLIENT_KEY"]
+        XCTAssertEqual(key?.starts(with: "client-"), true, "Invalid Client Key Provided")
 
         let app = XCUIApplication()
         app.launchEnvironment = ProcessInfo.processInfo.environment
