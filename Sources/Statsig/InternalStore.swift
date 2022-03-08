@@ -40,17 +40,20 @@ extension UserDefaults {
 }
 
 struct StatsigValuesCache {
-    var cacheByID: [String: [String: Any]]!
-    var userCacheKey: String!
-    var userCache: [String: Any]!
-    var stickyDeviceExperiments: [String: [String: Any]]!
+    var cacheByID: [String: [String: Any]]
+    var userCacheKey: String
+    var userCache: [String: Any]
+    var stickyDeviceExperiments: [String: [String: Any]]
 
     init(_ user: StatsigUser) {
-        cacheByID = loadDictMigratingIfRequired(forKey: InternalStore.localStorageKey)
-        stickyDeviceExperiments = loadDictMigratingIfRequired(forKey: InternalStore.stickyDeviceExperimentsKey)
+        self.cacheByID = StatsigValuesCache.loadDictMigratingIfRequired(forKey: InternalStore.localStorageKey)
+        self.stickyDeviceExperiments = StatsigValuesCache.loadDictMigratingIfRequired(forKey: InternalStore.stickyDeviceExperimentsKey)
 
-        setUserCacheKey(user)
-        migrateLegacyStickyExperimentValues(user)
+        self.userCache = [:]
+        self.userCacheKey = "null"
+
+        self.setUserCacheKey(user)
+        self.migrateLegacyStickyExperimentValues(user)
     }
 
     func getGate(_ gateName: String) -> FeatureGate? {
@@ -141,7 +144,7 @@ struct StatsigValuesCache {
         userCache = cacheByID[userCacheKey]!
     }
 
-    private func loadDictMigratingIfRequired(forKey key: String) -> [String: [String: Any]] {
+    private static func loadDictMigratingIfRequired(forKey key: String) -> [String: [String: Any]] {
         if let dict = UserDefaults.standard.dictionarySafe(forKey: key) as? [String: [String: Any]] {
             return dict
         }

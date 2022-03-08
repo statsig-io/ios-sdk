@@ -10,9 +10,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@main
+      - name: Install XCBeautify
+        run: brew install xcbeautify
       - name: Build and test
         run: |
           cd .swiftpm/xcode
-          xcodebuild clean test -workspace package.xcworkspace -scheme Statsig -destination "${destination}" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO
+          xcodebuild clean test -workspace package.xcworkspace -scheme Statsig -destination "${destination}" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO | xcbeautify && exit ${PIPESTATUS[0]}
         env:
           destination: ${{ matrix.destination }}

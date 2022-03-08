@@ -35,8 +35,8 @@ class InternalStoreSpec: QuickSpec {
                 let store2 = InternalStore(StatsigUser())
                 let cache = store2.cache.userCache
                 expect(cache).toNot(beNil())
-                expect((cache!["feature_gates"] as! [String: [String: Any]]).count).to(equal(2))
-                expect((cache!["dynamic_configs"] as! [String: [String: Any]]).count).to(equal(1))
+                expect((cache["feature_gates"] as! [String: [String: Any]]).count).to(equal(2))
+                expect((cache["dynamic_configs"] as! [String: [String: Any]]).count).to(equal(1))
 
                 let gate1 = store.checkGate(forName: "gate_name_1")
                 expect(gate1?.value).to(beFalse())
