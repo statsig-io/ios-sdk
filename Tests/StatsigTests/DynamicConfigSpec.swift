@@ -6,6 +6,7 @@ import XCTest
 class DynamicConfigSpec: QuickSpec {
     static let TestMixedConfig: [String: Any] =
         [
+            "name": "config".sha256(),
             "rule_id": "default",
             "value":
                 [

@@ -32,8 +32,7 @@ public class Statsig {
 
     public static func getExperiment(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
         guard let client = client else {
-            print("[Statsig]: Must start Statsig first and wait for it to complete before calling getExperiment. Returning a dummy DynamicConfig that will only return default values.")
-            return DynamicConfig(configName: experimentName)
+            return getDummyConfig(experimentName, #function)
         }
 
         return client.getExperiment(experimentName)
@@ -41,12 +40,21 @@ public class Statsig {
 
     public static func getConfig(_ configName: String) -> DynamicConfig {
         guard let client = client else {
-            print("[Statsig]: Must start Statsig first and wait for it to complete before calling getConfig. Returning a dummy DynamicConfig that will only return default values.")
-            return DynamicConfig(configName: configName)
+            return getDummyConfig(configName, #function)
         }
 
         return client.getConfig(configName)
     }
+
+    public static func getLayer(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
+        guard let client = client else {
+            print("[Statsig]: Must start Statsig first and wait for it to complete before calling getLayer. Returning an empty Layer object")
+            return Layer(name: layerName)
+        }
+
+        return client.getLayer(layerName, keepDeviceValue: keepDeviceValue)
+    }
+
 
     public static func logEvent(_ withName: String, metadata: [String: String]? = nil) {
         logEventImpl(withName, value: nil, metadata: metadata)
@@ -106,6 +114,11 @@ public class Statsig {
         }
 
         client.logEvent(withName, value: value, metadata: metadata)
+    }
+
+    private static func getDummyConfig(_ name: String, _ caller: String) -> DynamicConfig {
+        print("[Statsig]: Must start Statsig first and wait for it to complete before calling \(caller). Returning a dummy DynamicConfig that will only return default values.")
+        return DynamicConfig(configName: name)
     }
 }
 

@@ -63,8 +63,7 @@ internal class StatsigClient {
         if let result = store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue) {
             experiment = result
         } else {
-            print("[Statsig]: The experiment with name \(experimentName) does not exist. Returning a dummy DynamicConfig that will only return default values.")
-            experiment = DynamicConfig(configName: experimentName)
+            experiment = getDummyConfig(experimentName, "The experiment with name \(experimentName) does not exist")
         }
 
         let ruleID = experiment.ruleID
@@ -87,8 +86,7 @@ internal class StatsigClient {
         if let result = store.getConfig(forName: configName) {
             config = result
         } else {
-            print("[Statsig]: The config with name \(configName) does not exist. Returning a dummy DynamicConfig that will only return default values.")
-            config = DynamicConfig(configName: configName)
+            config = getDummyConfig(configName, "The config with name \(configName) does not exist")
         }
 
         let ruleID = config.ruleID
@@ -104,6 +102,31 @@ internal class StatsigClient {
         }
 
         return config
+    }
+
+    internal func getLayer(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
+        var layer: Layer
+        if let result = store.getLayer(forName: layerName, keepDeviceValue: keepDeviceValue) {
+            layer = result
+        } else {
+            print("[Statsig]: The layer with name \(layerName) does not exist. Returning an empty Layer.")
+            return Layer(name: layerName)
+        }
+
+        let ruleID = layer.ruleID
+        let dedupeKey = layerName + ruleID
+        if shouldLogExposure(key: dedupeKey) {
+            logger.log(
+                Event.layerExposure(
+                    user: currentUser,
+                    configName: layer.name,
+                    ruleID: ruleID,
+                    secondaryExposures: layer.secondaryExposures,
+                    disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging,
+                    allocatedExperimentName: layer.allocatedExperimentName))
+        }
+
+        return layer
     }
 
     internal func updateUser(_ user: StatsigUser, completion: completionBlock = nil) {
@@ -243,6 +266,12 @@ internal class StatsigClient {
         logger.user = currentUser
         fetchAndScheduleSyncing(completion: completion)
     }
+
+    private func getDummyConfig(_ name: String, _ reason: String) -> DynamicConfig {
+      print("[Statsig]: \(reason). Returning a dummy DynamicConfig that will only return default values.")
+      return DynamicConfig(configName: name)
+    }
+
 
     deinit {
         unsubscribeFromApplicationLifecycle()

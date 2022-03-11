@@ -10,9 +10,11 @@ class Event {
     let user: StatsigUser
     let secondaryExposures: [[String: String]]?
     var statsigMetadata: [String: String]?
+    var allocatedExperimentHash: String?
 
     static let statsigPrefix = "statsig::"
     static let configExposureEventName = "config_exposure"
+    static let layerExposureEventName = "layer_exposure"
     static let gateExposureEventName = "gate_exposure"
     static let currentVCKey = "currentPage"
 
@@ -30,6 +32,7 @@ class Event {
         self.value = value
         self.metadata = metadata
         self.secondaryExposures = secondaryExposures
+
         if !disableCurrentVCLogging {
             DispatchQueue.main.async { [weak self] in
                 if let self = self, let vc = UIApplication.shared.keyWindow?.rootViewController {
@@ -86,7 +89,32 @@ class Event {
             user: user,
             name: configExposureEventName,
             value: nil,
-            metadata: ["config": configName, "ruleID": ruleID],
+            metadata: [
+                "config": configName,
+                "ruleID": ruleID,
+            ],
+            secondaryExposures: secondaryExposures,
+            disableCurrentVCLogging: disableCurrentVCLogging
+        )
+    }
+
+    static func layerExposure(
+        user: StatsigUser,
+        configName: String,
+        ruleID: String,
+        secondaryExposures: [[String: String]],
+        disableCurrentVCLogging: Bool,
+        allocatedExperimentName: String
+    ) -> Event {
+        return statsigInternalEvent(
+            user: user,
+            name: layerExposureEventName,
+            value: nil,
+            metadata: [
+                "config": configName,
+                "ruleID": ruleID,
+                "allocatedExperiment": allocatedExperimentName
+            ],
             secondaryExposures: secondaryExposures,
             disableCurrentVCLogging: disableCurrentVCLogging
         )
@@ -108,6 +136,9 @@ class Event {
         }
         if let secondaryExposures = secondaryExposures {
             dict["secondaryExposures"] = secondaryExposures
+        }
+        if let allocatedExperimentHash = allocatedExperimentHash {
+            dict["allocatedExperimentHash"] = allocatedExperimentHash
         }
 
         return dict

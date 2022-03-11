@@ -25,6 +25,13 @@ class StatsigSpec: QuickSpec {
         ],
         "dynamic_configs": [
             "config".sha256(): DynamicConfigSpec.TestMixedConfig
+        ],
+        "layer_configs": [
+            "allocated_layer".sha256(): DynamicConfigSpec
+                .TestMixedConfig
+                .merging(["allocated_experiment_name":"config".sha256()]) { (_, new) in new },
+            "unallocated_layer".sha256(): DynamicConfigSpec
+                .TestMixedConfig
         ]
     ]
 
@@ -128,24 +135,24 @@ class StatsigSpec: QuickSpec {
                     var requestCount = 0
                     var lastSyncTime: Double = 0
                     let now = NSDate().timeIntervalSince1970
-
+                    
                     stub(condition: isHost("api.statsig.com")) { request in
                         requestCount += 1
-
+                        
                         let httpBody = try! JSONSerialization.jsonObject(
                             with: request.ohhttpStubs_httpBody!,
                             options: []) as! [String: Any]
                         lastSyncTime = httpBody["lastSyncTimeForUser"] as? Double ?? 0
-
+                        
                         return HTTPStubsResponse(jsonObject: ["time": now * 1000], statusCode: 200, headers: nil)
                     }
-
+                    
                     Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(enableAutoValueUpdate: true))
-
+                    
                     // first request, "lastSyncTimeForUser" field should not be present in the request body
                     expect(requestCount).toEventually(equal(1), timeout: .seconds(1))
                     expect(lastSyncTime).to(equal(0))
-
+                    
                     // second request, "lastSyncTimeForUser" field should be the time when the first request was sent
                     expect(requestCount).toEventually(equal(2), timeout: .seconds(11))
                     expect(Int(lastSyncTime / 1000)).toEventually(equal(Int(now)), timeout: .seconds(11))
@@ -363,15 +370,32 @@ class StatsigSpec: QuickSpec {
                                       user: StatsigUser(userID: "123", email: "123@statsig.com"),
                                       options: StatsigOptions(overrideStableID: "custom_stable_id"))
                         { _ in
+                            // Event 0
                             gate = Statsig.checkGate(gateName2)
                             _ = Statsig.checkGate(gateName2) // should not create an exposure, deduped
+
+                            // Event 1
                             exp = Statsig.getExperiment(configName)
                             config = Statsig.getConfig(configName) // should not create an exposure, deduped
                             stableID = Statsig.getStableID()
+
+                            // Event 2
                             Statsig.logEvent("test_event", value: 1, metadata: ["key": "value1"])
+
+                            // Event 3
                             Statsig.logEvent("test_event_2", value: "1", metadata: ["key": "value2"])
+
+                            // Event 4
                             Statsig.logEvent("test_event_3", metadata: ["key": "value3"])
+
+                            // Event 5
+                            _ = Statsig.getLayer("allocated_layer")
+
+                            // Event 6
+                            _ = Statsig.getLayer("unallocated_layer")
+
                             Statsig.updateUser(StatsigUser(userID: "123", email: "123@statsig.com")) { errorMessage in
+                                // Event 7
                                 _ = Statsig.checkGate(gateName2) // should create an exposure, no longer dedupe after updating user
                                 Statsig.shutdown()
                                 done()
@@ -391,7 +415,7 @@ class StatsigSpec: QuickSpec {
                         )
                     )
 
-                    expect(events.count).toEventually(equal(6))
+                    expect(events.count).toEventually(equal(8))
 
                     var event = events[0]
                     var user = event["user"] as! [String: Any]
@@ -406,6 +430,7 @@ class StatsigSpec: QuickSpec {
                     expect(secondaryExposures).to(equal([]))
                     expect(value).to(beNil())
 
+
                     event = events[1]
                     user = event["user"] as! [String: Any]
                     metadata = event["metadata"] as! [String: String]?
@@ -418,6 +443,7 @@ class StatsigSpec: QuickSpec {
                     expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["config": "config", "ruleID": "default"])))
                     expect(secondaryExposures).to(equal([]))
                     expect(value).to(beNil())
+
 
                     event = events[2]
                     user = event["user"] as! [String: Any]
@@ -432,6 +458,7 @@ class StatsigSpec: QuickSpec {
                     expect(secondaryExposures).to(beNil())
                     expect(value as? Int).to(equal(1))
 
+
                     event = events[3]
                     user = event["user"] as! [String: Any]
                     metadata = event["metadata"] as! [String: String]?
@@ -444,6 +471,7 @@ class StatsigSpec: QuickSpec {
                     expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["key": "value2"])))
                     expect(secondaryExposures).to(beNil())
                     expect(value as? String).to(equal("1"))
+
 
                     event = events[4]
                     user = event["user"] as! [String: Any]
@@ -458,7 +486,35 @@ class StatsigSpec: QuickSpec {
                     expect(secondaryExposures).to(beNil())
                     expect(value).to(beNil())
 
+
                     event = events[5]
+                    user = event["user"] as! [String: Any]
+                    metadata = event["metadata"] as! [String: String]?
+                    secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
+                    value = event["value"]
+
+                    expect(event["eventName"] as? String).to(equal(Event.statsigPrefix + Event.layerExposureEventName))
+                    expect(user["userID"] as? String).to(equal("123"))
+                    expect(user["email"] as? String).to(equal("123@statsig.com"))
+                    expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["config": "allocated_layer", "ruleID": "default", "allocatedExperiment": "config".sha256()])))
+                    expect(secondaryExposures).to(equal([]))
+                    expect(value).to(beNil())
+
+                    event = events[6]
+                    user = event["user"] as! [String: Any]
+                    metadata = event["metadata"] as! [String: String]?
+                    secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
+                    value = event["value"]
+
+                    expect(event["eventName"] as? String).to(equal(Event.statsigPrefix + Event.layerExposureEventName))
+                    expect(user["userID"] as? String).to(equal("123"))
+                    expect(user["email"] as? String).to(equal("123@statsig.com"))
+                    expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["config": "unallocated_layer", "ruleID": "default", "allocatedExperiment": ""])))
+                    expect(secondaryExposures).to(equal([]))
+                    expect(value).to(beNil())
+
+
+                    event = events[7]
                     user = event["user"] as! [String: Any]
                     metadata = event["metadata"] as! [String: String]?
                     secondaryExposures = event["secondaryExposures"] as! [[String: String]]?

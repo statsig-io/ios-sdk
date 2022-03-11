@@ -1,23 +1,21 @@
 import Foundation
 
-public struct DynamicConfig: ConfigProtocol {
+public struct Layer: ConfigProtocol {
     public let name: String
-    public let value: [String: Any]
     public let ruleID: String
-    let secondaryExposures: [[String: String]]
     public let isUserInExperiment: Bool
     public let isExperimentActive: Bool
     public let hashedName: String
+    public let allocatedExperimentName: String
 
-    var isDeviceBased: Bool = false
-    var rawValue: [String: Any] = [:]
+    internal let secondaryExposures: [[String: String]]
+    internal var isDeviceBased: Bool = false
+    internal var rawValue: [String: Any] = [:]
+
+    private let value: [String: Any]
 
     init(name: String, configObj: [String: Any] = [:]) {
-        self.init(configName: name, configObj: configObj)
-    }
-
-    init(configName: String, configObj: [String: Any] = [:]) {
-        self.name = configName
+        self.name = name
         self.ruleID = configObj["rule_id"] as? String ?? ""
         self.value = configObj["value"] as? [String: Any] ?? [:]
         self.secondaryExposures = configObj["secondary_exposures"] as? [[String: String]] ?? []
@@ -26,11 +24,12 @@ public struct DynamicConfig: ConfigProtocol {
         self.isDeviceBased = configObj["is_device_based"] as? Bool ?? false
         self.isUserInExperiment = configObj["is_user_in_experiment"] as? Bool ?? false
         self.isExperimentActive = configObj["is_experiment_active"] as? Bool ?? false
+        self.allocatedExperimentName = configObj["allocated_experiment_name"] as? String ?? ""
         self.rawValue = configObj
     }
 
-    init(configName: String, value: [String: Any], ruleID: String) {
-        self.name = configName
+    init(layerName: String, value: [String: Any], ruleID: String) {
+        self.name = layerName
         self.value = value
         self.ruleID = ruleID
         self.secondaryExposures = []
@@ -38,6 +37,7 @@ public struct DynamicConfig: ConfigProtocol {
 
         self.isExperimentActive = false
         self.isUserInExperiment = false
+        self.allocatedExperimentName = ""
     }
 
     public func getValue<T: StatsigDynamicConfigValue>(forKey: String, defaultValue: T) -> T {
