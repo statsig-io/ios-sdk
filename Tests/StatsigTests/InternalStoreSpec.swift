@@ -363,6 +363,21 @@ class InternalStoreSpec: QuickSpec {
                 expect(exp?.getValue(forKey: "label", defaultValue: "")).to(equal("exp_v0"))
                 expect(deviceExp?.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v0"))
 
+                // Reinitialize, same user ID, should keep sticky values
+                store = InternalStore(StatsigUser(userID: "jkw"))
+                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"] // this value changed, but old value should be sticky
+                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v1"]
+                waitUntil { done in
+                    store.set(values: values) {
+                        done()
+                    }
+                }
+                exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
+                deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
+                expect(exp?.getValue(forKey: "label", defaultValue: "")).to(equal("exp_v0")) // should still get old value
+                expect(deviceExp?.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v0"))
+
+
                 // Re-initialize store with a different ID, change the latest values, now user should get updated values but device value stays the same
                 store = InternalStore(StatsigUser(userID: "tore"))
                 values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"]
@@ -394,8 +409,12 @@ class InternalStoreSpec: QuickSpec {
 
                 // update user ID back, should get old values
                 store.updateUser(StatsigUser(userID: "jkw"))
-                exp = store.getExperiment(forName: expKey, keepDeviceValue: false)
+                exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 expect(exp?.getValue(forKey: "label", defaultValue: "")).to(equal("exp_v0"))
+
+                // reset sticky exp
+                exp = store.getExperiment(forName: expKey, keepDeviceValue: false)
+                expect(exp?.getValue(forKey: "label", defaultValue: "")).to(equal("exp_v1"))
 
                 // add a custom ID, now should get default value because cache key is different
                 store.updateUser(StatsigUser(userID: "jkw", customIDs: ["id_type_1": "123456"]))

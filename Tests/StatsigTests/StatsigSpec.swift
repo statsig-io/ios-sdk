@@ -135,24 +135,24 @@ class StatsigSpec: QuickSpec {
                     var requestCount = 0
                     var lastSyncTime: Double = 0
                     let now = NSDate().timeIntervalSince1970
-                    
+
                     stub(condition: isHost("api.statsig.com")) { request in
                         requestCount += 1
-                        
+
                         let httpBody = try! JSONSerialization.jsonObject(
                             with: request.ohhttpStubs_httpBody!,
                             options: []) as! [String: Any]
                         lastSyncTime = httpBody["lastSyncTimeForUser"] as? Double ?? 0
-                        
+
                         return HTTPStubsResponse(jsonObject: ["time": now * 1000], statusCode: 200, headers: nil)
                     }
-                    
+
                     Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(enableAutoValueUpdate: true))
-                    
+
                     // first request, "lastSyncTimeForUser" field should not be present in the request body
                     expect(requestCount).toEventually(equal(1), timeout: .seconds(1))
                     expect(lastSyncTime).to(equal(0))
-                    
+
                     // second request, "lastSyncTimeForUser" field should be the time when the first request was sent
                     expect(requestCount).toEventually(equal(2), timeout: .seconds(11))
                     expect(Int(lastSyncTime / 1000)).toEventually(equal(Int(now)), timeout: .seconds(11))
@@ -278,6 +278,114 @@ class StatsigSpec: QuickSpec {
                     overrides = Statsig.getAllOverrides()
                     expect(overrides?.gates.keys.count).to(equal(0))
                     expect(overrides?.configs.keys.count).to(equal(0))
+                }
+
+                it("works correctly with sticky bucketing") {
+                    var initializeResponse: [String: [String: Any]] = [
+                        "dynamic_configs": [
+                            "exp".sha256(): [
+                                "rule_id": "default",
+                                "value": ["key": "value"],
+                                "is_user_in_experiment": true,
+                                "is_experiment_active": true,
+                            ],
+                        ],
+                        "layer_configs": [
+                            "layer".sha256():[
+                                "rule_id": "default",
+                                "value": ["key": "value"],
+                                "is_user_in_experiment": true,
+                                "is_experiment_active": true,
+                                "allocated_experiment_name": "exp".sha256()
+                            ]
+                        ]
+                    ]
+                    stub(condition: isHost("api.statsig.com")) { _ in
+                        HTTPStubsResponse(jsonObject: initializeResponse, statusCode: 200, headers: nil)
+                    }
+
+                    waitUntil { done in
+                        Statsig.start(sdkKey: "client-api-key") { _ in
+                            done()
+                        }
+                    }
+
+                    var exp = Statsig.getExperiment("exp", keepDeviceValue: true)
+                    expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("value"))
+                    var layer = Statsig.getLayer("layer", keepDeviceValue: true)
+                    expect(layer.getValue(forKey: "key", defaultValue: "")).to(equal("value"))
+
+                    Statsig.shutdown()
+
+                    initializeResponse = [
+                        "dynamic_configs": [
+                            "exp".sha256(): [
+                                "rule_id": "default",
+                                "value": ["key": "value_changed"],
+                                "is_user_in_experiment": false,
+                                "is_experiment_active": true,
+                            ],
+                        ],
+                        "layer_configs": [
+                            "layer".sha256():[
+                                "rule_id": "default",
+                                "value": ["key": "value_changed"],
+                                "is_user_in_experiment": false,
+                                "is_experiment_active": true,
+                                "allocated_experiment_name": "exp".sha256()
+                            ]
+                        ]
+                    ]
+                    // user is failing targeting, but should still get the old value
+                    stub(condition: isHost("api.statsig.com")) { _ in
+                        HTTPStubsResponse(jsonObject: initializeResponse, statusCode: 200, headers: nil)
+                    }
+                    waitUntil { done in
+                        Statsig.start(sdkKey: "client-api-key") { _ in
+                            done()
+                        }
+                    }
+
+                    exp = Statsig.getExperiment("exp", keepDeviceValue: true)
+                    expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("value"))
+                    layer = Statsig.getLayer("layer", keepDeviceValue: true)
+                    expect(layer.getValue(forKey: "key", defaultValue: "")).to(equal("value"))
+
+                    Statsig.shutdown()
+
+                    initializeResponse = [
+                        "dynamic_configs": [
+                            "exp".sha256(): [
+                                "rule_id": "default",
+                                "value": ["key": "value_changed"],
+                                "is_user_in_experiment": false,
+                                "is_experiment_active": false,
+                            ],
+                        ],
+                        "layer_configs": [
+                            "layer".sha256():[
+                                "rule_id": "default",
+                                "value": ["key": "value_changed_new_exp"],
+                                "is_user_in_experiment": true,
+                                "is_experiment_active": true,
+                                "allocated_experiment_name": "new_exp".sha256()
+                            ]
+                        ]
+                    ]
+                    // experiment is stopped, now user should get new value
+                    stub(condition: isHost("api.statsig.com")) { _ in
+                        HTTPStubsResponse(jsonObject: initializeResponse, statusCode: 200, headers: nil)
+                    }
+                    waitUntil { done in
+                        Statsig.start(sdkKey: "client-api-key") { _ in
+                            done()
+                        }
+                    }
+
+                    exp = Statsig.getExperiment("exp", keepDeviceValue: true)
+                    expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("value_changed"))
+                    layer = Statsig.getLayer("layer", keepDeviceValue: true)
+                    expect(layer.getValue(forKey: "key", defaultValue: "")).to(equal("value_changed_new_exp"))
                 }
 
                 it("times out if the request took too long and responds early with default values, when there is no local cache") {

@@ -61,6 +61,9 @@ struct StatsigValuesCache {
         if let gates = userCache[InternalStore.gatesKey] as? [String: [String: Any]], let gateObj = gates[gateNameHash] {
             return FeatureGate(name: gateName, gateObj: gateObj)
         }
+        if let gates = userCache[InternalStore.gatesKey] as? [String: [String: Any]], let gateObj = gates[gateName] {
+            return FeatureGate(name: gateName, gateObj: gateObj)
+        }
         return nil
     }
 
@@ -69,12 +72,18 @@ struct StatsigValuesCache {
         if let configObj = getConfigData(configNameHash, topLevelKey: InternalStore.configsKey) {
             return DynamicConfig(configName: configName, configObj: configObj)
         }
+        if let configObj = getConfigData(configName, topLevelKey: InternalStore.configsKey) {
+            return DynamicConfig(configName: configName, configObj: configObj)
+        }
         return nil
     }
 
     func getLayer(_ layerName: String) -> Layer? {
         let layerNameHash = layerName.sha256()
         if let configObj = getConfigData(layerNameHash, topLevelKey: InternalStore.layerConfigsKey) {
+            return Layer(name: layerName, configObj: configObj)
+        }
+        if let configObj = getConfigData(layerName, topLevelKey: InternalStore.layerConfigsKey) {
             return Layer(name: layerName, configObj: configObj)
         }
         return nil
@@ -136,7 +145,8 @@ struct StatsigValuesCache {
         saveToUserDefaults()
     }
 
-    private func saveToUserDefaults() {
+    private mutating func saveToUserDefaults() {
+        cacheByID[userCacheKey] = userCache
         UserDefaults.standard.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
         UserDefaults.standard.setDictionarySafe(stickyDeviceExperiments, forKey: InternalStore.stickyDeviceExperimentsKey)
     }
@@ -255,7 +265,8 @@ class InternalStore {
         let latestValue = cache.getLayer(layerName)
         return getPossiblyStickyValue(layerName,
                                       latestValue: latestValue,
-                                      keepDeviceValue: keepDeviceValue)
+                                      keepDeviceValue: keepDeviceValue,
+                                      isLayer: true)
     }
 
     func set(values: [String: Any], completion: (() -> Void)? = nil) {
@@ -326,10 +337,24 @@ class InternalStore {
         return [InternalStore.gatesKey: [:], InternalStore.configsKey: [:]]
     }
 
-    private func getPossiblyStickyValue<T: ConfigProtocol>(_ name: String, latestValue: T?, keepDeviceValue: Bool) -> T? {
+    private func getPossiblyStickyValue<T: ConfigProtocol>(_ name: String, latestValue: T?, keepDeviceValue: Bool,
+                                                           isLayer: Bool = false) -> T? {
         return storeQueue.sync {
+            var stickyExperimentIsActive = latestValue?.isExperimentActive
+            if isLayer {
+                // a user can have a different allocated experiment in a layer, but should still be sticky
+                // to the previous experiment if it's still active, so we need to look it up
+                let stickyLayerExp = cache.getStickyExperiment(name)
+                if stickyLayerExp != nil {
+                    if let stickyExpNameHash = stickyLayerExp?["allocated_experiment_name"] as? String,
+                       let currentExp = cache.getConfig(stickyExpNameHash) {
+                        stickyExperimentIsActive = currentExp.isExperimentActive
+                    }
+                }
+            }
+
             // If flag is false, or experiment is NOT active, simply remove the sticky experiment value, and return the latest value
-            if !keepDeviceValue || latestValue?.isExperimentActive == false {
+            if !keepDeviceValue || stickyExperimentIsActive == false {
                storeQueue.async(flags: .barrier) { [weak self] in
                    self?.cache.removeStickyExperiment(name)
                }
@@ -343,9 +368,9 @@ class InternalStore {
 
             // The user has NOT been exposed before. If is IN this ACTIVE experiment, then we save the value as sticky
             if let latestValue = latestValue {
-               storeQueue.async(flags: .barrier) { [weak self] in
-                   self?.cache.saveStickyExperimentIfNeeded(name, latestValue)
-               }
+                storeQueue.async(flags: .barrier) { [weak self] in
+                    self?.cache.saveStickyExperimentIfNeeded(name, latestValue)
+                }
             }
             return latestValue
         }

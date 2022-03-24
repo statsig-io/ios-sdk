@@ -35,7 +35,7 @@ public class Statsig {
             return getDummyConfig(experimentName, #function)
         }
 
-        return client.getExperiment(experimentName)
+        return client.getExperiment(experimentName, keepDeviceValue: keepDeviceValue)
     }
 
     public static func getConfig(_ configName: String) -> DynamicConfig {

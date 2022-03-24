@@ -19,6 +19,8 @@ class DynamicConfigSpec: QuickSpec {
                     "dict": ["key": "value"],
                     "mixedDict": ["keyStr": "string", "keyInt": 2, "keyArr": [1, 2], "keyDouble": 1.23, "keyDict": ["k": "v"]],
                 ],
+            "is_experiment_active": true,
+            "is_user_in_experiment": true,
         ]
     override func spec() {
         describe("dummy config works as expected") {

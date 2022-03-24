@@ -113,14 +113,9 @@ class LayerConfigSpec: QuickSpec {
                 expect(config?.getValue(forKey: "key", defaultValue: "ERR")).to(equal("value"))
 
                 var updatedValues: [String: Any] = Data.CacheValues
-                updatedValues[jsonDict: "layer_configs"]?[jsonDict: Data.HashLayerConfigWithExperimentKey] = [
-                    "name": Data.HashLayerConfigWithExperimentKey,
-                    "rule_id": "default",
-                    "value": ["key": "another_value"],
-                    "is_user_in_experiment": true,
-                    "is_experiment_active": true,
-                    "allocated_experiment_name": Data.AnotherConfigKey
-                ]
+                updatedValues[jsonDict: "dynamic_configs"]?[jsonDict: Data.HashConfigKey]?["is_user_in_experiment"] = false
+
+                store = InternalStore(StatsigUser(userID: "dloomb")) // reload the cache, and user is no longer in the experiment, but value should stick because experiment is active
 
                 waitUntil { done in
                     store.set(values: updatedValues) {
@@ -130,6 +125,41 @@ class LayerConfigSpec: QuickSpec {
 
                 config = store.getLayer(forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: true)
                 expect(config?.getValue(forKey: "key", defaultValue: "ERR")).to(equal("value"))
+
+                updatedValues[jsonDict: "layer_configs"]?[jsonDict: Data.HashLayerConfigWithExperimentKey] = [
+                    "name": Data.HashLayerConfigWithExperimentKey,
+                    "rule_id": "default",
+                    "value": ["key": "another_value"],
+                    "is_user_in_experiment": true,
+                    "is_experiment_active": true,
+                    "allocated_experiment_name": "completely_different_exp"
+                ]
+
+                // reload the cache, and user is allocated to a different experiment,
+                // but should still get same value because previous experiment is still active
+                store = InternalStore(StatsigUser(userID: "dloomb"))
+
+                waitUntil { done in
+                    store.set(values: updatedValues) {
+                        done()
+                    }
+                }
+
+                config = store.getLayer(forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: true)
+                expect(config?.getValue(forKey: "key", defaultValue: "ERR")).to(equal("value"))
+
+                updatedValues[jsonDict: "dynamic_configs"]?[jsonDict: Data.HashConfigKey]?["is_experiment_active"] = false
+                // reload the cache, and previous experiment is no longer active, so should get new value
+                store = InternalStore(StatsigUser(userID: "dloomb"))
+
+                waitUntil { done in
+                    store.set(values: updatedValues) {
+                        done()
+                    }
+                }
+
+                config = store.getLayer(forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: true)
+                expect(config?.getValue(forKey: "key", defaultValue: "ERR")).to(equal("another_value"))
             }
 
             it("should wipe sticky value when keepDeviceValue is false") {
@@ -146,12 +176,12 @@ class LayerConfigSpec: QuickSpec {
                     "allocated_experiment_name": Data.AnotherConfigKey
                 ]
 
+                store = InternalStore(StatsigUser(userID: "dloomb"))
                 waitUntil { done in
                     store.set(values: updatedValues) {
                         done()
                     }
                 }
-
                 config = store.getLayer(forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: false)
                 expect(config?.getValue(forKey: "key", defaultValue: "ERR")).to(equal("another_value"))
             }
