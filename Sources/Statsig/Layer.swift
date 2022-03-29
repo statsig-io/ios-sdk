@@ -43,7 +43,7 @@ public struct Layer: ConfigProtocol {
     public func getValue<T: StatsigDynamicConfigValue>(forKey: String, defaultValue: T) -> T {
         let serverValue = value[forKey] as? T
         if serverValue == nil {
-            print("[Statsig]: \(forKey) does not exist in this Dynamic Config. Returning the defaultValue.")
+            print("[Statsig]: \(forKey) does not exist in this Layer. Returning the defaultValue.")
         }
         return serverValue ?? defaultValue
     }
