@@ -441,6 +441,15 @@ class InternalStoreSpec: QuickSpec {
                                 "is_user_in_experiment": true,
                                 "is_experiment_active": true,
                             ],
+                            hashedStickyExpKey: [
+                                "value":
+                                    ["label": "device_exp_v1"] // value changed to v1
+                                ,
+                                "is_experiment_active": true,
+                                "is_device_based": true,
+                                "is_user_in_experiment": false, // No longer in experiment
+                                "rule_id": "rule_id_1"
+                            ]
                         ],
                         "sticky_experiments": [:],
                         "time": 0

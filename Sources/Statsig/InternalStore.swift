@@ -258,7 +258,8 @@ class InternalStore {
         let latestValue = getConfig(forName: experimentName)
         return getPossiblyStickyValue(experimentName,
                                       latestValue: latestValue,
-                                      keepDeviceValue: keepDeviceValue)
+                                      keepDeviceValue: keepDeviceValue,
+                                      isLayer: false)
     }
 
     func getLayer(forName layerName: String, keepDeviceValue: Bool = false) -> Layer? {
@@ -337,42 +338,57 @@ class InternalStore {
         return [InternalStore.gatesKey: [:], InternalStore.configsKey: [:]]
     }
 
-    private func getPossiblyStickyValue<T: ConfigProtocol>(_ name: String, latestValue: T?, keepDeviceValue: Bool,
-                                                           isLayer: Bool = false) -> T? {
+    // Sticky Logic: https://gist.github.com/daniel-statsig/3d8dfc9bdee531cffc96901c1a06a402
+    private func getPossiblyStickyValue<T: ConfigProtocol>(_ name: String, latestValue: T?, keepDeviceValue: Bool, isLayer: Bool) -> T? {
         return storeQueue.sync {
-            var stickyExperimentIsActive = latestValue?.isExperimentActive
-            if isLayer {
-                // a user can have a different allocated experiment in a layer, but should still be sticky
-                // to the previous experiment if it's still active, so we need to look it up
-                let stickyLayerExp = cache.getStickyExperiment(name)
-                if stickyLayerExp != nil {
-                    if let stickyExpNameHash = stickyLayerExp?["allocated_experiment_name"] as? String,
-                       let currentExp = cache.getConfig(stickyExpNameHash) {
-                        stickyExperimentIsActive = currentExp.isExperimentActive
-                    }
-                }
-            }
-
-            // If flag is false, or experiment is NOT active, simply remove the sticky experiment value, and return the latest value
-            if !keepDeviceValue || stickyExperimentIsActive == false {
-               storeQueue.async(flags: .barrier) { [weak self] in
-                   self?.cache.removeStickyExperiment(name)
-               }
+            // We don't want sticky behavior. Clear any sticky values and return latest.
+            if (!keepDeviceValue) {
+                removeStickyExperimentThreaded(name)
                 return latestValue
             }
 
-            // If sticky value is already in cache, use it
-            if let stickyValue = cache.getStickyExperiment(name) {
+            // If there is no sticky value, save latest as sticky and return latest.
+            guard let stickyValue = cache.getStickyExperiment(name) else {
+                saveStickyExperimentIfNeededThreaded(name, latestValue)
+                return latestValue
+            }
+
+            // Get the latest config value. Layers require a lookup by allocated_experiment_name.
+            var latestExperimentValue: ConfigProtocol? = nil
+            if isLayer {
+                latestExperimentValue = cache.getConfig(stickyValue["allocated_experiment_name"] as? String ?? "")
+            } else {
+                latestExperimentValue = latestValue
+            }
+
+            
+            if (latestExperimentValue?.isExperimentActive == true) {
                 return T(name: name, configObj: stickyValue)
             }
 
-            // The user has NOT been exposed before. If is IN this ACTIVE experiment, then we save the value as sticky
-            if let latestValue = latestValue {
-                storeQueue.async(flags: .barrier) { [weak self] in
-                    self?.cache.saveStickyExperimentIfNeeded(name, latestValue)
-                }
+            if (latestValue?.isExperimentActive == true) {
+                saveStickyExperimentIfNeededThreaded(name, latestValue)
+            } else {
+                removeStickyExperimentThreaded(name)
             }
+
             return latestValue
+        }
+    }
+
+    private func removeStickyExperimentThreaded(_ name: String) {
+        storeQueue.async(flags: .barrier) { [weak self] in
+            self?.cache.removeStickyExperiment(name)
+        }
+    }
+
+    private func saveStickyExperimentIfNeededThreaded(_ name: String, _ config: ConfigProtocol?) {
+        guard let config = config else {
+            return
+        }
+
+        storeQueue.async(flags: .barrier) { [weak self] in
+            self?.cache.saveStickyExperimentIfNeeded(name, config)
         }
 
     }
