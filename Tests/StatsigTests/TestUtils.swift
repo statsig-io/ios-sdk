@@ -27,4 +27,12 @@ class TestUtils {
 
         TestUtils.startStatsigAndWait(key: key, user)
     }
+
+    static func captureLogs(onLog: @escaping ([String: Any]) -> Void) {
+        stub(condition: isPath("/v1/rgstr")) { request in
+            let data = try! JSONSerialization.jsonObject(with: request.ohhttpStubs_httpBody!, options: []) as! [String: Any]
+            onLog(data)
+            return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
+        }
+    }
 }

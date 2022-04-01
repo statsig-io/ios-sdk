@@ -104,7 +104,9 @@ class Event {
         ruleID: String,
         secondaryExposures: [[String: String]],
         disableCurrentVCLogging: Bool,
-        allocatedExperimentName: String
+        allocatedExperimentName: String,
+        parameterName: String,
+        isExplicitParameter: Bool
     ) -> Event {
         return statsigInternalEvent(
             user: user,
@@ -113,7 +115,9 @@ class Event {
             metadata: [
                 "config": configName,
                 "ruleID": ruleID,
-                "allocatedExperiment": allocatedExperimentName
+                "allocatedExperiment": allocatedExperimentName,
+                "parameterName": parameterName,
+                "isExplicitParameter": "\(isExplicitParameter)"
             ],
             secondaryExposures: secondaryExposures,
             disableCurrentVCLogging: disableCurrentVCLogging

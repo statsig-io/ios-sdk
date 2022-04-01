@@ -558,14 +558,8 @@ class StatsigSpec: QuickSpec {
                             // Event 4
                             Statsig.logEvent("test_event_3", metadata: ["key": "value3"])
 
-                            // Event 5
-                            _ = Statsig.getLayer("allocated_layer")
-
-                            // Event 6
-                            _ = Statsig.getLayer("unallocated_layer")
-
                             Statsig.updateUser(StatsigUser(userID: "123", email: "123@statsig.com")) { errorMessage in
-                                // Event 7
+                                // Event 5
                                 _ = Statsig.checkGate(gateName2) // should create an exposure, no longer dedupe after updating user
                                 Statsig.shutdown()
                                 done()
@@ -585,7 +579,7 @@ class StatsigSpec: QuickSpec {
                         )
                     )
 
-                    expect(events.count).toEventually(equal(8))
+                    expect(events.count).toEventually(equal(6))
 
                     var event = events[0]
                     var user = event["user"] as! [String: Any]
@@ -656,35 +650,7 @@ class StatsigSpec: QuickSpec {
                     expect(secondaryExposures).to(beNil())
                     expect(value).to(beNil())
 
-
                     event = events[5]
-                    user = event["user"] as! [String: Any]
-                    metadata = event["metadata"] as! [String: String]?
-                    secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
-                    value = event["value"]
-
-                    expect(event["eventName"] as? String).to(equal(Event.statsigPrefix + Event.layerExposureEventName))
-                    expect(user["userID"] as? String).to(equal("123"))
-                    expect(user["email"] as? String).to(equal("123@statsig.com"))
-                    expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["config": "allocated_layer", "ruleID": "default", "allocatedExperiment": "config".sha256()])))
-                    expect(secondaryExposures).to(equal([]))
-                    expect(value).to(beNil())
-
-                    event = events[6]
-                    user = event["user"] as! [String: Any]
-                    metadata = event["metadata"] as! [String: String]?
-                    secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
-                    value = event["value"]
-
-                    expect(event["eventName"] as? String).to(equal(Event.statsigPrefix + Event.layerExposureEventName))
-                    expect(user["userID"] as? String).to(equal("123"))
-                    expect(user["email"] as? String).to(equal("123@statsig.com"))
-                    expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["config": "unallocated_layer", "ruleID": "default", "allocatedExperiment": ""])))
-                    expect(secondaryExposures).to(equal([]))
-                    expect(value).to(beNil())
-
-
-                    event = events[7]
                     user = event["user"] as! [String: Any]
                     metadata = event["metadata"] as! [String: String]?
                     secondaryExposures = event["secondaryExposures"] as! [[String: String]]?

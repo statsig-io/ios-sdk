@@ -49,7 +49,7 @@ public class Statsig {
     public static func getLayer(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
         guard let client = client else {
             print("[Statsig]: Must start Statsig first and wait for it to complete before calling getLayer. Returning an empty Layer object")
-            return Layer(name: layerName)
+            return Layer(client: nil, name: layerName)
         }
 
         return client.getLayer(layerName, keepDeviceValue: keepDeviceValue)

@@ -3,5 +3,4 @@ internal protocol ConfigProtocol {
     var isUserInExperiment: Bool { get }
     var isDeviceBased: Bool { get }
     var rawValue: [String: Any] { get }
-    init(name: String, configObj: [String: Any]) 
 }

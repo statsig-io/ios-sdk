@@ -91,6 +91,7 @@ class LayerConfigSpec: QuickSpec {
 
     override func spec() {
         describe("using getLayerConfig") {
+            let client = StatsigClient(sdkKey: "", user: nil, options: nil, completion: nil)
             var store: InternalStore!
 
             beforeEach {
@@ -101,15 +102,15 @@ class LayerConfigSpec: QuickSpec {
             }
 
             it("returns the experiment values") {
-                let config = store.getLayer(forName: Data.LayerConfigWithExperimentKey)
+                let config = store.getLayer(client: client, forName: Data.LayerConfigWithExperimentKey)
                 expect(config?.getValue(forKey: "key", defaultValue: "ERR")).to(equal("value"))
 
-                let another = store.getLayer(forName: Data.LayerConfigWithoutExperimentKey)
+                let another = store.getLayer(client: client, forName: Data.LayerConfigWithoutExperimentKey)
                 expect(another?.getValue(forKey: "key", defaultValue: "ERR")).to(equal("another_value"))
             }
 
             it("should return a sticky value") {
-                var config = store.getLayer(forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: true)
+                var config = store.getLayer(client: client, forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: true)
                 expect(config?.getValue(forKey: "key", defaultValue: "ERR")).to(equal("value"))
 
                 var updatedValues: [String: Any] = Data.CacheValues
@@ -123,7 +124,7 @@ class LayerConfigSpec: QuickSpec {
                     }
                 }
 
-                config = store.getLayer(forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: true)
+                config = store.getLayer(client: client, forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: true)
                 expect(config?.getValue(forKey: "key", defaultValue: "ERR")).to(equal("value"))
 
                 updatedValues[jsonDict: "layer_configs"]?[jsonDict: Data.HashLayerConfigWithExperimentKey] = [
@@ -145,7 +146,7 @@ class LayerConfigSpec: QuickSpec {
                     }
                 }
 
-                config = store.getLayer(forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: true)
+                config = store.getLayer(client: client, forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: true)
                 expect(config?.getValue(forKey: "key", defaultValue: "ERR")).to(equal("value"))
 
                 updatedValues[jsonDict: "dynamic_configs"]?[jsonDict: Data.HashConfigKey]?["is_experiment_active"] = false
@@ -158,12 +159,12 @@ class LayerConfigSpec: QuickSpec {
                     }
                 }
 
-                config = store.getLayer(forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: true)
+                config = store.getLayer(client: client, forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: true)
                 expect(config?.getValue(forKey: "key", defaultValue: "ERR")).to(equal("another_value"))
             }
 
             it("should wipe sticky value when keepDeviceValue is false") {
-                var config = store.getLayer(forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: true)
+                var config = store.getLayer(client: client, forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: true)
                 expect(config?.getValue(forKey: "key", defaultValue: "ERR")).to(equal("value"))
 
                 var updatedValues: [String: Any] = Data.CacheValues
@@ -182,7 +183,7 @@ class LayerConfigSpec: QuickSpec {
                         done()
                     }
                 }
-                config = store.getLayer(forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: false)
+                config = store.getLayer(client: client, forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: false)
                 expect(config?.getValue(forKey: "key", defaultValue: "ERR")).to(equal("another_value"))
             }
         }

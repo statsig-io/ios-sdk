@@ -78,13 +78,13 @@ struct StatsigValuesCache {
         return nil
     }
 
-    func getLayer(_ layerName: String) -> Layer? {
+    func getLayer(_ client: StatsigClient, _ layerName: String) -> Layer? {
         let layerNameHash = layerName.sha256()
         if let configObj = getConfigData(layerNameHash, topLevelKey: InternalStore.layerConfigsKey) {
-            return Layer(name: layerName, configObj: configObj)
+            return Layer(client: client, name: layerName, configObj: configObj)
         }
         if let configObj = getConfigData(layerName, topLevelKey: InternalStore.layerConfigsKey) {
-            return Layer(name: layerName, configObj: configObj)
+            return Layer(client: client, name: layerName, configObj: configObj)
         }
         return nil
     }
@@ -256,18 +256,26 @@ class InternalStore {
 
     func getExperiment(forName experimentName: String, keepDeviceValue: Bool) -> DynamicConfig? {
         let latestValue = getConfig(forName: experimentName)
-        return getPossiblyStickyValue(experimentName,
-                                      latestValue: latestValue,
-                                      keepDeviceValue: keepDeviceValue,
-                                      isLayer: false)
+        return getPossiblyStickyValue(
+            experimentName,
+            latestValue: latestValue,
+            keepDeviceValue: keepDeviceValue,
+            isLayer: false,
+            factory: { name, data in
+                return DynamicConfig(name: name, configObj: data)
+            })
     }
 
-    func getLayer(forName layerName: String, keepDeviceValue: Bool = false) -> Layer? {
-        let latestValue = cache.getLayer(layerName)
-        return getPossiblyStickyValue(layerName,
-                                      latestValue: latestValue,
-                                      keepDeviceValue: keepDeviceValue,
-                                      isLayer: true)
+    func getLayer(client: StatsigClient, forName layerName: String, keepDeviceValue: Bool = false) -> Layer? {
+        let latestValue = cache.getLayer(client, layerName)
+        return getPossiblyStickyValue(
+            layerName,
+            latestValue: latestValue,
+            keepDeviceValue: keepDeviceValue,
+            isLayer: true,
+            factory: { name, data in
+                return Layer(client: client, name: name, configObj: data)
+            })
     }
 
     func set(values: [String: Any], completion: (() -> Void)? = nil) {
@@ -339,7 +347,12 @@ class InternalStore {
     }
 
     // Sticky Logic: https://gist.github.com/daniel-statsig/3d8dfc9bdee531cffc96901c1a06a402
-    private func getPossiblyStickyValue<T: ConfigProtocol>(_ name: String, latestValue: T?, keepDeviceValue: Bool, isLayer: Bool) -> T? {
+    private func getPossiblyStickyValue<T: ConfigProtocol>(
+        _ name: String,
+        latestValue: T?,
+        keepDeviceValue: Bool,
+        isLayer: Bool,
+        factory: (_ name: String, _ data: [String: Any]) -> T) -> T? {
         return storeQueue.sync {
             // We don't want sticky behavior. Clear any sticky values and return latest.
             if (!keepDeviceValue) {
@@ -363,7 +376,7 @@ class InternalStore {
 
             
             if (latestExperimentValue?.isExperimentActive == true) {
-                return T(name: name, configObj: stickyValue)
+                return factory(name, stickyValue)
             }
 
             if (latestValue?.isExperimentActive == true) {

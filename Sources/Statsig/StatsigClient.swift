@@ -106,24 +106,11 @@ internal class StatsigClient {
 
     internal func getLayer(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
         var layer: Layer
-        if let result = store.getLayer(forName: layerName, keepDeviceValue: keepDeviceValue) {
+        if let result = store.getLayer(client: self, forName: layerName, keepDeviceValue: keepDeviceValue) {
             layer = result
         } else {
             print("[Statsig]: The layer with name \(layerName) does not exist. Returning an empty Layer.")
-            return Layer(name: layerName)
-        }
-
-        let ruleID = layer.ruleID
-        let dedupeKey = layerName + ruleID
-        if shouldLogExposure(key: dedupeKey) {
-            logger.log(
-                Event.layerExposure(
-                    user: currentUser,
-                    configName: layer.name,
-                    ruleID: ruleID,
-                    secondaryExposures: layer.secondaryExposures,
-                    disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging,
-                    allocatedExperimentName: layer.allocatedExperimentName))
+            return Layer(client: self, name: layerName)
         }
 
         return layer
@@ -200,6 +187,31 @@ internal class StatsigClient {
                 metadata: metadata,
                 disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging)
         )
+    }
+
+    internal func logLayerParameterExposure(layer: Layer, parameterName: String) {
+        var exposures = layer.undelegatedSecondaryExposures
+        var allocatedExperiment = ""
+        let isExplicit = layer.explicitParameters.contains(parameterName)
+        if isExplicit {
+            exposures = layer.secondaryExposures
+            allocatedExperiment = layer.allocatedExperimentName
+        }
+
+        let dedupeKey = [layer.name, layer.ruleID, allocatedExperiment, parameterName, "\(isExplicit)"].joined(separator: "|")
+
+        if shouldLogExposure(key: dedupeKey) {
+            logger.log(
+                Event.layerExposure(
+                    user: currentUser,
+                    configName: layer.name,
+                    ruleID: layer.ruleID,
+                    secondaryExposures: exposures,
+                    disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging,
+                    allocatedExperimentName: allocatedExperiment,
+                    parameterName: parameterName,
+                    isExplicitParameter: isExplicit))
+        }
     }
 
     private func fetchAndScheduleSyncing(completion: completionBlock) {
