@@ -1,3 +1,5 @@
+name: Test
+
 on:
   workflow_dispatch:
   push:
@@ -5,15 +7,14 @@ on:
     paths:
       - Sources/**
       - Tests/**
-      - .github/workflows/tests.yaml
+      - .github/workflows/test.yaml
   pull_request:
     branches: [main]
     paths:
       - Sources/**
       - Tests/**
-      - .github/workflows/tests.yaml
+      - .github/workflows/test.yaml
 
-name: Test
 jobs:
   test:
     name: Test
