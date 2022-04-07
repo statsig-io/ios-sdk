@@ -1,13 +1,16 @@
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - src/**
+      - Sources/**
+      - Tests/**
       - .github/workflows/tests.yml
   pull_request:
     branches: [main]
     paths:
-      - src/**
+      - Sources/**
+      - Tests/**
       - .github/workflows/tests.yml
 
 name: Test
@@ -15,6 +18,7 @@ jobs:
   test:
     name: Test
     runs-on: macos-latest
+    timeout-minutes: 15
     strategy:
       matrix:
         destination: ['platform=iOS Simulator,OS=15.2,name=iPhone 12 Pro']
