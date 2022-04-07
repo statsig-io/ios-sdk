@@ -1,6 +1,19 @@
 name: Testbed UI
 
-on: pull_request
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - Sources/**
+      - Tests/**
+      - .github/workflows/testbed-ui-tests.yaml
+  pull_request:
+    branches: [main]
+    paths:
+      - Sources/**
+      - Tests/**
+      - .github/workflows/testbed-ui-tests.yaml
 
 jobs:
   test:
