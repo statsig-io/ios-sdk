@@ -1,4 +1,15 @@
-on: pull_request
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/**
+      - .github/workflows/tests.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - src/**
+      - .github/workflows/tests.yml
+
 name: Test
 jobs:
   test:
