@@ -1,4 +1,18 @@
-on: pull_request
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - Sources/**
+      - Tests/**
+      - .github/workflows/tests.yaml
+  pull_request:
+    branches: [main]
+    paths:
+      - Sources/**
+      - Tests/**
+      - .github/workflows/tests.yaml
+
 name: Test
 jobs:
   test:
