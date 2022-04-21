@@ -267,7 +267,9 @@ class InternalStore {
     }
 
     func getLayer(client: StatsigClient, forName layerName: String, keepDeviceValue: Bool = false) -> Layer? {
-        let latestValue = cache.getLayer(client, layerName)
+        let latestValue = storeQueue.sync {
+            return cache.getLayer(client, layerName)
+        }
         return getPossiblyStickyValue(
             layerName,
             latestValue: latestValue,
