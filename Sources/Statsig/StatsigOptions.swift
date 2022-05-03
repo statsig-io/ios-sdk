@@ -5,6 +5,8 @@ public class StatsigOptions {
     public var disableCurrentVCLogging = false
     public var enableAutoValueUpdate = false
     public var overrideStableID: String?
+
+    internal var overrideURL: URL?
     var environment: [String: String] = [:]
 
     public init(initTimeout: Double? = 3.0,
@@ -26,5 +28,6 @@ public class StatsigOptions {
             self.enableAutoValueUpdate = enableAutoValueUpdate
         }
         self.overrideStableID = overrideStableID
+        self.overrideURL = nil
     }
 }

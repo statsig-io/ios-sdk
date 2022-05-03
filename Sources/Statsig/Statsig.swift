@@ -5,7 +5,7 @@ import UIKit
 public typealias completionBlock = ((_ errorMessage: String?) -> Void)?
 
 public class Statsig {
-    private static var client: StatsigClient?
+    internal static var client: StatsigClient?
 
     public static func start(sdkKey: String, user: StatsigUser? = nil, options: StatsigOptions? = nil,
                              completion: completionBlock = nil)

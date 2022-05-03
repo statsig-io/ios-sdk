@@ -43,6 +43,13 @@ class NetworkService {
         var urlComponents = URLComponents()
         urlComponents.scheme = "https"
         urlComponents.host = apiHost
+
+        if let override = self.statsigOptions.overrideURL {
+            urlComponents.scheme = override.scheme
+            urlComponents.host = override.host
+            urlComponents.port = override.port
+        }
+
         switch forType {
         case .initialize:
             urlComponents.path = initializeAPIPath
