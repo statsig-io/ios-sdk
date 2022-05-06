@@ -25,20 +25,23 @@ class DynamicConfigSpec: QuickSpec {
     override func spec() {
         describe("dummy config works as expected") {
             it("only returns the default values") {
-                let dc = DynamicConfig(configName: "dummy")
+                let dc = DynamicConfig(configName: "dummy", evalDetails: EvaluationDetails(reason: .Uninitialized))
                 expect(dc.getValue(forKey: "str", defaultValue: "1")) == "1"
                 expect(dc.getValue(forKey: "bool", defaultValue: true)) == true
                 expect(dc.getValue(forKey: "double", defaultValue: 1.1)) == 1.1
                 expect(dc.getValue(forKey: "int", defaultValue: 3)) == 3
                 expect(dc.getValue(forKey: "strArray", defaultValue: ["1", "2"])) == ["1", "2"]
                 expect(dc.getValue(forKey: "dict", defaultValue: ["key": "value"])) == ["key": "value"]
+                expect(dc.evaluationDetails.reason).to(equal(.Uninitialized))
+                expect(Int(dc.evaluationDetails.time / 1000)) == Int(NSDate().timeIntervalSince1970)
             }
         }
 
         describe("creating a dynamic config from dictionary") {
             let dc = DynamicConfig(
                 configName: "testConfig",
-                configObj: DynamicConfigSpec.TestMixedConfig)
+                configObj: DynamicConfigSpec.TestMixedConfig,
+                evalDetails: EvaluationDetails(reason: .Network))
 
             it("returns the correct value for key given the defaultValue with correct type") {
                 expect(dc.getValue(forKey: "str", defaultValue: "1")) == "string"
@@ -46,6 +49,9 @@ class DynamicConfigSpec: QuickSpec {
                 expect(dc.getValue(forKey: "double", defaultValue: 1.0)) == 3.14
                 expect(dc.getValue(forKey: "int", defaultValue: 1)) == 3
                 expect(dc.getValue(forKey: "strArray", defaultValue: [])) == ["1", "2"]
+
+                expect(dc.evaluationDetails.reason).to(equal(.Network))
+                expect(Int(dc.evaluationDetails.time / 1000)) == Int(NSDate().timeIntervalSince1970)
 
                 let mixedArray = dc.getValue(forKey: "mixedArray", defaultValue: [])
                 expect(mixedArray.count) == 2

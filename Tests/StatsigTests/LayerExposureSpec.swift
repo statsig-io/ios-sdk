@@ -69,13 +69,16 @@ class LayerExposureSpec: QuickSpec {
                 let event = logs[a: "events"]?[d: 0]
                 expect(event?[a: "secondaryExposures"] as? [[String: String]])
                     .to(equal([["gate": "undelegated_secondary_exp"]]))
-                expect(event?[d: "metadata"] as? [String: String])
+                let metadata = event?[d: "metadata"] as! [String: String]
+                expect(metadata)
                     .to(equal([
                         "config": "layer",
                         "ruleID": "default",
                         "allocatedExperiment": "",
                         "parameterName": "an_int",
-                        "isExplicitParameter": "false"
+                        "isExplicitParameter": "false",
+                        "reason": "Network",
+                        "time": metadata["time"]!
                     ]))
             }
 
@@ -110,27 +113,33 @@ class LayerExposureSpec: QuickSpec {
                 expect(events?.count).to(equal(2))
 
                 let explicitEvent = events?[d: 0]
+                var metadata = explicitEvent?[d: "metadata"] as! [String: String]
                 expect(explicitEvent?[a: "secondaryExposures"] as? [[String: String]])
                     .to(equal([["gate": "secondary_exp"]]))
-                expect(explicitEvent?[d: "metadata"] as? [String: String])
+                expect(metadata)
                     .to(equal([
                         "config": "layer",
                         "ruleID": "default",
                         "allocatedExperiment": "the_allocated_experiment",
                         "parameterName": "an_int",
-                        "isExplicitParameter": "true"
+                        "isExplicitParameter": "true",
+                        "reason": "Network",
+                        "time": metadata["time"]!
                     ]))
 
                 let implicitEvent = events?[d: 1]
+                metadata = implicitEvent?[d: "metadata"] as! [String: String]
                 expect(implicitEvent?[a: "secondaryExposures"] as? [[String: String]])
                     .to(equal([["gate": "undelegated_secondary_exp"]]))
-                expect(implicitEvent?[d: "metadata"] as? [String: String])
+                expect(metadata)
                     .to(equal([
                         "config": "layer",
                         "ruleID": "default",
                         "allocatedExperiment": "",
                         "parameterName": "a_string",
-                        "isExplicitParameter": "false"
+                        "isExplicitParameter": "false",
+                        "reason": "Network",
+                        "time": metadata["time"]!
                     ]))
             }
 

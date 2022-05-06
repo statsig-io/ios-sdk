@@ -26,7 +26,7 @@ class Event {
         secondaryExposures: [[String: String]]? = nil,
         disableCurrentVCLogging: Bool
     ) {
-        self.time = NSDate().timeIntervalSince1970 * 1000
+        self.time = NSDate().epochTimeInMs()
         self.user = user
         self.name = name
         self.value = value
@@ -66,13 +66,20 @@ class Event {
         gateValue: Bool,
         ruleID: String,
         secondaryExposures: [[String: String]],
+        evalDetails: EvaluationDetails,
         disableCurrentVCLogging: Bool
     ) -> Event {
         return statsigInternalEvent(
             user: user,
             name: gateExposureEventName,
             value: nil,
-            metadata: ["gate": gateName, "gateValue": String(gateValue), "ruleID": ruleID],
+            metadata: [
+                "gate": gateName,
+                "gateValue": String(gateValue),
+                "ruleID": ruleID,
+                "reason": evalDetails.reason.rawValue,
+                "time": String(evalDetails.time)
+            ],
             secondaryExposures: secondaryExposures,
             disableCurrentVCLogging: disableCurrentVCLogging
         )
@@ -83,6 +90,7 @@ class Event {
         configName: String,
         ruleID: String,
         secondaryExposures: [[String: String]],
+        evalDetails: EvaluationDetails,
         disableCurrentVCLogging: Bool
     ) -> Event {
         return statsigInternalEvent(
@@ -92,6 +100,8 @@ class Event {
             metadata: [
                 "config": configName,
                 "ruleID": ruleID,
+                "reason": evalDetails.reason.rawValue,
+                "time": String(evalDetails.time)
             ],
             secondaryExposures: secondaryExposures,
             disableCurrentVCLogging: disableCurrentVCLogging
@@ -106,7 +116,8 @@ class Event {
         disableCurrentVCLogging: Bool,
         allocatedExperimentName: String,
         parameterName: String,
-        isExplicitParameter: Bool
+        isExplicitParameter: Bool,
+        evalDetails: EvaluationDetails
     ) -> Event {
         return statsigInternalEvent(
             user: user,
@@ -117,7 +128,9 @@ class Event {
                 "ruleID": ruleID,
                 "allocatedExperiment": allocatedExperimentName,
                 "parameterName": parameterName,
-                "isExplicitParameter": "\(isExplicitParameter)"
+                "isExplicitParameter": "\(isExplicitParameter)",
+                "reason": evalDetails.reason.rawValue,
+                "time": String(evalDetails.time)
             ],
             secondaryExposures: secondaryExposures,
             disableCurrentVCLogging: disableCurrentVCLogging

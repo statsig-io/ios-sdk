@@ -31,11 +31,12 @@ class EventSpec: QuickSpec {
                     gateValue: true,
                     ruleID: "default",
                     secondaryExposures: [["gate": "employee", "gateValue": "true", "ruleID": "rule_id_employee"]],
+                    evalDetails: EvaluationDetails(reason: .Network, time: 123456789),
                     disableCurrentVCLogging: false)
 
                 expect(gateExposure.name) == "statsig::gate_exposure"
                 expect(gateExposure.value).to(beNil())
-                expect(gateExposure.metadata) == ["gate": "show_coupon", "gateValue": String(true), "ruleID": "default"]
+                expect(gateExposure.metadata) == ["gate": "show_coupon", "gateValue": String(true), "ruleID": "default", "reason": "Network", "time": "123456789.0"]
                 expect(gateExposure.secondaryExposures![0]).to(equal(["gate": "employee", "gateValue": "true", "ruleID": "rule_id_employee"]))
                 expect(Int(gateExposure.time / 1000)) == Int(NSDate().timeIntervalSince1970)
             }
@@ -46,11 +47,12 @@ class EventSpec: QuickSpec {
                     configName: "my_config",
                     ruleID: "default",
                     secondaryExposures: [],
+                    evalDetails: EvaluationDetails(reason: .Network, time: 123456789),
                     disableCurrentVCLogging: false)
 
                 expect(configExposure.name) == "statsig::config_exposure"
                 expect(configExposure.value).to(beNil())
-                expect(configExposure.metadata) == ["config": "my_config", "ruleID": "default"]
+                expect(configExposure.metadata) == ["config": "my_config", "ruleID": "default", "reason": "Network", "time": "123456789.0"]
                 expect(configExposure.secondaryExposures).to(equal([]))
                 expect(Int(configExposure.time / 1000)) == Int(NSDate().timeIntervalSince1970)
             }

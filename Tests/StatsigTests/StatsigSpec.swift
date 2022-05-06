@@ -69,6 +69,7 @@ class StatsigSpec: QuickSpec {
                     expect(error).toEventually(contain("403"))
                     expect(gate).toEventually(beFalse())
                     expect(NSDictionary(dictionary: config!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
+                    expect(config!.evaluationDetails.reason).toEventually(equal(.Uninitialized))
                 }
 
                 it("works when provided server secret by returning default value") {
@@ -83,6 +84,7 @@ class StatsigSpec: QuickSpec {
                     expect(error).toEventually(equal("Must use a valid client SDK key."))
                     expect(gate).toEventually(beFalse())
                     expect(NSDictionary(dictionary: config!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
+                    expect(config!.evaluationDetails.reason).toEventually(equal(.Uninitialized))
                 }
             }
 
@@ -217,6 +219,10 @@ class StatsigSpec: QuickSpec {
                     expect(NSDictionary(dictionary:exp.value)).to(equal(expectedConfig))
                     expect(NSDictionary(dictionary: nonExistentDC.value)).to(equal(NSDictionary()))
 
+                    expect(dc.evaluationDetails.reason).to(equal(.Network))
+                    expect(exp.evaluationDetails.reason).to(equal(.Network))
+                    expect(nonExistentDC.evaluationDetails.reason).to(equal(.Unrecognized))
+
                     // Now add overrides on top and check if they work
                     Statsig.overrideGate(gateName1, value: true)
                     expect(Statsig.checkGate(gateName1)).to(beTrue())
@@ -230,6 +236,8 @@ class StatsigSpec: QuickSpec {
                     Statsig.overrideConfig(configName, value: ["param": "value"])
                     expect(Statsig.getConfig(configName).getValue(forKey: "param", defaultValue: "wrong")).to(equal("value"))
                     expect(Statsig.getExperiment(configName).getValue(forKey: "param", defaultValue: "wrong")).to(equal("value"))
+                    expect(Statsig.getConfig(configName).evaluationDetails.reason).to(equal(.LocalOverride))
+                    expect(Statsig.getExperiment(configName).evaluationDetails.reason).to(equal(.LocalOverride))
 
                     var overrides = Statsig.getAllOverrides()
                     expect(overrides?.gates.keys.count).to(equal(2))
@@ -245,6 +253,7 @@ class StatsigSpec: QuickSpec {
                     Statsig.removeOverride(configName)
                     expect(NSDictionary(dictionary: Statsig.getConfig(configName).value)).to(
                         equal(NSDictionary(dictionary: DynamicConfigSpec.TestMixedConfig["value"] as! [String: Any])))
+                    expect(Statsig.getConfig(configName).evaluationDetails.reason).to(equal(.Network))
 
                     overrides = Statsig.getAllOverrides()
                     expect(overrides?.gates.keys.count).to(equal(1))
@@ -281,9 +290,11 @@ class StatsigSpec: QuickSpec {
 
                     var exp = Statsig.getExperiment("exp", keepDeviceValue: true)
                     expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v1"))
+                    expect(exp.evaluationDetails.reason).to(equal(.Network))
 
                     var layer = Statsig.getLayer("layer", keepDeviceValue: true)
                     expect(layer.getValue(forKey: "key", defaultValue: "")).to(equal("layer_v1"))
+                    expect(layer.evaluationDetails.reason).to(equal(.Network))
 
                     Statsig.shutdown()
 
@@ -311,9 +322,11 @@ class StatsigSpec: QuickSpec {
 
                     exp = Statsig.getExperiment("exp", keepDeviceValue: true)
                     expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v1"))
+                    expect(exp.evaluationDetails.reason).to(equal(.Sticky))
 
                     layer = Statsig.getLayer("layer", keepDeviceValue: true)
                     expect(layer.getValue(forKey: "key", defaultValue: "")).to(equal("layer_v1"))
+                    expect(layer.evaluationDetails.reason).to(equal(.Sticky))
 
                     Statsig.shutdown()
 
@@ -346,9 +359,11 @@ class StatsigSpec: QuickSpec {
 
                     exp = Statsig.getExperiment("exp", keepDeviceValue: true)
                     expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v3"))
+                    expect(exp.evaluationDetails.reason).to(equal(.Network))
 
                     layer = Statsig.getLayer("layer", keepDeviceValue: true)
                     expect(layer.getValue(forKey: "key", defaultValue: "")).to(equal("layer_v3"))
+                    expect(layer.evaluationDetails.reason).to(equal(.Network))
 
                     Statsig.shutdown()
 
@@ -381,9 +396,11 @@ class StatsigSpec: QuickSpec {
 
                     exp = Statsig.getExperiment("exp", keepDeviceValue: true)
                     expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v4"))
+                    expect(exp.evaluationDetails.reason).to(equal(.Network))
 
                     layer = Statsig.getLayer("layer", keepDeviceValue: true)
                     expect(layer.getValue(forKey: "key", defaultValue: "")).to(equal("layer_v3"))
+                    expect(layer.evaluationDetails.reason).to(equal(.Sticky))
 
                     Statsig.shutdown()
 
@@ -411,9 +428,11 @@ class StatsigSpec: QuickSpec {
 
                     exp = Statsig.getExperiment("exp", keepDeviceValue: false)
                     expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v5"))
+                    expect(exp.evaluationDetails.reason).to(equal(.Network))
 
                     layer = Statsig.getLayer("layer", keepDeviceValue: false)
                     expect(layer.getValue(forKey: "key", defaultValue: "")).to(equal("layer_v5"))
+                    expect(layer.evaluationDetails.reason).to(equal(.Network))
 
                     // 6. Only sets sticky values when experiment is active
 
@@ -443,9 +462,11 @@ class StatsigSpec: QuickSpec {
 
                     exp = Statsig.getExperiment("exp", keepDeviceValue: true)
                     expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v6"))
+                    expect(exp.evaluationDetails.reason).to(equal(.Network))
 
                     layer = Statsig.getLayer("layer", keepDeviceValue: true)
                     expect(layer.getValue(forKey: "key", defaultValue: "")).to(equal("layer_v6"))
+                    expect(layer.evaluationDetails.reason).to(equal(.Network))
 
                     Statsig.shutdown()
                 }
@@ -473,11 +494,13 @@ class StatsigSpec: QuickSpec {
                     expect(error).toEventually(beNil(), timeout: .milliseconds(3500))
                     expect(gate).toEventually(beFalse(), timeout: .milliseconds(3500))
                     expect(NSDictionary(dictionary: dc!.value)).toEventually(equal(NSDictionary(dictionary: [:])), timeout: .milliseconds(3500))
+                    expect(dc!.evaluationDetails.reason).toEventually(equal(.Uninitialized), timeout: .milliseconds(3500))
                     expect(Int(timeDiff!)).toEventually(equal(3), timeout: .milliseconds(3500))
 
                     // check the same gate and config >4 seconds later should return the results from response JSON
                     expect(Statsig.checkGate(gateName2)).toEventually(beTrue(), timeout: .milliseconds(4500))
                     expect(Statsig.getConfig(configName)).toEventuallyNot(beNil(), timeout: .milliseconds(4500))
+                    expect(Statsig.getConfig(configName).evaluationDetails.reason).toEventually(equal(.Network), timeout: .milliseconds(4500))
                 }
 
                 it("times out and returns value from local cache") {
@@ -511,8 +534,11 @@ class StatsigSpec: QuickSpec {
                     expect(gate).toEventually(beTrue())
                     expect(nonExistentGate).toEventually(beFalse())
                     expect(dc).toEventuallyNot(beNil())
+                    expect(dc?.evaluationDetails.reason).toEventually(equal(.Cache))
                     expect(exp).toEventuallyNot(beNil())
+                    expect(exp?.evaluationDetails.reason).toEventually(equal(.Cache))
                     expect(NSDictionary(dictionary: nonExistentDC!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
+                    expect(nonExistentDC?.evaluationDetails.reason).toEventually(equal(.Unrecognized))
                 }
 
                 it("correctly shuts down") {
@@ -535,11 +561,13 @@ class StatsigSpec: QuickSpec {
                     var config: DynamicConfig?
                     var exp: DynamicConfig?
                     var stableID: String?
+                    var time: Int = 0
                     waitUntil { done in
                         Statsig.start(sdkKey: "client-api-key",
                                       user: StatsigUser(userID: "123", email: "123@statsig.com"),
                                       options: StatsigOptions(overrideStableID: "custom_stable_id"))
                         { _ in
+                            time = Int(NSDate().timeIntervalSince1970)
                             // Event 0
                             gate = Statsig.checkGate(gateName2)
                             _ = Statsig.checkGate(gateName2) // should not create an exposure, deduped
@@ -590,7 +618,15 @@ class StatsigSpec: QuickSpec {
                     expect(event["eventName"] as? String).to(equal(Event.statsigPrefix + Event.gateExposureEventName))
                     expect(user["userID"] as? String).to(equal("123"))
                     expect(user["email"] as? String).to(equal("123@statsig.com"))
-                    expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["gate": "gate_name_2", "gateValue": "true", "ruleID": "rule_id_2"])))
+                    expect(NSDictionary(dictionary: metadata!)).to(equal(
+                        NSDictionary(dictionary: [
+                            "gate": "gate_name_2",
+                            "gateValue": "true",
+                            "ruleID": "rule_id_2",
+                            "reason": "Network",
+                            "time": metadata!["time"]!
+                        ]))
+                    )
                     expect(secondaryExposures).to(equal([]))
                     expect(value).to(beNil())
 
@@ -604,7 +640,14 @@ class StatsigSpec: QuickSpec {
                     expect(event["eventName"] as? String).to(equal(Event.statsigPrefix + Event.configExposureEventName))
                     expect(user["userID"] as? String).to(equal("123"))
                     expect(user["email"] as? String).to(equal("123@statsig.com"))
-                    expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["config": "config", "ruleID": "default"])))
+                    expect(NSDictionary(dictionary: metadata!)).to(equal(
+                        NSDictionary(dictionary: [
+                            "config": "config",
+                            "ruleID": "default",
+                            "reason": "Network",
+                            "time": metadata!["time"]!
+                        ]))
+                    )
                     expect(secondaryExposures).to(equal([]))
                     expect(value).to(beNil())
 
@@ -659,9 +702,18 @@ class StatsigSpec: QuickSpec {
                     expect(event["eventName"] as? String).to(equal(Event.statsigPrefix + Event.gateExposureEventName))
                     expect(user["userID"] as? String).to(equal("123"))
                     expect(user["email"] as? String).to(equal("123@statsig.com"))
-                    expect(NSDictionary(dictionary: metadata!)).to(equal(NSDictionary(dictionary: ["gate": "gate_name_2", "gateValue": "true", "ruleID": "rule_id_2"])))
+                    expect(NSDictionary(dictionary: metadata!)).to(equal(
+                        NSDictionary(dictionary: [
+                            "gate": "gate_name_2",
+                            "gateValue": "true",
+                            "ruleID": "rule_id_2",
+                            "reason": "Network",
+                            "time": metadata!["time"]!
+                        ]))
+                    )
                     expect(secondaryExposures).to(equal([]))
                     expect(value).to(beNil())
+
 
                     // validate stable ID
                     expect(statsigMetadata["stableID"]).to(equal("custom_stable_id"))

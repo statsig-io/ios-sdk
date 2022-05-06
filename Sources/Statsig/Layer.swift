@@ -9,6 +9,7 @@ public struct Layer: ConfigProtocol {
     public let isExperimentActive: Bool
     public let hashedName: String
     public let allocatedExperimentName: String
+    public let evaluationDetails: EvaluationDetails
 
     weak internal var client: StatsigClient?
     internal let secondaryExposures: [[String: String]]
@@ -19,7 +20,7 @@ public struct Layer: ConfigProtocol {
 
     private let value: [String: Any]
 
-    internal init(client: StatsigClient?, name: String, configObj: [String: Any] = [:]) {
+    internal init(client: StatsigClient?, name: String, configObj: [String: Any] = [:], evalDetails: EvaluationDetails) {
         self.client = client
         self.name = name
         self.ruleID = configObj["rule_id"] as? String ?? ""
@@ -34,9 +35,11 @@ public struct Layer: ConfigProtocol {
         self.allocatedExperimentName = configObj["allocated_experiment_name"] as? String ?? ""
         self.explicitParameters = Set(configObj["explicit_parameters"] as? [String] ?? [])
         self.rawValue = configObj
+
+        self.evaluationDetails = evalDetails
     }
 
-    internal init(client: StatsigClient?, name: String, value: [String: Any], ruleID: String) {
+    internal init(client: StatsigClient?, name: String, value: [String: Any], ruleID: String, evalDetails: EvaluationDetails) {
         self.client = client
         self.name = name
         self.value = value
@@ -49,6 +52,8 @@ public struct Layer: ConfigProtocol {
         self.isExperimentActive = false
         self.isUserInExperiment = false
         self.allocatedExperimentName = ""
+
+        self.evaluationDetails = evalDetails
     }
 
     public func getValue<T: StatsigDynamicConfigValue>(forKey: String, defaultValue: T) -> T {

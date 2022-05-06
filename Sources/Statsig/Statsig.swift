@@ -49,7 +49,7 @@ public class Statsig {
     public static func getLayer(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
         guard let client = client else {
             print("[Statsig]: Must start Statsig first and wait for it to complete before calling getLayer. Returning an empty Layer object")
-            return Layer(client: nil, name: layerName)
+            return Layer(client: nil, name: layerName, evalDetails: EvaluationDetails(reason: .Uninitialized))
         }
 
         return client.getLayer(layerName, keepDeviceValue: keepDeviceValue)
@@ -118,7 +118,7 @@ public class Statsig {
 
     private static func getDummyConfig(_ name: String, _ caller: String) -> DynamicConfig {
         print("[Statsig]: Must start Statsig first and wait for it to complete before calling \(caller). Returning a dummy DynamicConfig that will only return default values.")
-        return DynamicConfig(configName: name)
+        return DynamicConfig(configName: name, evalDetails: EvaluationDetails(reason: .Uninitialized))
     }
 }
 

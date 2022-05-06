@@ -61,7 +61,7 @@ class NetworkServiceSpec: QuickSpec {
                 }
 
                 let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(StatsigUser(userID: "jkw")))
-                let now = NSDate().timeIntervalSince1970 * 1000
+                let now = NSDate().epochTimeInMs()
                 waitUntil { done in
                     ns.fetchUpdatedValues(for: StatsigUser(userID: "jkw"), since: now) {
                         done()

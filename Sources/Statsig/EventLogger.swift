@@ -90,7 +90,12 @@ class EventLogger {
 
             // when shutting down, save request data locally to be sent next time instead of adding it back to event queue
             if shutdown {
-                DispatchQueue.main.sync { [self] in
+                if !Thread.isMainThread {
+                    DispatchQueue.main.sync { [self] in
+                        self.addFailedLogRequest(requestData)
+                        self.userDefaults.setValue(self.failedRequestQueue, forKey: EventLogger.loggingRequestUserDefaultsKey)
+                    }
+                } else {
                     self.addFailedLogRequest(requestData)
                     self.userDefaults.setValue(self.failedRequestQueue, forKey: EventLogger.loggingRequestUserDefaultsKey)
                 }
