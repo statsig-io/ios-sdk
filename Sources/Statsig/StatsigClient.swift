@@ -32,17 +32,11 @@ internal class StatsigClient {
     }
 
     internal func checkGate(_ gateName: String) -> Bool {
-        var gate: FeatureGate
-        if let result = store.checkGate(forName: gateName) {
-            gate = result
-        } else {
-            print("[Statsig]: The feature gate with name \(gateName) does not exist. Returning false as the default.")
-            gate = FeatureGate(name: gateName, value: false, ruleID: "")
-        }
+        let gate = store.checkGate(forName: gateName)
 
         let gateValue = gate.value
         let ruleID = gate.ruleID
-        let dedupeKey = gateName + (gateValue ? "true" : "false") + ruleID
+        let dedupeKey = gateName + (gateValue ? "true" : "false") + ruleID + gate.evaluationDetails.reason.rawValue
 
         if shouldLogExposure(key: dedupeKey) {
             logger.log(
@@ -52,6 +46,7 @@ internal class StatsigClient {
                     gateValue: gateValue,
                     ruleID: ruleID,
                     secondaryExposures: gate.secondaryExposures,
+                    evalDetails: gate.evaluationDetails,
                     disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging))
         }
 
@@ -59,15 +54,10 @@ internal class StatsigClient {
     }
 
     internal func getExperiment(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
-        var experiment: DynamicConfig
-        if let result = store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue) {
-            experiment = result
-        } else {
-            experiment = getDummyConfig(experimentName, "The experiment with name \(experimentName) does not exist")
-        }
+        let experiment = store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
 
         let ruleID = experiment.ruleID
-        let dedupeKey = experimentName + ruleID
+        let dedupeKey = experimentName + ruleID + experiment.evaluationDetails.reason.rawValue
         if shouldLogExposure(key: dedupeKey) {
             logger.log(
                 Event.configExposure(
@@ -75,6 +65,7 @@ internal class StatsigClient {
                     configName: experimentName,
                     ruleID: ruleID,
                     secondaryExposures: experiment.secondaryExposures,
+                    evalDetails: experiment.evaluationDetails,
                     disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging))
         }
 
@@ -82,15 +73,10 @@ internal class StatsigClient {
     }
 
     internal func getConfig(_ configName: String) -> DynamicConfig {
-        var config: DynamicConfig
-        if let result = store.getConfig(forName: configName) {
-            config = result
-        } else {
-            config = getDummyConfig(configName, "The config with name \(configName) does not exist")
-        }
+        let config = store.getConfig(forName: configName)
 
         let ruleID = config.ruleID
-        let dedupeKey = configName + ruleID
+        let dedupeKey = configName + ruleID + config.evaluationDetails.reason.rawValue
         if shouldLogExposure(key: dedupeKey) {
             logger.log(
                 Event.configExposure(
@@ -98,6 +84,7 @@ internal class StatsigClient {
                     configName: configName,
                     ruleID: config.ruleID,
                     secondaryExposures: config.secondaryExposures,
+                    evalDetails: config.evaluationDetails,
                     disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging))
         }
 
@@ -105,15 +92,7 @@ internal class StatsigClient {
     }
 
     internal func getLayer(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
-        var layer: Layer
-        if let result = store.getLayer(client: self, forName: layerName, keepDeviceValue: keepDeviceValue) {
-            layer = result
-        } else {
-            print("[Statsig]: The layer with name \(layerName) does not exist. Returning an empty Layer.")
-            return Layer(client: self, name: layerName)
-        }
-
-        return layer
+        return store.getLayer(client: self, forName: layerName, keepDeviceValue: keepDeviceValue)
     }
 
     internal func updateUser(_ user: StatsigUser, completion: completionBlock = nil) {
@@ -198,7 +177,14 @@ internal class StatsigClient {
             allocatedExperiment = layer.allocatedExperimentName
         }
 
-        let dedupeKey = [layer.name, layer.ruleID, allocatedExperiment, parameterName, "\(isExplicit)"].joined(separator: "|")
+        let dedupeKey = [
+            layer.name,
+            layer.ruleID,
+            allocatedExperiment,
+            parameterName,
+            "\(isExplicit)",
+            layer.evaluationDetails.reason.rawValue
+        ].joined(separator: "|")
 
         if shouldLogExposure(key: dedupeKey) {
             logger.log(
@@ -210,7 +196,9 @@ internal class StatsigClient {
                     disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging,
                     allocatedExperimentName: allocatedExperiment,
                     parameterName: parameterName,
-                    isExplicitParameter: isExplicit))
+                    isExplicitParameter: isExplicit,
+                    evalDetails: layer.evaluationDetails
+                ))
         }
     }
 
@@ -278,12 +266,6 @@ internal class StatsigClient {
         logger.user = currentUser
         fetchAndScheduleSyncing(completion: completion)
     }
-
-    private func getDummyConfig(_ name: String, _ reason: String) -> DynamicConfig {
-      print("[Statsig]: \(reason). Returning a dummy DynamicConfig that will only return default values.")
-      return DynamicConfig(configName: name)
-    }
-
 
     deinit {
         unsubscribeFromApplicationLifecycle()

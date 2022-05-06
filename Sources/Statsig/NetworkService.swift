@@ -43,6 +43,13 @@ class NetworkService {
         var urlComponents = URLComponents()
         urlComponents.scheme = "https"
         urlComponents.host = apiHost
+
+        if let override = self.statsigOptions.overrideURL {
+            urlComponents.scheme = override.scheme
+            urlComponents.host = override.host
+            urlComponents.port = override.port
+        }
+
         switch forType {
         case .initialize:
             urlComponents.path = initializeAPIPath
@@ -58,7 +65,7 @@ class NetworkService {
         var request = URLRequest(url: requestURL)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(sdkKey, forHTTPHeaderField: "STATSIG-API-KEY")
-        request.setValue("\(NSDate().timeIntervalSince1970 * 1000)", forHTTPHeaderField: "STATSIG-CLIENT-TIME")
+        request.setValue("\(NSDate().epochTimeInMs())", forHTTPHeaderField: "STATSIG-CLIENT-TIME")
         request.httpBody = requestData
         request.httpMethod = "POST"
 

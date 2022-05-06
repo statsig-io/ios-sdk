@@ -8,15 +8,16 @@ public struct DynamicConfig: ConfigProtocol {
     public let isUserInExperiment: Bool
     public let isExperimentActive: Bool
     public let hashedName: String
+    public let evaluationDetails: EvaluationDetails
 
     var isDeviceBased: Bool = false
     var rawValue: [String: Any] = [:]
 
-    init(name: String, configObj: [String: Any] = [:]) {
-        self.init(configName: name, configObj: configObj)
+    init(name: String, configObj: [String: Any] = [:], evalDetails: EvaluationDetails) {
+        self.init(configName: name, configObj: configObj, evalDetails: evalDetails)
     }
 
-    init(configName: String, configObj: [String: Any] = [:]) {
+    init(configName: String, configObj: [String: Any] = [:], evalDetails: EvaluationDetails) {
         self.name = configName
         self.ruleID = configObj["rule_id"] as? String ?? ""
         self.value = configObj["value"] as? [String: Any] ?? [:]
@@ -27,9 +28,11 @@ public struct DynamicConfig: ConfigProtocol {
         self.isUserInExperiment = configObj["is_user_in_experiment"] as? Bool ?? false
         self.isExperimentActive = configObj["is_experiment_active"] as? Bool ?? false
         self.rawValue = configObj
+
+        self.evaluationDetails = evalDetails
     }
 
-    init(configName: String, value: [String: Any], ruleID: String) {
+    init(configName: String, value: [String: Any], ruleID: String, evalDetails: EvaluationDetails) {
         self.name = configName
         self.value = value
         self.ruleID = ruleID
@@ -38,6 +41,8 @@ public struct DynamicConfig: ConfigProtocol {
 
         self.isExperimentActive = false
         self.isUserInExperiment = false
+
+        self.evaluationDetails = evalDetails
     }
 
     public func getValue<T: StatsigDynamicConfigValue>(forKey: String, defaultValue: T) -> T {

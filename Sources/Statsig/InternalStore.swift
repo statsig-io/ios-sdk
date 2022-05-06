@@ -44,6 +44,7 @@ struct StatsigValuesCache {
     var userCacheKey: String
     var userCache: [String: Any]
     var stickyDeviceExperiments: [String: [String: Any]]
+    var reason: EvaluationReason = .Uninitialized
 
     init(_ user: StatsigUser) {
         self.cacheByID = StatsigValuesCache.loadDictMigratingIfRequired(forKey: InternalStore.localStorageKey)
@@ -52,41 +53,44 @@ struct StatsigValuesCache {
         self.userCache = [:]
         self.userCacheKey = "null"
 
-        self.setUserCacheKey(user)
+        self.setUserCacheKeyAndValues(user)
         self.migrateLegacyStickyExperimentValues(user)
     }
 
-    func getGate(_ gateName: String) -> FeatureGate? {
+    func getGate(_ gateName: String) -> FeatureGate {
         let gateNameHash = gateName.sha256()
         if let gates = userCache[InternalStore.gatesKey] as? [String: [String: Any]], let gateObj = gates[gateNameHash] {
-            return FeatureGate(name: gateName, gateObj: gateObj)
+            return FeatureGate(name: gateName, gateObj: gateObj, evalDetails: getEvaluationDetails(valueExists: true))
         }
         if let gates = userCache[InternalStore.gatesKey] as? [String: [String: Any]], let gateObj = gates[gateName] {
-            return FeatureGate(name: gateName, gateObj: gateObj)
+            return FeatureGate(name: gateName, gateObj: gateObj, evalDetails: getEvaluationDetails(valueExists: true))
         }
-        return nil
+        print("[Statsig]: The feature gate with name \(gateName) does not exist. Returning false as the default.")
+        return FeatureGate(name: gateName, value: false, ruleID: "", evalDetails: getEvaluationDetails(valueExists: false))
     }
 
-    func getConfig(_ configName: String) -> DynamicConfig? {
+    func getConfig(_ configName: String) -> DynamicConfig {
         let configNameHash = configName.sha256()
         if let configObj = getConfigData(configNameHash, topLevelKey: InternalStore.configsKey) {
-            return DynamicConfig(configName: configName, configObj: configObj)
+            return DynamicConfig(configName: configName, configObj: configObj, evalDetails: getEvaluationDetails(valueExists: true))
         }
         if let configObj = getConfigData(configName, topLevelKey: InternalStore.configsKey) {
-            return DynamicConfig(configName: configName, configObj: configObj)
+            return DynamicConfig(configName: configName, configObj: configObj, evalDetails: getEvaluationDetails(valueExists: true))
         }
-        return nil
+        print("[Statsig]: \(configName) does not exist. Returning a dummy DynamicConfig that will only return default values.")
+        return DynamicConfig(configName: configName, evalDetails: getEvaluationDetails(valueExists: false))
     }
 
-    func getLayer(_ client: StatsigClient, _ layerName: String) -> Layer? {
+    func getLayer(_ client: StatsigClient, _ layerName: String) -> Layer {
         let layerNameHash = layerName.sha256()
         if let configObj = getConfigData(layerNameHash, topLevelKey: InternalStore.layerConfigsKey) {
-            return Layer(client: client, name: layerName, configObj: configObj)
+            return Layer(client: client, name: layerName, configObj: configObj, evalDetails: getEvaluationDetails(valueExists: true))
         }
         if let configObj = getConfigData(layerName, topLevelKey: InternalStore.layerConfigsKey) {
-            return Layer(client: client, name: layerName, configObj: configObj)
+            return Layer(client: client, name: layerName, configObj: configObj, evalDetails: getEvaluationDetails(valueExists: true))
         }
-        return nil
+        print("[Statsig]: The layer with name \(layerName) does not exist. Returning an empty Layer.")
+        return Layer(client: client, name: layerName, evalDetails: getEvaluationDetails(valueExists: false))
     }
 
     func getStickyExperiment(_ expName: String) -> [String: Any]? {
@@ -108,12 +112,28 @@ struct StatsigValuesCache {
         return nil
     }
 
+    func getEvaluationDetails(valueExists: Bool) -> EvaluationDetails {
+        if valueExists {
+            return EvaluationDetails(
+                reason: reason,
+                time: userCache[InternalStore.evalTimeKey] as? Double ?? NSDate().epochTimeInMs()
+            )
+        } else {
+            return EvaluationDetails(
+                reason: reason == .Uninitialized ? .Uninitialized : .Unrecognized,
+                time: NSDate().epochTimeInMs()
+            )
+        }
+    }
+
     func getLastUpdatedTime() -> Double {
         return userCache["time"] as? Double ?? 0
     }
 
     mutating func updateUser(_ newUser: StatsigUser) {
-        setUserCacheKey(newUser)
+        // when updateUser is called, state will be uninitialized until updated values are fetched or local cache is retrieved
+        reason = .Uninitialized
+        setUserCacheKeyAndValues(newUser)
     }
 
     mutating func saveValuesForCurrentUser(_ values: [String: Any]) {
@@ -121,6 +141,11 @@ struct StatsigValuesCache {
         userCache[InternalStore.configsKey] = values[InternalStore.configsKey]
         userCache[InternalStore.layerConfigsKey] = values[InternalStore.layerConfigsKey]
         userCache["time"] = values["time"] as? Double ?? userCache["time"]
+        userCache[InternalStore.evalTimeKey] = NSDate().epochTimeInMs()
+
+        // Now the values we serve came from network request
+        reason = .Network
+
         cacheByID[userCacheKey] = userCache
         UserDefaults.standard.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
     }
@@ -151,7 +176,7 @@ struct StatsigValuesCache {
         UserDefaults.standard.setDictionarySafe(stickyDeviceExperiments, forKey: InternalStore.stickyDeviceExperimentsKey)
     }
 
-    private mutating func setUserCacheKey(_ user: StatsigUser) {
+    private mutating func setUserCacheKeyAndValues(_ user: StatsigUser) {
         var key = user.userID ?? "null"
         if let customIDs = user.customIDs {
             for (idType, idValue) in customIDs {
@@ -168,6 +193,9 @@ struct StatsigValuesCache {
                     InternalStore.stickyExpKey: [:],
                     "time": 0,
                 ]
+        } else {
+            // The values we serve now is from the local cache
+            reason = .Cache
         }
         userCache = cacheByID[userCacheKey]!
     }
@@ -224,6 +252,7 @@ class InternalStore {
     static let configsKey = "dynamic_configs"
     static let stickyExpKey = "sticky_experiments"
     static let layerConfigsKey = "layer_configs"
+    static let evalTimeKey = "evaluation_time"
 
     var cache: StatsigValuesCache
     var localOverrides: [String: Any]!
@@ -236,25 +265,35 @@ class InternalStore {
             ?? getEmptyOverrides()
     }
 
-    func checkGate(forName: String) -> FeatureGate? {
+    func checkGate(forName: String) -> FeatureGate {
         storeQueue.sync {
             if let override = (localOverrides[InternalStore.gatesKey] as? [String: Bool])?[forName] {
-                return FeatureGate(name: forName, value: override, ruleID: "override")
+                return FeatureGate(
+                    name: forName,
+                    value: override,
+                    ruleID: "override",
+                    evalDetails: EvaluationDetails(reason: .LocalOverride)
+                )
             }
             return cache.getGate(forName)
         }
     }
 
-    func getConfig(forName: String) -> DynamicConfig? {
+    func getConfig(forName: String) -> DynamicConfig {
         storeQueue.sync {
             if let override = (localOverrides[InternalStore.configsKey] as? [String: [String: Any]])?[forName] {
-                return DynamicConfig(configName: forName, value: override, ruleID: "override")
+                return DynamicConfig(
+                    configName: forName,
+                    value: override,
+                    ruleID: "override",
+                    evalDetails: EvaluationDetails(reason: .LocalOverride)
+                )
             }
             return cache.getConfig(forName)
         }
     }
 
-    func getExperiment(forName experimentName: String, keepDeviceValue: Bool) -> DynamicConfig? {
+    func getExperiment(forName experimentName: String, keepDeviceValue: Bool) -> DynamicConfig {
         let latestValue = getConfig(forName: experimentName)
         return getPossiblyStickyValue(
             experimentName,
@@ -262,11 +301,11 @@ class InternalStore {
             keepDeviceValue: keepDeviceValue,
             isLayer: false,
             factory: { name, data in
-                return DynamicConfig(name: name, configObj: data)
+                return DynamicConfig(name: name, configObj: data, evalDetails: EvaluationDetails(reason: .Sticky))
             })
     }
 
-    func getLayer(client: StatsigClient, forName layerName: String, keepDeviceValue: Bool = false) -> Layer? {
+    func getLayer(client: StatsigClient, forName layerName: String, keepDeviceValue: Bool = false) -> Layer {
         let latestValue = storeQueue.sync {
             return cache.getLayer(client, layerName)
         }
@@ -276,7 +315,7 @@ class InternalStore {
             keepDeviceValue: keepDeviceValue,
             isLayer: true,
             factory: { name, data in
-                return Layer(client: client, name: name, configObj: data)
+                return Layer(client: client, name: name, configObj: data, evalDetails: EvaluationDetails(reason: .Sticky))
             })
     }
 
@@ -351,10 +390,10 @@ class InternalStore {
     // Sticky Logic: https://gist.github.com/daniel-statsig/3d8dfc9bdee531cffc96901c1a06a402
     private func getPossiblyStickyValue<T: ConfigProtocol>(
         _ name: String,
-        latestValue: T?,
+        latestValue: T,
         keepDeviceValue: Bool,
         isLayer: Bool,
-        factory: (_ name: String, _ data: [String: Any]) -> T) -> T? {
+        factory: (_ name: String, _ data: [String: Any]) -> T) -> T {
         return storeQueue.sync {
             // We don't want sticky behavior. Clear any sticky values and return latest.
             if (!keepDeviceValue) {
@@ -381,7 +420,7 @@ class InternalStore {
                 return factory(name, stickyValue)
             }
 
-            if (latestValue?.isExperimentActive == true) {
+            if (latestValue.isExperimentActive == true) {
                 saveStickyExperimentIfNeededThreaded(name, latestValue)
             } else {
                 removeStickyExperimentThreaded(name)
@@ -429,5 +468,11 @@ extension Dictionary {
         set {
             self[key] = newValue as? Value
         }
+    }
+}
+
+extension NSDate {
+    func epochTimeInMs() -> Double {
+        return NSDate().timeIntervalSince1970 * 1000
     }
 }

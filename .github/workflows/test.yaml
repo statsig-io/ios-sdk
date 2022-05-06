@@ -16,20 +16,42 @@ on:
       - .github/workflows/test.yaml
 
 jobs:
-  test:
-    name: Test
+  build-and-test:
+    name: Build and Test
     runs-on: macos-latest
-    strategy:
-      matrix:
-        destination: ['platform=iOS Simulator,OS=15.2,name=iPhone 12 Pro']
     steps:
       - name: Checkout
         uses: actions/checkout@main
+
+      - name: Configure cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/Library/Caches/Homebrew/xcbeautify*
+            ~/Library/Caches/Homebrew/downloads/*xcbeautify*
+            ~/Library/Developer/Xcode/DerivedData/ios-client-sdk*
+          key: ios-cache-
+          restore-keys: ios-cache-
+
       - name: Install XCBeautify
         run: brew install xcbeautify
-      - name: Build and test
+
+      - name: Build
         run: |
           cd .swiftpm/xcode
-          xcodebuild clean test -workspace package.xcworkspace -scheme Statsig -destination "${destination}" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO | xcbeautify && exit ${PIPESTATUS[0]}
-        env:
-          destination: ${{ matrix.destination }}
+          xcodebuild build -workspace package.xcworkspace -scheme Statsig -destination "platform=iOS Simulator,name=iPod touch (7th generation)" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO | xcbeautify && exit ${PIPESTATUS[0]}
+
+      - name: Test Internal Store
+        run: |
+          cd .swiftpm/xcode
+          xcodebuild test -only-testing:StatsigTests/InternalStoreSpec -workspace package.xcworkspace -scheme Statsig -destination "platform=iOS Simulator,name=iPod touch (7th generation)" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO | xcbeautify && exit ${PIPESTATUS[0]}
+
+      - name: Test Statsig
+        run: |
+          cd .swiftpm/xcode
+          xcodebuild test -only-testing:StatsigTests/StatsigSpec -workspace package.xcworkspace -scheme Statsig -destination "platform=iOS Simulator,name=iPod touch (7th generation)" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO | xcbeautify && exit ${PIPESTATUS[0]}
+
+      - name: Test Everything Else
+        run: |
+          cd .swiftpm/xcode
+          xcodebuild test -skip-testing:StatsigTests/InternalStoreSpec -skip-testing:StatsigTests/StatsigSpec -workspace package.xcworkspace -scheme Statsig -destination "platform=iOS Simulator,name=iPod touch (7th generation)" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO | xcbeautify && exit ${PIPESTATUS[0]}
