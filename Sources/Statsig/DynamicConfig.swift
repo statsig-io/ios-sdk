@@ -46,10 +46,15 @@ public struct DynamicConfig: ConfigProtocol {
     }
 
     public func getValue<T: StatsigDynamicConfigValue>(forKey: String, defaultValue: T) -> T {
-        let serverValue = value[forKey] as? T
-        if serverValue == nil {
-            print("[Statsig]: \(forKey) not found in this Dynamic Config. The key may not exist or the user may not be in the backing Experiment. Returning the defaultValue.")
+        let result = value[forKey]
+        let typedResult = result as? T
+        if typedResult == nil {
+            if let result = result {
+                print("[Statsig]: \(forKey) exists in this Dynamic Config, but requested type was incorrect (Requested = \(type(of: defaultValue)), Actual = \(type(of: result))). Returning the defaultValue.")
+            } else {
+                print("[Statsig]: \(forKey) does not exist in this Dynamic Config. Returning the defaultValue.")
+            }
         }
-        return serverValue ?? defaultValue
+        return typedResult ?? defaultValue
     }
 }

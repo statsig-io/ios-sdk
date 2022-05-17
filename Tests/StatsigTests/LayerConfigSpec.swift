@@ -186,6 +186,50 @@ class LayerConfigSpec: QuickSpec {
                 config = store.getLayer(client: client, forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: false)
                 expect(config.getValue(forKey: "key", defaultValue: "ERR")).to(equal("another_value"))
             }
+
+
+            it("returns the default value for mismatched types") {
+                let layer = Layer(client: client, name: "a_layer", value: [
+                    "str": "string",
+                    "bool": true,
+                    "double": 3.14,
+                    "int": 3,
+                    "strArray": ["1", "2"],
+                    "mixedArray": [1, "2"],
+                    "dict": ["key": "value"],
+                    "mixedDict": ["keyStr": "string", "keyInt": 2, "keyArr": [1, 2], "keyDouble": 1.23, "keyDict": ["k": "v"]],
+                ], ruleID: "", evalDetails: EvaluationDetails(reason: .Cache))
+                expect(layer.getValue(forKey: "str", defaultValue: 1)) == 1
+                expect(layer.getValue(forKey: "str", defaultValue: true)) == true
+
+                expect(layer.getValue(forKey: "bool", defaultValue: "false")) == "false"
+                expect(layer.getValue(forKey: "bool", defaultValue: 0)) == 0
+
+                expect(layer.getValue(forKey: "double", defaultValue: 1)) == 1
+                expect(layer.getValue(forKey: "double", defaultValue: "str")) == "str"
+
+                expect(layer.getValue(forKey: "int", defaultValue: 1.0)) == 1.0
+                expect(layer.getValue(forKey: "int", defaultValue: "1")) == "1"
+
+                expect(layer.getValue(forKey: "strArray", defaultValue: [1, 2, 3])) == [1, 2, 3]
+
+                expect(layer.getValue(forKey: "mixedArray", defaultValue: [1, 2, 3])) == [1, 2, 3]
+
+                expect(layer.getValue(forKey: "dict", defaultValue: ["key": 3])) == ["key": 3]
+
+                expect(layer.getValue(forKey: "mixedDict", defaultValue: ["key": "value"])) == ["key": "value"]
+            }
+
+            it("returns the default value for non-existent key") {
+                let layer = Layer(client: client, name: "a_layer", value: [:], ruleID: "", evalDetails: EvaluationDetails(reason: .Uninitialized))
+                expect(layer.getValue(forKey: "wrong_key", defaultValue: 1)) == 1
+                expect(layer.getValue(forKey: "wrong_key", defaultValue: true)) == true
+                expect(layer.getValue(forKey: "wrong_key", defaultValue: "false")) == "false"
+                expect(layer.getValue(forKey: "wrong_key", defaultValue: 1.23)) == 1.23
+                expect(layer.getValue(forKey: "wrong_key", defaultValue: [1, 2, 3])) == [1, 2, 3]
+                expect(layer.getValue(forKey: "wrong_key", defaultValue: ["key": 3])) == ["key": 3]
+                expect(layer.getValue(forKey: "wrong_key", defaultValue: ["key": "value"])) == ["key": "value"]
+            }
         }
     }
 }
