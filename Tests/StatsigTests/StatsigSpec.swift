@@ -583,13 +583,11 @@ class StatsigSpec: QuickSpec {
                     var config: DynamicConfig?
                     var exp: DynamicConfig?
                     var stableID: String?
-                    var time: Int = 0
                     waitUntil { done in
                         Statsig.start(sdkKey: "client-api-key",
                                       user: StatsigUser(userID: "123", email: "123@statsig.com"),
                                       options: StatsigOptions(overrideStableID: "custom_stable_id"))
                         { _ in
-                            time = Int(NSDate().timeIntervalSince1970)
                             // Event 0
                             gate = Statsig.checkGate(gateName2)
                             _ = Statsig.checkGate(gateName2) // should not create an exposure, deduped
