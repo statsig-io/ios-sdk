@@ -3,6 +3,8 @@ import UIKit
 internal class StatsigClient {
     private static let exposureDedupeQueueLabel = "com.Statsig.exposureDedupeQueue"
 
+    internal static var autoValueUpdateTime = 10.0
+
     internal var logger: EventLogger
     private var sdkKey: String
     private var currentUser: StatsigUser
@@ -227,7 +229,7 @@ internal class StatsigClient {
 
     private func scheduleRepeatingSync() {
         let currentUser = self.currentUser
-        syncTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [weak self] _ in
+        syncTimer = Timer.scheduledTimer(withTimeInterval: StatsigClient.autoValueUpdateTime, repeats: false) { [weak self] _ in
             guard let self = self else { return }
             self.networkService.fetchUpdatedValues(for: currentUser, since: self.store.updatedTime)
                 { [weak self] in

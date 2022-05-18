@@ -38,10 +38,14 @@ class DynamicConfigSpec: QuickSpec {
         }
 
         describe("creating a dynamic config from dictionary") {
-            let dc = DynamicConfig(
-                configName: "testConfig",
-                configObj: DynamicConfigSpec.TestMixedConfig,
-                evalDetails: EvaluationDetails(reason: .Network))
+            var dc: DynamicConfig!
+
+            beforeEach {
+                dc = DynamicConfig(
+                    configName: "testConfig",
+                    configObj: DynamicConfigSpec.TestMixedConfig,
+                    evalDetails: EvaluationDetails(reason: .Network))
+            }
 
             it("returns the correct value for key given the defaultValue with correct type") {
                 expect(dc.getValue(forKey: "str", defaultValue: "1")) == "string"
@@ -51,7 +55,7 @@ class DynamicConfigSpec: QuickSpec {
                 expect(dc.getValue(forKey: "strArray", defaultValue: [])) == ["1", "2"]
 
                 expect(dc.evaluationDetails.reason).to(equal(.Network))
-                expect(Int(dc.evaluationDetails.time / 1000)) == Int(NSDate().timeIntervalSince1970)
+                expect(dc.evaluationDetails.time).to(beCloseTo(NSDate().epochTimeInMs(), within: 1))
 
                 let mixedArray = dc.getValue(forKey: "mixedArray", defaultValue: [])
                 expect(mixedArray.count) == 2

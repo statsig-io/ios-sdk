@@ -39,6 +39,7 @@ class StatsigSpec: QuickSpec {
         describe("starting Statsig") {
             beforeEach {
                 InternalStore.deleteAllLocalStorage()
+                StatsigClient.autoValueUpdateTime = 10
             }
 
             afterEach {
@@ -110,10 +111,11 @@ class StatsigSpec: QuickSpec {
                     expect(requestCount).toEventually(equal(1))
                 }
 
-                it("make only 1 network request in 11 seconds when enableAutoValueUpdate is not set to true") {
+                it("make only 1 network request in 0.1 seconds when enableAutoValueUpdate is FALSE") {
                     var requestCount = 0
                     var lastSyncTime: Double = 0
                     let now = NSDate().timeIntervalSince1970
+                    StatsigClient.autoValueUpdateTime = 0.1
 
                     stub(condition: isHost("api.statsig.com")) { request in
                         requestCount += 1
@@ -129,15 +131,17 @@ class StatsigSpec: QuickSpec {
                     Statsig.start(sdkKey: "client-api-key")
 
                     // first request, "lastSyncTimeForUser" field should not be present in the request body
-                    expect(requestCount).toEventually(equal(1), timeout: .seconds(11))
+                    expect(requestCount).toEventually(equal(1), timeout: .milliseconds(200))
                     expect(lastSyncTime).to(equal(0))
                 }
 
-                it("makes 2 network requests in 11 seconds and updates internal store's updatedTime correctly each time when enableAutoValueUpdate is true") {
+                it("makes 2 network requests in 0.1 seconds and updates internal store's updatedTime correctly each time when enableAutoValueUpdate is TRUE") {
                     var requestCount = 0
                     var lastSyncTime: Double = 0
                     let now = NSDate().timeIntervalSince1970
+                    StatsigClient.autoValueUpdateTime = 0.1
 
+                    var requestExpectation = self.expectation(description: "Request Made Once")
                     stub(condition: isHost("api.statsig.com")) { request in
                         requestCount += 1
 
@@ -146,18 +150,23 @@ class StatsigSpec: QuickSpec {
                             options: []) as! [String: Any]
                         lastSyncTime = httpBody["lastSyncTimeForUser"] as? Double ?? 0
 
+                        requestExpectation.fulfill()
                         return HTTPStubsResponse(jsonObject: ["time": now * 1000], statusCode: 200, headers: nil)
                     }
 
                     Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(enableAutoValueUpdate: true))
 
+                    self.wait(for: [requestExpectation], timeout: 0.05)
+                    requestExpectation = self.expectation(description: "Request Made Twice")
+
                     // first request, "lastSyncTimeForUser" field should not be present in the request body
-                    expect(requestCount).toEventually(equal(1), timeout: .seconds(1))
+                    expect(requestCount).to(equal(1))
                     expect(lastSyncTime).to(equal(0))
 
+                    self.wait(for: [requestExpectation], timeout: 0.11)
                     // second request, "lastSyncTimeForUser" field should be the time when the first request was sent
-                    expect(requestCount).toEventually(equal(2), timeout: .seconds(11))
-                    expect(Int(lastSyncTime / 1000)).toEventually(equal(Int(now)), timeout: .seconds(11))
+                    expect(requestCount).to(equal(2))
+                    expect(Int(lastSyncTime / 1000)).to(equal(Int(now)))
                 }
 
                 it("works with local cache with different user cache keys") {
@@ -474,33 +483,46 @@ class StatsigSpec: QuickSpec {
                 it("times out if the request took too long and responds early with default values, when there is no local cache") {
                     stub(condition: isHost("api.statsig.com")) { _ in
                         HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
-                            .responseTime(4.0)
+                            .responseTime(0.2)
                     }
 
                     var error: String?
                     var gate: Bool?
                     var dc: DynamicConfig?
-                    let timeBefore = NSDate().timeIntervalSince1970
-                    var timeDiff: TimeInterval? = 0
+                    let timeBefore = CFAbsoluteTimeGetCurrent()
+                    var timeDiff = 0.0
 
-                    Statsig.start(sdkKey: "client-api-key") { errorMessage in
+                    let initTimeoutExpect = self.expectation(description: "Init Timeout")
+                    Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(initTimeout: 0.1)) { errorMessage in
                         error = errorMessage
                         gate = Statsig.checkGate(gateName2)
                         dc = Statsig.getConfig(configName)
-                        timeDiff = NSDate().timeIntervalSince1970 - timeBefore
+                        timeDiff = CFAbsoluteTimeGetCurrent() - timeBefore
+                        initTimeoutExpect.fulfill()
                     }
 
-                    // check the values immediately following the completion block from start() assignments
-                    expect(error).toEventually(beNil(), timeout: .milliseconds(3500))
-                    expect(gate).toEventually(beFalse(), timeout: .milliseconds(3500))
-                    expect(NSDictionary(dictionary: dc!.value)).toEventually(equal(NSDictionary(dictionary: [:])), timeout: .milliseconds(3500))
-                    expect(dc!.evaluationDetails.reason).toEventually(equal(.Uninitialized), timeout: .milliseconds(3500))
-                    expect(Int(timeDiff!)).toEventually(equal(3), timeout: .milliseconds(3500))
+                    self.wait(for: [initTimeoutExpect], timeout: 0.11)
 
-                    // check the same gate and config >4 seconds later should return the results from response JSON
-                    expect(Statsig.checkGate(gateName2)).toEventually(beTrue(), timeout: .milliseconds(4500))
-                    expect(Statsig.getConfig(configName)).toEventuallyNot(beNil(), timeout: .milliseconds(4500))
-                    expect(Statsig.getConfig(configName).evaluationDetails.reason).toEventually(equal(.Network), timeout: .milliseconds(4500))
+                    // check the values immediately following the completion block from start() assignments
+                    expect(error).to(equal("initTimeout Expired"))
+                    expect(gate).to(beFalse())
+                    expect(NSDictionary(dictionary: dc!.value)).to(equal(NSDictionary(dictionary: [:])))
+                    expect(dc!.evaluationDetails.reason).to(equal(.Uninitialized))
+                    expect(timeDiff).to(beCloseTo(0.1, within: 0.01))
+
+
+                    waitUntil { done in
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            done()
+                        }
+                    }
+
+                    // check the same gate and config >0.01 seconds later should return the original results
+                    expect(error).to(equal("initTimeout Expired"))
+                    expect(gate).to(beFalse())
+                    expect(NSDictionary(dictionary: dc!.value)).to(equal(NSDictionary(dictionary: [:])))
+                    expect(dc!.evaluationDetails.reason).to(equal(.Uninitialized))
+                    expect(timeDiff).to(beCloseTo(0.1, within: 0.01))
                 }
 
                 it("times out and returns value from local cache") {

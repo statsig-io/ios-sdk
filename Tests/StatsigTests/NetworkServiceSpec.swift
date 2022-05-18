@@ -152,6 +152,44 @@ class NetworkServiceSpec: QuickSpec {
                 expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/rgstr"))
                 expect(actualRequestData.count).toEventually(equal(returnedRequestData.count))
             }
+
+
+            it ("does not retry requests after timeout") {
+                var calls = 0
+                var timedout = false
+                stub(condition: isHost("api.statsig.com")) { request in
+                    calls += 1
+
+                    while (timedout == false) {} // block until timeout
+
+                    // 500 so retry logic would try again
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 500, headers: nil)
+                }
+
+                let user = StatsigUser()
+                let opts = StatsigOptions(initTimeout: 0.01)
+                let store = InternalStore(user)
+                let ns = NetworkService(sdkKey: "client-key", options: opts, store: store)
+
+                var expected = -1
+                waitUntil { done in
+                    ns.fetchInitialValues(for: user) { err in
+                        expected = calls
+                        expect(err).to(equal("initTimeout Expired"))
+                        timedout = true;
+                        done()
+                    }
+                }
+
+
+                waitUntil { done in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        expect(expected).notTo(equal(-1))
+                        expect(calls).to(equal(expected))
+                        done()
+                    }
+                }
+            }
         }
     }
 }

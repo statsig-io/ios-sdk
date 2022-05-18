@@ -1,9 +1,12 @@
 import Foundation
 
-enum requestType: String {
-    case initialize
-    case logEvent
+fileprivate enum Endpoint: String {
+    case initialize = "/v1/initialize"
+    case logEvent = "/v1/rgstr"
 }
+
+fileprivate typealias NetworkCompletionHandler = (Data?, URLResponse?, Error?) -> Void
+fileprivate typealias TaskCaptureHandler = ((URLSessionDataTask) -> Void)?
 
 class NetworkService {
     let sdkKey: String
@@ -11,8 +14,6 @@ class NetworkService {
     var store: InternalStore
 
     private final let apiHost = "api.statsig.com"
-    private final let initializeAPIPath = "/v1/initialize"
-    private final let logEventAPIPath = "/v1/rgstr"
     private final let networkRetryErrorCodes = [408, 500, 502, 503, 504, 522, 524, 599]
 
     init(sdkKey: String, options: StatsigOptions, store: InternalStore) {
@@ -21,85 +22,21 @@ class NetworkService {
         self.store = store
     }
 
-    private func sendRequest(forType: requestType,
-                             requestBody: [String: Any],
-                             retry: Int = 0,
-                             completion: @escaping (Data?, URLResponse?, Error?) -> Void)
-    {
-        guard JSONSerialization.isValidJSONObject(requestBody),
-              let jsonData = try? JSONSerialization.data(withJSONObject: requestBody)
-        else {
-            completion(nil, nil, StatsigError.invalidJSONParam("requestBody"))
-            return
-        }
-        sendRequest(forType: forType, requestData: jsonData, retry: retry, completion: completion)
-    }
-
-    private func sendRequest(forType: requestType,
-                             requestData: Data,
-                             retry: Int = 0,
-                             completion: @escaping (Data?, URLResponse?, Error?) -> Void)
-    {
-        var urlComponents = URLComponents()
-        urlComponents.scheme = "https"
-        urlComponents.host = apiHost
-
-        if let override = self.statsigOptions.overrideURL {
-            urlComponents.scheme = override.scheme
-            urlComponents.host = override.host
-            urlComponents.port = override.port
-        }
-
-        switch forType {
-        case .initialize:
-            urlComponents.path = initializeAPIPath
-        case .logEvent:
-            urlComponents.path = logEventAPIPath
-        }
-
-        guard let requestURL = urlComponents.url else {
-            completion(nil, nil, StatsigError.invalidRequestURL(forType.rawValue))
-            return
-        }
-
-        var request = URLRequest(url: requestURL)
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(sdkKey, forHTTPHeaderField: "STATSIG-API-KEY")
-        request.setValue("\(NSDate().epochTimeInMs())", forHTTPHeaderField: "STATSIG-CLIENT-TIME")
-        request.httpBody = requestData
-        request.httpMethod = "POST"
-
-        send(request: request, retry: retry) { responseData, response, error in
-            completion(responseData, response, error)
-        }
-    }
-
-    func send(request: URLRequest, retry: Int = 0, backoff: Double = 1, completion: @escaping (Data?, URLResponse?, Error?) -> Void) {
-        DispatchQueue.main.async {
-            let task = URLSession.shared.dataTask(with: request) { [weak self] responseData, response, error in
-                if retry > 0,
-                   let self = self,
-                   let statusCode = (response as? HTTPURLResponse)?.statusCode,
-                   self.networkRetryErrorCodes.contains(statusCode)
-                {
-                    self.send(request: request, retry: retry - 1, backoff: backoff * 2, completion: completion)
-                } else {
-                    completion(responseData, response, error)
-                }
-            }
-            task.resume()
-        }
-    }
-
     func fetchUpdatedValues(for user: StatsigUser, since: Double, completion: (() -> Void)?) {
-        let params: [String: Any] = [
+        let (body, _) = makeReqBody([
             "user": user.toDictionary(forLogging: false),
             "statsigMetadata": user.deviceEnvironment,
             "lastSyncTimeForUser": since
-        ]
-        sendRequest(forType: .initialize, requestBody: params) { [weak self] responseData, _, _ in
+        ])
+
+        guard let body = body else {
+            completion?()
+            return
+        }
+
+        makeAndSendRequest(.initialize, body: body) { [weak self] data, _, _ in
             if let self = self,
-               let responseData = responseData,
+               let responseData = data,
                let json = try? JSONSerialization.jsonObject(with: responseData, options: []),
                let responseDict = json as? [String: Any],
                let hasUpdates = responseDict["has_updates"] as? Bool,
@@ -115,63 +52,74 @@ class NetworkService {
     }
 
     func fetchInitialValues(for user: StatsigUser, completion: completionBlock) {
-        var completionClone = completion
+        var task: URLSessionDataTask?
+        var done: completionBlock = nil
+        done = { err in
+            done = nil
+            task?.cancel()
+            completion?(err)
+        }
+
         if statsigOptions.initTimeout > 0 {
             DispatchQueue.main.asyncAfter(deadline: .now() + statsigOptions.initTimeout) {
-                completionClone?(nil)
-                completionClone = nil
+                done?("initTimeout Expired")
             }
         }
 
-        let params: [String: Any] = [
+        let (body, parseErr) = makeReqBody([
             "user": user.toDictionary(forLogging: false),
             "statsigMetadata": user.deviceEnvironment
-        ]
-        sendRequest(forType: .initialize, requestBody: params, retry: 3) { [weak self] responseData, response, error in
+        ])
+
+        guard let body = body else {
+            done?(parseErr?.localizedDescription)
+            return
+        }
+
+        makeAndSendRequest(.initialize, body: body, retry: 3) { [weak self] data, response, error in
             var errorMessage: String?
             if let error = error {
                 errorMessage = error.localizedDescription
             } else if let statusCode = (response as? HTTPURLResponse)?.statusCode, !(200...299).contains(statusCode) {
                 errorMessage = "An error occurred during fetching values for the user. "
-                    + "\(String(describing: statusCode))"
+                + "\(String(describing: statusCode))"
             }
 
             if let self = self,
-               let responseData = responseData,
-               let json = try? JSONSerialization.jsonObject(with: responseData, options: []),
+               let data = data,
+               let json = try? JSONSerialization.jsonObject(with: data, options: []),
                let responseDict = json as? [String: Any]
             {
                 self.store.set(values: responseDict) {
-                    completionClone?(errorMessage)
-                    completionClone = nil
+                    done?(errorMessage)
                 }
             } else {
                 DispatchQueue.main.async {
-                    completionClone?(errorMessage)
-                    completionClone = nil
+                    done?(errorMessage)
                 }
             }
+        } taskCapture: { capturedTask in
+            task = capturedTask
         }
     }
 
     func sendEvents(forUser: StatsigUser, events: [Event],
                     completion: @escaping ((_ errorMessage: String?, _ data: Data?) -> Void))
     {
-        let params: [String: Any] = [
+        let (body, parseErr) = makeReqBody([
             "events": events.map { $0.toDictionary() },
             "user": forUser.toDictionary(forLogging: true),
             "statsigMetadata": forUser.deviceEnvironment
-        ]
-        guard JSONSerialization.isValidJSONObject(params),
-              let jsonData = try? JSONSerialization.data(withJSONObject: params)
-        else {
-            completion(StatsigError.invalidJSONParam("requestBody").localizedDescription, nil)
+        ])
+
+        guard let body = body else {
+            completion(parseErr?.localizedDescription, nil)
             return
         }
 
-        sendRequest(forType: .logEvent, requestData: jsonData) { _, response, error in
+        makeAndSendRequest(.logEvent, body: body) { _, response, error in
             if let error = error {
-                completion(error.localizedDescription, jsonData)
+                completion(error.localizedDescription, body)
                 return
             }
 
@@ -179,7 +127,7 @@ class NetworkService {
                   (200...299).contains(httpResponse.statusCode)
             else {
                 completion("An error occurred during sending events to server. "
-                    + "\(String(describing: (response as? HTTPURLResponse)?.statusCode))", jsonData)
+                           + "\(String(describing: (response as? HTTPURLResponse)?.statusCode))", body)
                 return
             }
         }
@@ -190,7 +138,7 @@ class NetworkService {
         let dispatchGroup = DispatchGroup()
         for data in dataArray {
             dispatchGroup.enter()
-            sendRequest(forType: .logEvent, requestData: data) { _, response, error in
+            makeAndSendRequest(.logEvent, body: data) { _, response, error in
                 let httpResponse = response as? HTTPURLResponse
                 if error != nil ||
                     (httpResponse != nil && !(200...299).contains(httpResponse!.statusCode))
@@ -202,6 +150,63 @@ class NetworkService {
         }
         dispatchGroup.notify(queue: .main) {
             completion(failedRequests)
+        }
+    }
+
+    private func makeReqBody(_ dict: Dictionary<String, Any>) -> (Data?, Error?) {
+        if JSONSerialization.isValidJSONObject(dict),
+           let data = try? JSONSerialization.data(withJSONObject: dict){
+            return (data, nil)
+        }
+
+        return (nil, StatsigError.invalidJSONParam("requestBody"))
+    }
+
+    private func makeAndSendRequest(_ endpoint: Endpoint, body: Data, retry: Int = 0, completion: @escaping NetworkCompletionHandler, taskCapture: TaskCaptureHandler = nil)
+    {
+        var urlComponents = URLComponents()
+        urlComponents.scheme = "https"
+        urlComponents.host = apiHost
+        urlComponents.path = endpoint.rawValue
+
+        if let override = self.statsigOptions.overrideURL {
+            urlComponents.scheme = override.scheme
+            urlComponents.host = override.host
+            urlComponents.port = override.port
+        }
+
+        guard let requestURL = urlComponents.url else {
+            completion(nil, nil, StatsigError.invalidRequestURL("\(endpoint)"))
+            return
+        }
+
+        var request = URLRequest(url: requestURL)
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(sdkKey, forHTTPHeaderField: "STATSIG-API-KEY")
+        request.setValue("\(NSDate().epochTimeInMs())", forHTTPHeaderField: "STATSIG-CLIENT-TIME")
+        request.httpBody = body
+        request.httpMethod = "POST"
+
+        sendRequest(request, retry: retry, completion: completion, taskCapture: taskCapture)
+    }
+
+    private func sendRequest(_ request: URLRequest, retry: Int = 0, backoff: Double = 1, completion: @escaping NetworkCompletionHandler, taskCapture: TaskCaptureHandler) {
+        DispatchQueue.main.async {
+            let task = URLSession.shared.dataTask(with: request) { [weak self] responseData, response, error in
+                if retry > 0,
+                   let self = self,
+                   let statusCode = (response as? HTTPURLResponse)?.statusCode,
+                   self.networkRetryErrorCodes.contains(statusCode)
+                {
+                    self.sendRequest(request, retry: retry - 1, backoff: backoff * 2, completion: completion, taskCapture: taskCapture)
+                } else {
+                    completion(responseData, response, error)
+                }
+
+            }
+
+            taskCapture?(task)
+            task.resume()
         }
     }
 }
