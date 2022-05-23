@@ -185,19 +185,21 @@ struct StatsigValuesCache {
         }
         userCacheKey = key
 
+        let cachedValues = cacheByID[userCacheKey] ?? [
+            InternalStore.gatesKey: [:],
+            InternalStore.configsKey: [:],
+            InternalStore.stickyExpKey: [:],
+            "time": 0,
+        ]
+
         if cacheByID[userCacheKey] == nil {
-            cacheByID[userCacheKey] =
-                [
-                    InternalStore.gatesKey: [:],
-                    InternalStore.configsKey: [:],
-                    InternalStore.stickyExpKey: [:],
-                    "time": 0,
-                ]
+            cacheByID[userCacheKey] = cachedValues
         } else {
             // The values we serve now is from the local cache
             reason = .Cache
         }
-        userCache = cacheByID[userCacheKey]!
+
+        userCache = cachedValues
     }
 
     private static func loadDictMigratingIfRequired(forKey key: String) -> [String: [String: Any]] {
@@ -255,14 +257,14 @@ class InternalStore {
     static let evalTimeKey = "evaluation_time"
 
     var cache: StatsigValuesCache
-    var localOverrides: [String: Any]!
+    var localOverrides: [String: Any] = InternalStore.getEmptyOverrides()
     var updatedTime: Double { cache.getLastUpdatedTime() }
     let storeQueue = DispatchQueue(label: storeQueueLabel, qos: .userInitiated, attributes: .concurrent)
 
     init(_ user: StatsigUser) {
         cache = StatsigValuesCache(user)
         localOverrides = UserDefaults.standard.dictionarySafe(forKey: InternalStore.localOverridesKey)
-            ?? getEmptyOverrides()
+        ?? InternalStore.getEmptyOverrides()
     }
 
     func checkGate(forName: String) -> FeatureGate {
@@ -368,8 +370,9 @@ class InternalStore {
 
     func removeAllOverrides() {
         storeQueue.async(flags: .barrier) { [weak self] in
-            self?.localOverrides = self?.getEmptyOverrides()
-            self?.saveOverrides()
+            guard let this = self else { return }
+            this.localOverrides = InternalStore.getEmptyOverrides()
+            this.saveOverrides()
         }
     }
 
@@ -383,7 +386,7 @@ class InternalStore {
         UserDefaults.standard.setDictionarySafe(localOverrides, forKey: InternalStore.localOverridesKey)
     }
 
-    private func getEmptyOverrides() -> [String: Any] {
+    private static func getEmptyOverrides() -> [String: Any] {
         return [InternalStore.gatesKey: [:], InternalStore.configsKey: [:]]
     }
 
