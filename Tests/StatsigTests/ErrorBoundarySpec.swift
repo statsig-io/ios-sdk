@@ -4,7 +4,11 @@ import Nimble
 import OHHTTPStubs
 import Quick
 import StatsigInternalObjC
+
+#if !COCOAPODS
 import OHHTTPStubsSwift
+#endif
+
 
 class ErrorBoundarySpec: QuickSpec {
     override func spec() {
@@ -23,7 +27,7 @@ class ErrorBoundarySpec: QuickSpec {
                     defaults?.set(["crash": nil], forKey: "ShouldCrash")
                 }
 
-                expect(called).toEventually(be(true))
+                expect(called).toEventually(beTrue())
             }
 
             it("recovers") {
@@ -39,7 +43,7 @@ class ErrorBoundarySpec: QuickSpec {
                     recovered = true
                 }
 
-                expect(recovered).toEventually(be(true))
+                expect(recovered).toEventually(beTrue())
             }
         }
     }
