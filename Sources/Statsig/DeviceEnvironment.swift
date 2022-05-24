@@ -51,4 +51,10 @@ struct DeviceEnvironment {
             "systemName": systemName
         ]
     }
+
+    func explicitGet(_ overrideStableID: String? = nil) -> [String: String] {
+        return get(overrideStableID).mapValues { val in
+            return val ?? ""
+        }
+    }
 }

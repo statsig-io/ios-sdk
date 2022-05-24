@@ -1,11 +1,13 @@
 import Foundation
 
 import UIKit
+import StatsigInternalObjC
 
 public typealias completionBlock = ((_ errorMessage: String?) -> Void)?
 
 public class Statsig {
     internal static var client: StatsigClient?
+    internal static var errorBoundary: ErrorBoundary = ErrorBoundary()
 
     public static func start(sdkKey: String, user: StatsigUser? = nil, options: StatsigOptions? = nil,
                              completion: completionBlock = nil)
@@ -14,11 +16,19 @@ public class Statsig {
             completion?("Statsig has already started!")
             return
         }
+
         if sdkKey.isEmpty || sdkKey.starts(with: "secret-") {
             completion?("Must use a valid client SDK key.")
             return
         }
-        client = StatsigClient(sdkKey: sdkKey, user: user, options: options, completion: completion)
+
+        errorBoundary = ErrorBoundary(
+            key: sdkKey, deviceEnvironment: DeviceEnvironment().explicitGet()
+        )
+
+        errorBoundary.capture {
+            client = StatsigClient(sdkKey: sdkKey, user: user, options: options, completion: completion)
+        }
     }
 
     public static func checkGate(_ gateName: String) -> Bool {
@@ -27,32 +37,51 @@ public class Statsig {
             return false
         }
 
-        return client.checkGate(gateName)
+        var result = false
+        errorBoundary.capture {
+            result = client.checkGate(gateName)
+        }
+        return result
     }
 
     public static func getExperiment(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
-        guard let client = client else {
-            return getDummyConfig(experimentName, #function)
-        }
+        var result: DynamicConfig? = nil
+        errorBoundary.capture {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling getExperiment. Returning a dummy DynamicConfig that will only return default values.")
+                return
+            }
 
-        return client.getExperiment(experimentName, keepDeviceValue: keepDeviceValue)
+            result = client.getExperiment(experimentName, keepDeviceValue: keepDeviceValue)
+        }
+        return result ?? getEmptyConfig(experimentName)
     }
 
     public static func getConfig(_ configName: String) -> DynamicConfig {
-        guard let client = client else {
-            return getDummyConfig(configName, #function)
-        }
+        var result: DynamicConfig? = nil
+        errorBoundary.capture {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling getConfig. Returning a dummy DynamicConfig that will only return default values.")
+                return
+            }
 
-        return client.getConfig(configName)
+            result = client.getConfig(configName)
+        }
+        return result ?? getEmptyConfig(configName)
     }
 
     public static func getLayer(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
-        guard let client = client else {
-            print("[Statsig]: Must start Statsig first and wait for it to complete before calling getLayer. Returning an empty Layer object")
-            return Layer(client: nil, name: layerName, evalDetails: EvaluationDetails(reason: .Uninitialized))
-        }
+        var result: Layer?
+        errorBoundary.capture {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling getLayer. Returning an empty Layer object")
+                return
+            }
 
-        return client.getLayer(layerName, keepDeviceValue: keepDeviceValue)
+            result = client.getLayer(layerName, keepDeviceValue: keepDeviceValue)
+        } 
+
+        return result ?? Layer(client: nil, name: layerName, evalDetails: EvaluationDetails(reason: .Uninitialized))
     }
 
 
@@ -69,42 +98,62 @@ public class Statsig {
     }
 
     public static func updateUser(_ user: StatsigUser, completion: completionBlock = nil) {
-        guard let client = client else {
-            print("[Statsig]: Must start Statsig first and wait for it to complete before calling updateUser.")
-            completion?("Must start Statsig first and wait for it to complete before calling updateUser.")
-            return
-        }
+        errorBoundary.capture {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling updateUser.")
+                completion?("Must start Statsig first and wait for it to complete before calling updateUser.")
+                return
+            }
 
-        client.updateUser(user, completion: completion)
+            client.updateUser(user, completion: completion)
+        }
     }
 
     public static func shutdown() {
-        client?.shutdown()
-        client = nil
+        errorBoundary.capture {
+            client?.shutdown()
+            client = nil
+        }
     }
 
     public static func getStableID() -> String? {
-        return client?.getStableID()
+        var result:String? = nil
+        errorBoundary.capture {
+            result = client?.getStableID()
+        }
+        return result
     }
 
     public static func overrideGate(_ gateName: String, value: Bool) {
-        client?.overrideGate(gateName, value: value)
+        errorBoundary.capture {
+            client?.overrideGate(gateName, value: value)
+        }
     }
 
     public static func overrideConfig(_ configName: String, value: [String: Any]) {
-        client?.overrideConfig(configName, value: value)
+        errorBoundary.capture {
+            client?.overrideConfig(configName, value: value)
+        }
     }
 
     public static func removeOverride(_ name: String) {
-        client?.removeOverride(name)
+        errorBoundary.capture {
+            client?.removeOverride(name)
+        }
     }
 
     public static func removeAllOverrides() {
-        client?.removeAllOverrides()
+        errorBoundary.capture {
+            client?.removeAllOverrides()
+        }
     }
 
     public static func getAllOverrides() -> StatsigOverrides? {
-        return client?.getAllOverrides()
+        var result: StatsigOverrides? = nil
+        errorBoundary.capture {
+            result = client?.getAllOverrides()
+        }
+        return result
     }
 
     private static func logEventImpl(_ withName: String, value: Any? = nil, metadata: [String: String]? = nil) {
@@ -113,11 +162,12 @@ public class Statsig {
             return
         }
 
-        client.logEvent(withName, value: value, metadata: metadata)
+        errorBoundary.capture {
+            client.logEvent(withName, value: value, metadata: metadata)
+        }
     }
 
-    private static func getDummyConfig(_ name: String, _ caller: String) -> DynamicConfig {
-        print("[Statsig]: Must start Statsig first and wait for it to complete before calling \(caller). Returning a dummy DynamicConfig that will only return default values.")
+    private static func getEmptyConfig(_ name: String) -> DynamicConfig {
         return DynamicConfig(configName: name, evalDetails: EvaluationDetails(reason: .Uninitialized))
     }
 }

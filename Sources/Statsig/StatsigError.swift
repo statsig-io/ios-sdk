@@ -4,6 +4,7 @@ enum StatsigError: Error {
     case invalidJSONParam(String)
     case invalidRequestURL(String)
     case tooManyRequests(String)
+    case unexpectedError(String)
 }
 
 extension StatsigError: LocalizedError {
@@ -15,6 +16,8 @@ extension StatsigError: LocalizedError {
             return NSLocalizedString("The request URL for \(requestType) is not valid.", comment: "")
         case .tooManyRequests(let requestURL):
             return NSLocalizedString("Too many requests made to \(requestURL).", comment: "")
+        case .unexpectedError(let context):
+            return NSLocalizedString("An unexpected error occured -- \(context)", comment: "")
         }
     }
 }

@@ -22,7 +22,8 @@ Pod::Spec.new do |spec|
   spec.ios.deployment_target = "10.0"
 
   spec.source       = { :git => "https://github.com/statsig-io/ios-sdk.git", :tag => "v#{spec.version}" }
-  spec.source_files  = "Sources/**/*.swift"
+  spec.source_files  = "Sources/Statsig/**/*.swift"
+  spec.dependency 'StatsigInternalObjC'
 
   spec.swift_version = '5.0'
 

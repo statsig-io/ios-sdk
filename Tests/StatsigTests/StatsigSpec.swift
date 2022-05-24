@@ -742,19 +742,22 @@ class StatsigSpec: QuickSpec {
             }
 
             describe("handling null") {
-                stub(condition: isPath("/v1/initialize")) { _ in
-                    var mock = StatsigSpec.mockUserValues
-                    mock[jsonDict: "dynamic_configs"]?["null_value_config".sha256()] = [
-                        "rule_id": "default",
-                        "value":
-                            [
-                                "str": "string",
-                                "null": nil
-                            ]
-                    ]
+                beforeEach {
+                    stub(condition: isPath("/v1/initialize")) { _ in
+                        var mock = StatsigSpec.mockUserValues
+                        mock[jsonDict: "dynamic_configs"]?["null_value_config".sha256()] = [
+                            "rule_id": "default",
+                            "value":
+                                [
+                                    "str": "string",
+                                    "null": nil
+                                ]
+                        ]
 
-                    return HTTPStubsResponse(jsonObject: mock, statusCode: 200, headers: nil)
+                        return HTTPStubsResponse(jsonObject: mock, statusCode: 200, headers: nil)
+                    }
                 }
+
 
                 it("works when initialize contains null") {
                     waitUntil { done in

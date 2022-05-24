@@ -200,7 +200,11 @@ class NetworkService {
                 {
                     self.sendRequest(request, retry: retry - 1, backoff: backoff * 2, completion: completion, taskCapture: taskCapture)
                 } else {
-                    completion(responseData, response, error)
+                    Statsig.errorBoundary.capture {
+                        completion(responseData, response, error)
+                    } withRecovery: {
+                        completion(nil, nil, StatsigError.unexpectedError("Response Handling"))
+                    }
                 }
 
             }
