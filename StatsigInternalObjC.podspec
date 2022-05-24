@@ -1,10 +1,12 @@
 Pod::Spec.new do |spec|
 
   spec.name         = "StatsigInternalObjC"
-  spec.version      = "1.11.0"
+  spec.version      = "1.12.0"
   spec.summary      = "Statsig enables developers to ship code faster and more safely."
   spec.description  = <<-DESC
-                   Objective C library for the main Statsig pod.
+                  Statsig enables developers to ship code faster and more safely.
+                  -
+                  Objective C library for the main Statsig pod.
                    DESC
 
   spec.homepage     = "https://github.com/statsig-io/ios-sdk"

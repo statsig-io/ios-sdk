@@ -70,7 +70,7 @@
             return;
         }
 
-        NSString *length = [NSString stringWithFormat:@"%lu", [jsonData length]];
+        NSString *length = [NSString stringWithFormat:@"%lu", (unsigned long) [jsonData length]];
         [request setValue:length forHTTPHeaderField:@"Content-length"];
 
         if (self.clientKey) {
