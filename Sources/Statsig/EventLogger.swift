@@ -16,7 +16,11 @@ class EventLogger {
 
     let logQueue = DispatchQueue(label: eventQueueLabel, qos: .userInitiated)
 
-    let MAX_SAVED_LOG_REQUEST_SIZE = 1_000_000 //1MB
+    #if os(tvOS)
+        let MAX_SAVED_LOG_REQUEST_SIZE = 100_000 //100 KB
+    #else
+        let MAX_SAVED_LOG_REQUEST_SIZE = 1_000_000 //1 MB
+    #endif
 
     init(user: StatsigUser, networkService: NetworkService, userDefaults: UserDefaults = UserDefaults.standard) {
         self.events = [Event]()
