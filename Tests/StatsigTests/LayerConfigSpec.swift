@@ -98,7 +98,7 @@ class LayerConfigSpec: QuickSpec {
                 InternalStore.deleteAllLocalStorage()
                 store = InternalStore(StatsigUser(userID: "dloomb"))
 
-                store.cache.saveValuesForCurrentUser(Data.CacheValues)
+                store.cache.saveValues(Data.CacheValues, forCacheKey: StatsigUser(userID: "dloomb").getCacheKey())
             }
 
             it("returns the experiment values") {
@@ -119,7 +119,7 @@ class LayerConfigSpec: QuickSpec {
                 store = InternalStore(StatsigUser(userID: "dloomb")) // reload the cache, and user is no longer in the experiment, but value should stick because experiment is active
 
                 waitUntil { done in
-                    store.set(values: updatedValues) {
+                    store.set(values: updatedValues, withCacheKey: store.cache.userCacheKey) {
                         done()
                     }
                 }
@@ -141,7 +141,7 @@ class LayerConfigSpec: QuickSpec {
                 store = InternalStore(StatsigUser(userID: "dloomb"))
 
                 waitUntil { done in
-                    store.set(values: updatedValues) {
+                    store.set(values: updatedValues, withCacheKey: store.cache.userCacheKey) {
                         done()
                     }
                 }
@@ -154,7 +154,7 @@ class LayerConfigSpec: QuickSpec {
                 store = InternalStore(StatsigUser(userID: "dloomb"))
 
                 waitUntil { done in
-                    store.set(values: updatedValues) {
+                    store.set(values: updatedValues, withCacheKey: store.cache.userCacheKey) {
                         done()
                     }
                 }
@@ -179,7 +179,7 @@ class LayerConfigSpec: QuickSpec {
 
                 store = InternalStore(StatsigUser(userID: "dloomb"))
                 waitUntil { done in
-                    store.set(values: updatedValues) {
+                    store.set(values: updatedValues, withCacheKey: store.cache.userCacheKey) {
                         done()
                     }
                 }

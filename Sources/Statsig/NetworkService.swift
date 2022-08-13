@@ -34,6 +34,8 @@ class NetworkService {
             return
         }
 
+        let cacheKey = user.getCacheKey()
+
         makeAndSendRequest(.initialize, body: body) { [weak self] data, _, _ in
             if let self = self,
                let responseData = data,
@@ -42,7 +44,7 @@ class NetworkService {
                let hasUpdates = responseDict["has_updates"] as? Bool,
                hasUpdates
             {
-                self.store.set(values: responseDict, completion: completion)
+                self.store.set(values: responseDict, withCacheKey: cacheKey, completion: completion)
             } else {
                 DispatchQueue.main.async {
                     completion?()
@@ -76,6 +78,8 @@ class NetworkService {
             return
         }
 
+        let cacheKey = user.getCacheKey()
+
         makeAndSendRequest(.initialize, body: body, retry: 3) { [weak self] data, response, error in
             var errorMessage: String?
             if let error = error {
@@ -85,12 +89,14 @@ class NetworkService {
                 + "\(String(describing: statusCode))"
             }
 
+
+
             if let self = self,
                let data = data,
                let json = try? JSONSerialization.jsonObject(with: data, options: []),
                let responseDict = json as? [String: Any]
             {
-                self.store.set(values: responseDict) {
+                self.store.set(values: responseDict, withCacheKey: cacheKey) {
                     done?(errorMessage)
                 }
             } else {

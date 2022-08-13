@@ -136,17 +136,23 @@ struct StatsigValuesCache {
         setUserCacheKeyAndValues(newUser)
     }
 
-    mutating func saveValuesForCurrentUser(_ values: [String: Any]) {
-        userCache[InternalStore.gatesKey] = values[InternalStore.gatesKey]
-        userCache[InternalStore.configsKey] = values[InternalStore.configsKey]
-        userCache[InternalStore.layerConfigsKey] = values[InternalStore.layerConfigsKey]
-        userCache["time"] = values["time"] as? Double ?? userCache["time"]
-        userCache[InternalStore.evalTimeKey] = NSDate().epochTimeInMs()
+    mutating func saveValues(_ values: [String: Any], forCacheKey cacheKey: String) {
+        var cache = cacheKey == userCacheKey ? userCache : getCacheValues(forCacheKey: cacheKey)
 
-        // Now the values we serve came from network request
-        reason = .Network
+        cache[InternalStore.gatesKey] = values[InternalStore.gatesKey]
+        cache[InternalStore.configsKey] = values[InternalStore.configsKey]
+        cache[InternalStore.layerConfigsKey] = values[InternalStore.layerConfigsKey]
+        cache["time"] = values["time"] as? Double ?? userCache["time"]
+        cache[InternalStore.evalTimeKey] = NSDate().epochTimeInMs()
 
-        cacheByID[userCacheKey] = userCache
+        if (userCacheKey == cacheKey) {
+            // Now the values we serve came from network request
+            reason = .Network
+            userCache = cache
+        }
+
+
+        cacheByID[cacheKey] = cache
         UserDefaults.standard.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
     }
 
@@ -170,6 +176,16 @@ struct StatsigValuesCache {
         saveToUserDefaults()
     }
 
+    private func getCacheValues(forCacheKey key: String) -> [String: Any] {
+        return cacheByID[key] ?? [
+            InternalStore.gatesKey: [:],
+            InternalStore.configsKey: [:],
+            InternalStore.stickyExpKey: [:],
+            "time": 0,
+        ]
+
+    }
+
     private mutating func saveToUserDefaults() {
         cacheByID[userCacheKey] = userCache
         UserDefaults.standard.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
@@ -177,20 +193,9 @@ struct StatsigValuesCache {
     }
 
     private mutating func setUserCacheKeyAndValues(_ user: StatsigUser) {
-        var key = user.userID ?? "null"
-        if let customIDs = user.customIDs {
-            for (idType, idValue) in customIDs {
-                key += "\(idType)\(idValue)"
-            }
-        }
-        userCacheKey = key
+        userCacheKey = user.getCacheKey()
 
-        let cachedValues = cacheByID[userCacheKey] ?? [
-            InternalStore.gatesKey: [:],
-            InternalStore.configsKey: [:],
-            InternalStore.stickyExpKey: [:],
-            "time": 0,
-        ]
+        let cachedValues = getCacheValues(forCacheKey: userCacheKey)
 
         if cacheByID[userCacheKey] == nil {
             cacheByID[userCacheKey] = cachedValues
@@ -321,10 +326,10 @@ class InternalStore {
             })
     }
 
-    func set(values: [String: Any], completion: (() -> Void)? = nil) {
+    func set(values: [String: Any], withCacheKey cacheKey: String, completion: (() -> Void)? = nil) {
         storeQueue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
-            self.cache.saveValuesForCurrentUser(values)
+            self.cache.saveValues(values, forCacheKey: cacheKey)
             DispatchQueue.main.async {
                 completion?()
             }
@@ -344,6 +349,7 @@ class InternalStore {
         UserDefaults.standard.removeObject(forKey: InternalStore.stickyDeviceExperimentsKey)
         UserDefaults.standard.removeObject(forKey: InternalStore.DEPRECATED_stickyUserIDKey)
         UserDefaults.standard.removeObject(forKey: InternalStore.localOverridesKey)
+        UserDefaults.standard.synchronize()
     }
 
     // Local overrides functions

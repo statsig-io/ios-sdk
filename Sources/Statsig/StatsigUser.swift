@@ -74,4 +74,14 @@ public struct StatsigUser {
 
         return dict
     }
+
+    func getCacheKey() -> String {
+        var key = userID ?? "null"
+        if let customIDs = customIDs {
+            for (idType, idValue) in customIDs {
+                key += "\(idType)\(idValue)"
+            }
+        }
+        return key
+    }
 }
