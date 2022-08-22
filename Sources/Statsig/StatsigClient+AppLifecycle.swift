@@ -1,3 +1,13 @@
+
+#if os(macOS)
+extension StatsigClient {
+    internal func subscribeToApplicationLifecycle() {
+    }
+
+    internal func unsubscribeFromApplicationLifecycle() {
+    }
+}
+#else
 import UIKit
 
 extension StatsigClient {
@@ -39,3 +49,4 @@ extension StatsigClient {
         logger.stop()
     }
 }
+#endif

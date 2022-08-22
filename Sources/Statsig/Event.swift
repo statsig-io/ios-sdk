@@ -1,7 +1,5 @@
 import Foundation
 
-import UIKit
-
 class Event {
     let name: String
     let value: Any?
@@ -35,7 +33,7 @@ class Event {
 
         if !disableCurrentVCLogging {
             DispatchQueue.main.async { [weak self] in
-                if let self = self, let vc = UIApplication.shared.keyWindow?.rootViewController {
+                if let self = self, let vc = SystemInfo.getCurrentViewController() {
                     self.statsigMetadata = [Event.currentVCKey: "\(vc.classForCoder)"]
                 }
             }
