@@ -1,7 +1,7 @@
 Pod::Spec.new do |spec|
 
   spec.name         = "StatsigInternalObjC"
-  spec.version      = "1.13.2"
+  spec.version      = "1.14.0"
   spec.summary      = "Statsig enables developers to ship code faster and more safely."
   spec.description  = <<-DESC
                   Statsig enables developers to ship code faster and more safely.
