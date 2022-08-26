@@ -126,7 +126,7 @@ class StatsigListeningSpec: QuickSpec {
                 let listener = TestListener()
                 Statsig.addListener(listener)
                 expect(listener.onInitializedCalled).to(beTrue())
-                expect(listener.onInitializedError).to(be(error))
+                expect(listener.onInitializedError).to(equal(error))
             }
         }
 
