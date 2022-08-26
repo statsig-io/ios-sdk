@@ -7,7 +7,6 @@ import OHHTTPStubs
 import OHHTTPStubsSwift
 #endif
 @testable import Statsig
-import Accessibility
 
 func getBody(fromRequest req: URLRequest) -> [String: Any] {
     return try! JSONSerialization.jsonObject(

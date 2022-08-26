@@ -31,6 +31,20 @@ public class Statsig {
         }
     }
 
+    public static func isInitialized() -> Bool {
+        guard let client = client else {
+            print("[Statsig]: Statsig.start has not been called.")
+            return false
+        }
+
+        return client.isInitialized()
+    }
+
+    public static func addListener(_ listener: StatsigListening)
+    {
+        client?.addListener(listener)
+    }
+
     public static func checkGate(_ gateName: String) -> Bool {
         guard let client = client else {
             print("[Statsig]: Must start Statsig first and wait for it to complete before calling checkGate. Returning false as the default.")

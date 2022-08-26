@@ -13,6 +13,9 @@ internal class StatsigClient {
     private var networkService: NetworkService
     private var syncTimer: Timer?
     private var loggedExposures: [String: TimeInterval]
+    private var listeners: [() -> StatsigListening?] = []
+    private var hasInitialized: Bool = false
+    private var lastInitializeError: String?
 
     private let exposureDedupeQueue = DispatchQueue(label: exposureDedupeQueueLabel, qos: .userInitiated, attributes: .concurrent)
 
@@ -28,9 +31,25 @@ internal class StatsigClient {
         self.logger.start()
         self.loggedExposures = [String: TimeInterval]()
 
-        fetchAndScheduleSyncing(completion: completion)
+        fetchAndScheduleSyncing { [weak self] errorMessage in
+            self?.lastInitializeError = errorMessage
+            self?.hasInitialized = true
+            self?.notifyOnInitializedListeners(errorMessage)
+            completion?(errorMessage)
+        }
 
         subscribeToApplicationLifecycle()
+    }
+
+    internal func isInitialized() -> Bool {
+        return hasInitialized
+    }
+
+    internal func addListener(_ listener: StatsigListening) {
+        if (hasInitialized) {
+            listener.onInitialized(lastInitializeError)
+        }
+        listeners.append({ [weak listener] in return listener })
     }
 
     internal func checkGate(_ gateName: String) -> Bool {
@@ -266,7 +285,22 @@ internal class StatsigClient {
         currentUser = StatsigClient.normalizeUser(user, options: statsigOptions)
         store.updateUser(currentUser)
         logger.user = currentUser
-        fetchAndScheduleSyncing(completion: completion)
+        fetchAndScheduleSyncing { [weak self] errorMessage in
+            self?.notifyOnUserUpdatedListeners(errorMessage)
+            completion?(errorMessage)
+        }
+    }
+
+    private func notifyOnInitializedListeners(_ error: String?) {
+        for listener in listeners {
+            listener()?.onInitialized(error)
+        }
+    }
+
+    private func notifyOnUserUpdatedListeners(_ error: String?) {
+        for listener in listeners {
+            listener()?.onUserUpdated(error)
+        }
     }
 
     deinit {
