@@ -128,6 +128,19 @@ class StatsigListeningSpec: QuickSpec {
                 expect(listener.onInitializedCalled).to(beTrue())
                 expect(listener.onInitializedError).to(equal(error))
             }
+
+            it("can add listeners before start is called") {
+                goodStub()
+
+                let listener = TestListener()
+                Statsig.addListener(listener)
+
+
+                Statsig.start(sdkKey: "client-key")
+
+                expect(listener.onInitializedCalled).toEventually(beTrue())
+                expect(listener.onInitializedError).to(beNil())
+            }
         }
 
         describe("listening to updateUser callbacks") {

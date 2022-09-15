@@ -8,6 +8,7 @@ public typealias completionBlock = ((_ errorMessage: String?) -> Void)?
 public class Statsig {
     internal static var client: StatsigClient?
     internal static var errorBoundary: ErrorBoundary = ErrorBoundary()
+    internal static var pendingListeners: [StatsigListening] = []
 
     public static func start(sdkKey: String, user: StatsigUser? = nil, options: StatsigOptions? = nil,
                              completion: completionBlock = nil)
@@ -28,6 +29,7 @@ public class Statsig {
 
         errorBoundary.capture {
             client = StatsigClient(sdkKey: sdkKey, user: user, options: options, completion: completion)
+            addPendingListeners()
         }
     }
 
@@ -42,7 +44,12 @@ public class Statsig {
 
     public static func addListener(_ listener: StatsigListening)
     {
-        client?.addListener(listener)
+        guard let client = client else {
+            pendingListeners.append(listener)
+            return
+        }
+
+        client.addListener(listener)
     }
 
     public static func checkGate(_ gateName: String) -> Bool {
@@ -183,6 +190,13 @@ public class Statsig {
 
     private static func getEmptyConfig(_ name: String) -> DynamicConfig {
         return DynamicConfig(configName: name, evalDetails: EvaluationDetails(reason: .Uninitialized))
+    }
+
+    private static func addPendingListeners() {
+        for listener in pendingListeners {
+            client?.addListener(listener)
+        }
+        pendingListeners.removeAll()
     }
 }
 
