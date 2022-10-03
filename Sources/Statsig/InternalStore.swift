@@ -81,7 +81,7 @@ struct StatsigValuesCache {
         return DynamicConfig(configName: configName, evalDetails: getEvaluationDetails(valueExists: false))
     }
 
-    func getLayer(_ client: StatsigClient, _ layerName: String) -> Layer {
+    func getLayer(_ client: StatsigClient?, _ layerName: String) -> Layer {
         let layerNameHash = layerName.sha256()
         if let configObj = getConfigData(layerNameHash, topLevelKey: InternalStore.layerConfigsKey) {
             return Layer(client: client, name: layerName, configObj: configObj, evalDetails: getEvaluationDetails(valueExists: true))
@@ -312,7 +312,7 @@ class InternalStore {
             })
     }
 
-    func getLayer(client: StatsigClient, forName layerName: String, keepDeviceValue: Bool = false) -> Layer {
+    func getLayer(client: StatsigClient?, forName layerName: String, keepDeviceValue: Bool = false) -> Layer {
         let latestValue = storeQueue.sync {
             return cache.getLayer(client, layerName)
         }

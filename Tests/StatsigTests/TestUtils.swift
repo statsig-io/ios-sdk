@@ -1,6 +1,6 @@
 import Foundation
 import Nimble
-import Statsig
+@testable import Statsig
 import OHHTTPStubs
 
 #if !COCOAPODS
@@ -10,6 +10,7 @@ import OHHTTPStubsSwift
 class TestUtils {
     static func startStatsigAndWait(key: String, _ user: StatsigUser? = nil) {
         waitUntil { done in
+            Statsig.client = nil
             Statsig.start(sdkKey: key, user: user) { _ in
                 done()
             }

@@ -74,6 +74,10 @@ internal class StatsigClient {
         return gate.value
     }
 
+    internal func checkGateWithExposureLoggingDisabled(_ gateName: String) -> Bool {
+        return store.checkGate(forName: gateName).value
+    }
+
     internal func getExperiment(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
         let experiment = store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
 
@@ -91,6 +95,10 @@ internal class StatsigClient {
         }
 
         return experiment
+    }
+
+    internal func getExperimentWithExposureLoggingDisabled(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
+        return store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
     }
 
     internal func getConfig(_ configName: String) -> DynamicConfig {
@@ -112,8 +120,16 @@ internal class StatsigClient {
         return config
     }
 
+    internal func getConfigWithExposureLoggingDisabled(_ configName: String) -> DynamicConfig {
+        return store.getConfig(forName: configName)
+    }
+
     internal func getLayer(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
         return store.getLayer(client: self, forName: layerName, keepDeviceValue: keepDeviceValue)
+    }
+
+    internal func getLayerWithExposureLoggingDisabled(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
+        return store.getLayer(client: nil, forName: layerName, keepDeviceValue: keepDeviceValue)
     }
 
     internal func updateUser(_ user: StatsigUser, completion: completionBlock = nil) {

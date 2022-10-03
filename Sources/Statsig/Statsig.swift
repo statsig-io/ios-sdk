@@ -53,58 +53,36 @@ public class Statsig {
     }
 
     public static func checkGate(_ gateName: String) -> Bool {
-        guard let client = client else {
-            print("[Statsig]: Must start Statsig first and wait for it to complete before calling checkGate. Returning false as the default.")
-            return false
-        }
+        return checkGateImpl(gateName, withExposures: true, functionName: #function)
+    }
 
-        var result = false
-        errorBoundary.capture {
-            result = client.checkGate(gateName)
-        }
-        return result
+    public static func checkGateWithExposureLoggingDisabled(_ gateName: String) -> Bool {
+        return checkGateImpl(gateName, withExposures: false, functionName: #function)
     }
 
     public static func getExperiment(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
-        var result: DynamicConfig? = nil
-        errorBoundary.capture {
-            guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling getExperiment. Returning a dummy DynamicConfig that will only return default values.")
-                return
-            }
+        return getExperimentImpl(experimentName, keepDeviceValue: keepDeviceValue, withExposures: true, functionName: #function)
+    }
 
-            result = client.getExperiment(experimentName, keepDeviceValue: keepDeviceValue)
-        }
-        return result ?? getEmptyConfig(experimentName)
+    public static func getExperimentWithExposureLoggingDisabled(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
+        return getExperimentImpl(experimentName, keepDeviceValue: keepDeviceValue, withExposures: false, functionName: #function)
     }
 
     public static func getConfig(_ configName: String) -> DynamicConfig {
-        var result: DynamicConfig? = nil
-        errorBoundary.capture {
-            guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling getConfig. Returning a dummy DynamicConfig that will only return default values.")
-                return
-            }
+        return getConfigImpl(configName, withExposures: true, functionName: #function)
+    }
 
-            result = client.getConfig(configName)
-        }
-        return result ?? getEmptyConfig(configName)
+    public static func getConfigWithExposureLoggingDisabled(_ configName: String) -> DynamicConfig {
+        return getConfigImpl(configName, withExposures: false, functionName: #function)
     }
 
     public static func getLayer(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
-        var result: Layer?
-        errorBoundary.capture {
-            guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling getLayer. Returning an empty Layer object")
-                return
-            }
-
-            result = client.getLayer(layerName, keepDeviceValue: keepDeviceValue)
-        } 
-
-        return result ?? Layer(client: nil, name: layerName, evalDetails: EvaluationDetails(reason: .Uninitialized))
+        return getLayerImpl(layerName, keepDeviceValue: keepDeviceValue, withExposures: true, functionName: #function)
     }
 
+    public static func getLayerWithExposureLoggingDisabled(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
+        return getLayerImpl(layerName, keepDeviceValue: keepDeviceValue, withExposures: false, functionName: #function)
+    }
 
     public static func logEvent(_ withName: String, metadata: [String: String]? = nil) {
         logEventImpl(withName, value: nil, metadata: metadata)
@@ -175,6 +153,67 @@ public class Statsig {
             result = client?.getAllOverrides()
         }
         return result
+    }
+
+    private static func checkGateImpl(_ gateName: String, withExposures: Bool, functionName: String) -> Bool {
+        var result = false
+        errorBoundary.capture {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling \(functionName). Returning false as the default.")
+                return
+            }
+
+            result = withExposures
+            ? client.checkGate(gateName)
+            : client.checkGateWithExposureLoggingDisabled(gateName)
+        }
+        return result
+    }
+
+    private static func getExperimentImpl(_ experimentName: String, keepDeviceValue: Bool, withExposures: Bool, functionName: String) -> DynamicConfig {
+        var result: DynamicConfig? = nil
+        errorBoundary.capture {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling \(functionName). Returning a dummy DynamicConfig that will only return default values.")
+                return
+            }
+
+            result = withExposures
+            ? client.getExperiment(experimentName, keepDeviceValue: keepDeviceValue)
+            : client.getExperimentWithExposureLoggingDisabled(experimentName, keepDeviceValue: keepDeviceValue)
+        }
+        return result ?? getEmptyConfig(experimentName)
+    }
+
+    private static func getConfigImpl(_ configName: String, withExposures: Bool, functionName: String) -> DynamicConfig {
+        var result: DynamicConfig? = nil
+        errorBoundary.capture {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling \(functionName). Returning a dummy DynamicConfig that will only return default values.")
+                return
+            }
+
+            result = withExposures
+            ? client.getConfig(configName)
+            : client.getConfigWithExposureLoggingDisabled(configName)
+        }
+        return result ?? getEmptyConfig(configName)
+    }
+
+    private static func getLayerImpl(_ layerName: String, keepDeviceValue: Bool, withExposures: Bool, functionName: String) -> Layer {
+        var result: Layer?
+        errorBoundary.capture {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling \(functionName). Returning an empty Layer object")
+                return
+            }
+
+            result = withExposures
+            ? client.getLayer(layerName, keepDeviceValue: keepDeviceValue)
+            : client.getLayerWithExposureLoggingDisabled(layerName, keepDeviceValue: keepDeviceValue)
+        }
+
+        return result ?? Layer(client: nil, name: layerName, evalDetails: EvaluationDetails(reason: .Uninitialized))
     }
 
     private static func logEventImpl(_ withName: String, value: Any? = nil, metadata: [String: String]? = nil) {
