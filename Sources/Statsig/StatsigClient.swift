@@ -55,9 +55,18 @@ internal class StatsigClient {
     internal func checkGate(_ gateName: String) -> Bool {
         let gate = store.checkGate(forName: gateName)
 
+        logGateExposure(gateName, gate: gate)
+
+        return gate.value
+    }
+
+    internal func logGateExposure(_ gateName: String, gate: FeatureGate? = nil) {
+        let isManualExposure = gate == nil
+        let gate = gate ?? store.checkGate(forName: gateName)
         let gateValue = gate.value
         let ruleID = gate.ruleID
         let dedupeKey = gateName + (gateValue ? "true" : "false") + ruleID + gate.evaluationDetails.reason.rawValue
+
 
         if shouldLogExposure(key: dedupeKey) {
             logger.log(
@@ -68,10 +77,9 @@ internal class StatsigClient {
                     ruleID: ruleID,
                     secondaryExposures: gate.secondaryExposures,
                     evalDetails: gate.evaluationDetails,
-                    disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging))
+                    disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging)
+                .withManualExposureFlag(isManualExposure))
         }
-
-        return gate.value
     }
 
     internal func checkGateWithExposureLoggingDisabled(_ gateName: String) -> Bool {
@@ -81,18 +89,7 @@ internal class StatsigClient {
     internal func getExperiment(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
         let experiment = store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
 
-        let ruleID = experiment.ruleID
-        let dedupeKey = experimentName + ruleID + experiment.evaluationDetails.reason.rawValue
-        if shouldLogExposure(key: dedupeKey) {
-            logger.log(
-                Event.configExposure(
-                    user: currentUser,
-                    configName: experimentName,
-                    ruleID: ruleID,
-                    secondaryExposures: experiment.secondaryExposures,
-                    evalDetails: experiment.evaluationDetails,
-                    disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging))
-        }
+        logExperimentExposure(experimentName, keepDeviceValue: keepDeviceValue, experiment: experiment)
 
         return experiment
     }
@@ -101,9 +98,31 @@ internal class StatsigClient {
         return store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
     }
 
+    internal func logExperimentExposure(_ experimentName: String, keepDeviceValue: Bool, experiment: DynamicConfig? = nil) {
+        let isManualExposure = experiment == nil
+        let experiment = experiment ?? store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
+       logConfigExposureForConfig(experimentName, config: experiment, isManualExposure: isManualExposure)
+    }
+
     internal func getConfig(_ configName: String) -> DynamicConfig {
         let config = store.getConfig(forName: configName)
 
+        logConfigExposure(configName, config: config)
+
+        return config
+    }
+
+    internal func getConfigWithExposureLoggingDisabled(_ configName: String) -> DynamicConfig {
+        return store.getConfig(forName: configName)
+    }
+
+    internal func logConfigExposure(_ configName: String, config: DynamicConfig? = nil) {
+        let isManualExposure = config == nil
+        let config = config ?? store.getConfig(forName: configName)
+        logConfigExposureForConfig(configName, config: config, isManualExposure: isManualExposure)
+    }
+
+    internal func logConfigExposureForConfig(_ configName: String, config: DynamicConfig, isManualExposure: Bool) {
         let ruleID = config.ruleID
         let dedupeKey = configName + ruleID + config.evaluationDetails.reason.rawValue
         if shouldLogExposure(key: dedupeKey) {
@@ -114,14 +133,9 @@ internal class StatsigClient {
                     ruleID: config.ruleID,
                     secondaryExposures: config.secondaryExposures,
                     evalDetails: config.evaluationDetails,
-                    disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging))
+                    disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging)
+                .withManualExposureFlag(isManualExposure))
         }
-
-        return config
-    }
-
-    internal func getConfigWithExposureLoggingDisabled(_ configName: String) -> DynamicConfig {
-        return store.getConfig(forName: configName)
     }
 
     internal func getLayer(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
@@ -130,6 +144,47 @@ internal class StatsigClient {
 
     internal func getLayerWithExposureLoggingDisabled(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
         return store.getLayer(client: nil, forName: layerName, keepDeviceValue: keepDeviceValue)
+    }
+
+
+    internal func logLayerParameterExposure(_ layerName: String, parameterName: String, keepDeviceValue: Bool) {
+        let layer = getLayer(layerName, keepDeviceValue: keepDeviceValue)
+        logLayerParameterExposureForLayer(layer, parameterName: parameterName, isManualExposure: true)
+    }
+
+    internal func logLayerParameterExposureForLayer(_ layer: Layer, parameterName: String, isManualExposure: Bool) {
+        var exposures = layer.undelegatedSecondaryExposures
+        var allocatedExperiment = ""
+        let isExplicit = layer.explicitParameters.contains(parameterName)
+        if isExplicit {
+            exposures = layer.secondaryExposures
+            allocatedExperiment = layer.allocatedExperimentName
+        }
+
+        let dedupeKey = [
+            layer.name,
+            layer.ruleID,
+            allocatedExperiment,
+            parameterName,
+            "\(isExplicit)",
+            layer.evaluationDetails.reason.rawValue
+        ].joined(separator: "|")
+
+        if shouldLogExposure(key: dedupeKey) {
+            logger.log(
+                Event.layerExposure(
+                    user: currentUser,
+                    configName: layer.name,
+                    ruleID: layer.ruleID,
+                    secondaryExposures: exposures,
+                    disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging,
+                    allocatedExperimentName: allocatedExperiment,
+                    parameterName: parameterName,
+                    isExplicitParameter: isExplicit,
+                    evalDetails: layer.evaluationDetails
+                )
+                .withManualExposureFlag(isManualExposure))
+        }
     }
 
     internal func updateUser(_ user: StatsigUser, completion: completionBlock = nil) {
@@ -203,40 +258,6 @@ internal class StatsigClient {
                 metadata: metadata,
                 disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging)
         )
-    }
-
-    internal func logLayerParameterExposure(layer: Layer, parameterName: String) {
-        var exposures = layer.undelegatedSecondaryExposures
-        var allocatedExperiment = ""
-        let isExplicit = layer.explicitParameters.contains(parameterName)
-        if isExplicit {
-            exposures = layer.secondaryExposures
-            allocatedExperiment = layer.allocatedExperimentName
-        }
-
-        let dedupeKey = [
-            layer.name,
-            layer.ruleID,
-            allocatedExperiment,
-            parameterName,
-            "\(isExplicit)",
-            layer.evaluationDetails.reason.rawValue
-        ].joined(separator: "|")
-
-        if shouldLogExposure(key: dedupeKey) {
-            logger.log(
-                Event.layerExposure(
-                    user: currentUser,
-                    configName: layer.name,
-                    ruleID: layer.ruleID,
-                    secondaryExposures: exposures,
-                    disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging,
-                    allocatedExperimentName: allocatedExperiment,
-                    parameterName: parameterName,
-                    isExplicitParameter: isExplicit,
-                    evalDetails: layer.evaluationDetails
-                ))
-        }
     }
 
     private func fetchAndScheduleSyncing(completion: completionBlock) {

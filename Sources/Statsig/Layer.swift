@@ -66,7 +66,7 @@ public struct Layer: ConfigProtocol {
                 print("[Statsig]: \(forKey) does not exist in this Layer. Returning the defaultValue.")
             }
         } else {
-            client?.logLayerParameterExposure(layer: self, parameterName: forKey)
+            client?.logLayerParameterExposureForLayer(self, parameterName: forKey, isManualExposure: false)
         }
         return typedResult ?? defaultValue
     }

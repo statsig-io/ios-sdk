@@ -17,7 +17,6 @@ func skipFrame() {
     }
 }
 
-
 class ExposureLoggingSpec: QuickSpec {
     override func spec() {
         describe("ExposureLogging") {
@@ -58,62 +57,104 @@ class ExposureLoggingSpec: QuickSpec {
                 Statsig.client = nil
             }
 
-            it("logs gate exposures") {
-                _ = Statsig.checkGate("a_gate")
-                skipFrame()
-                expect(logs.count).to(be(1))
-                expect(logs[0][jsonDict: "metadata"]?["gate"] as? String).to(equal("a_gate"))
-                expect(logs[0]["eventName"]as? String).to(equal("statsig::gate_exposure"))
+            describe("standard use") {
+                it("logs gate exposures") {
+                    _ = Statsig.checkGate("a_gate")
+                    skipFrame()
+                    expect(logs.count).to(be(1))
+                    expect(logs[0][jsonDict: "metadata"]?["gate"] as? String).to(equal("a_gate"))
+                    expect(logs[0]["eventName"]as? String).to(equal("statsig::gate_exposure"))
+                }
+
+                it("logs config exposures") {
+                    _ = Statsig.getConfig("a_config")
+                    skipFrame()
+                    expect(logs.count).to(be(1))
+                    expect(logs[0][jsonDict: "metadata"]?["config"] as? String).to(equal("a_config"))
+                    expect(logs[0]["eventName"]as? String).to(equal("statsig::config_exposure"))
+                }
+
+                it("logs experiment exposures") {
+                    _ = Statsig.getExperiment("an_experiment")
+                    skipFrame()
+                    expect(logs.count).to(be(1))
+                    expect(logs[0][jsonDict: "metadata"]?["config"] as? String).to(equal("an_experiment"))
+                    expect(logs[0]["eventName"]as? String).to(equal("statsig::config_exposure"))
+                }
+
+                it("logs layer exposures") {
+                    let layer = Statsig.getLayer("a_layer")
+                    _ = layer.getValue(forKey: "a_bool", defaultValue: false)
+                    skipFrame()
+                    expect(logs.count).to(be(1))
+                    expect(logs[0][jsonDict: "metadata"]?["config"] as? String).to(equal("a_layer"))
+                    expect(logs[0]["eventName"]as? String).to(equal("statsig::layer_exposure"))
+                }
             }
 
-            it("does not log gate exposures") {
-                _ = Statsig.checkGateWithExposureLoggingDisabled("a_gate")
-                skipFrame()
-                expect(logs.count).to(be(0))
+            describe("exposure logging disabled") {
+                it("does not log gate exposures") {
+                    _ = Statsig.checkGateWithExposureLoggingDisabled("a_gate")
+                    skipFrame()
+                    expect(logs.count).to(be(0))
+                }
+
+                it("does not log config exposures") {
+                    _ = Statsig.getConfigWithExposureLoggingDisabled("a_config")
+                    skipFrame()
+                    expect(logs.count).to(be(0))
+                }
+
+                it("does not log experiment exposures") {
+                    _ = Statsig.getExperimentWithExposureLoggingDisabled("an_experiment")
+                    skipFrame()
+                    expect(logs.count).to(be(0))
+                }
+
+                it("does not log layer exposures") {
+                    let layer = Statsig.getLayerWithExposureLoggingDisabled("a_layer")
+                    _ = layer.getValue(forKey: "a_bool", defaultValue: false)
+                    skipFrame()
+                    expect(logs.count).to(be(0))
+                }
             }
 
-            it("logs config exposures") {
-                _ = Statsig.getConfig("a_config")
-                skipFrame()
-                expect(logs.count).to(be(1))
-                expect(logs[0][jsonDict: "metadata"]?["config"] as? String).to(equal("a_config"))
-                expect(logs[0]["eventName"]as? String).to(equal("statsig::config_exposure"))
-            }
+            describe("manual exposure logging") {
+                it("logs a manual gate exposure") {
+                    Statsig.manuallyLogGateExposure("a_gate")
+                    skipFrame()
+                    expect(logs.count).to(be(1))
+                    expect(logs[0][jsonDict: "metadata"]?["gate"] as? String).to(equal("a_gate"))
+                    expect(logs[0][jsonDict: "metadata"]?["isManualExposure"] as? String).to(equal("true"))
+                    expect(logs[0]["eventName"]as? String).to(equal("statsig::gate_exposure"))
+                }
 
-            it("does not log config exposures") {
-                _ = Statsig.getConfigWithExposureLoggingDisabled("a_config")
-                skipFrame()
-                expect(logs.count).to(be(0))
-            }
+                it("logs a manual config exposure") {
+                    Statsig.manuallyLogConfigExposure("a_config")
+                    skipFrame()
+                    expect(logs.count).to(be(1))
+                    expect(logs[0][jsonDict: "metadata"]?["config"] as? String).to(equal("a_config"))
+                    expect(logs[0][jsonDict: "metadata"]?["isManualExposure"] as? String).to(equal("true"))
+                    expect(logs[0]["eventName"]as? String).to(equal("statsig::config_exposure"))
+                }
 
-            it("logs experiment exposures") {
-                _ = Statsig.getExperiment("an_experiment")
-                skipFrame()
-                expect(logs.count).to(be(1))
-                expect(logs[0][jsonDict: "metadata"]?["config"] as? String).to(equal("an_experiment"))
-                expect(logs[0]["eventName"]as? String).to(equal("statsig::config_exposure"))
-            }
+                it("logs a manual experiment exposure") {
+                    Statsig.manuallyLogExperimentExposure("an_experiment")
+                    skipFrame()
+                    expect(logs.count).to(be(1))
+                    expect(logs[0][jsonDict: "metadata"]?["config"] as? String).to(equal("an_experiment"))
+                    expect(logs[0][jsonDict: "metadata"]?["isManualExposure"] as? String).to(equal("true"))
+                    expect(logs[0]["eventName"]as? String).to(equal("statsig::config_exposure"))
+                }
 
-            it("does not log experiment exposures") {
-                _ = Statsig.getExperimentWithExposureLoggingDisabled("an_experiment")
-                skipFrame()
-                expect(logs.count).to(be(0))
-            }
-
-            it("logs layer exposures") {
-                let layer = Statsig.getLayer("a_layer")
-                _ = layer.getValue(forKey: "a_bool", defaultValue: false)
-                skipFrame()
-                expect(logs.count).to(be(1))
-                expect(logs[0][jsonDict: "metadata"]?["config"] as? String).to(equal("a_layer"))
-                expect(logs[0]["eventName"]as? String).to(equal("statsig::layer_exposure"))
-            }
-
-            it("does not log layer exposures") {
-                let layer = Statsig.getLayerWithExposureLoggingDisabled("a_layer")
-                _ = layer.getValue(forKey: "a_bool", defaultValue: false)
-                skipFrame()
-                expect(logs.count).to(be(0))
+                it("logs a manual layer param exposure") {
+                    Statsig.manuallyLogLayerParameterExposure("a_layer", "value")
+                    skipFrame()
+                    expect(logs.count).to(be(1))
+                    expect(logs[0][jsonDict: "metadata"]?["config"] as? String).to(equal("a_layer"))
+                    expect(logs[0][jsonDict: "metadata"]?["isManualExposure"] as? String).to(equal("true"))
+                    expect(logs[0]["eventName"]as? String).to(equal("statsig::layer_exposure"))
+                }
             }
         }
     }

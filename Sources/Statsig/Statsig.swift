@@ -60,12 +60,34 @@ public class Statsig {
         return checkGateImpl(gateName, withExposures: false, functionName: #function)
     }
 
+    public static func manuallyLogGateExposure(_ gateName: String) {
+        errorBoundary.capture {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling manuallyLogGateExposure.")
+                return
+            }
+
+            client.logGateExposure(gateName)
+        }
+    }
+
     public static func getExperiment(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
         return getExperimentImpl(experimentName, keepDeviceValue: keepDeviceValue, withExposures: true, functionName: #function)
     }
 
     public static func getExperimentWithExposureLoggingDisabled(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
         return getExperimentImpl(experimentName, keepDeviceValue: keepDeviceValue, withExposures: false, functionName: #function)
+    }
+
+    public static func manuallyLogExperimentExposure(_ experimentName: String, keepDeviceValue: Bool = false) {
+        errorBoundary.capture {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling manuallyLogExperimentExposure.")
+                return
+            }
+
+            client.logExperimentExposure(experimentName, keepDeviceValue: keepDeviceValue)
+        }
     }
 
     public static func getConfig(_ configName: String) -> DynamicConfig {
@@ -76,12 +98,34 @@ public class Statsig {
         return getConfigImpl(configName, withExposures: false, functionName: #function)
     }
 
+    public static func manuallyLogConfigExposure(_ configName: String) {
+        errorBoundary.capture {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling manuallyLogConfigExposure.")
+                return
+            }
+
+            client.logConfigExposure(configName)
+        }
+    }
+
     public static func getLayer(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
         return getLayerImpl(layerName, keepDeviceValue: keepDeviceValue, withExposures: true, functionName: #function)
     }
 
     public static func getLayerWithExposureLoggingDisabled(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
         return getLayerImpl(layerName, keepDeviceValue: keepDeviceValue, withExposures: false, functionName: #function)
+    }
+
+    public static func manuallyLogLayerParameterExposure(_ layerName: String, _ parameterName: String, keepDeviceValue: Bool = false) {
+        errorBoundary.capture {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling manuallyLogLayerParameterExposure.")
+                return
+            }
+
+            client.logLayerParameterExposure(layerName, parameterName: parameterName, keepDeviceValue: keepDeviceValue)
+        }
     }
 
     public static func logEvent(_ withName: String, metadata: [String: String]? = nil) {

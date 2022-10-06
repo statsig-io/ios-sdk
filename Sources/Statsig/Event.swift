@@ -11,6 +11,7 @@ class Event {
     let secondaryExposures: [[String: String]]?
     var statsigMetadata: [String: String]?
     var allocatedExperimentHash: String?
+    var isManualExposure: Bool = false
 
     static let statsigPrefix = "statsig::"
     static let configExposureEventName = "config_exposure"
@@ -40,6 +41,11 @@ class Event {
                 }
             }
         }
+    }
+
+    func withManualExposureFlag(_ isManualExposure: Bool) -> Event {
+        self.isManualExposure = isManualExposure
+        return self
     }
 
     static func statsigInternalEvent(
@@ -138,26 +144,21 @@ class Event {
     }
 
     func toDictionary() -> [String: Any] {
-        var dict = [String: Any]()
-        dict["eventName"] = name
-        dict["user"] = user.toDictionary(forLogging: true)
-        dict["time"] = time
-        if let value = value {
-            dict["value"] = value
-        }
-        if let metadata = metadata {
-            dict["metadata"] = metadata
-        }
-        if let statsigMetadata = statsigMetadata {
-            dict["statsigMetadata"] = statsigMetadata
-        }
-        if let secondaryExposures = secondaryExposures {
-            dict["secondaryExposures"] = secondaryExposures
-        }
-        if let allocatedExperimentHash = allocatedExperimentHash {
-            dict["allocatedExperimentHash"] = allocatedExperimentHash
+        var metadataForLogging = metadata
+        if isManualExposure {
+            metadataForLogging = metadataForLogging ?? [:]
+            metadataForLogging?["isManualExposure"] = "true"
         }
 
-        return dict
+        return [
+            "eventName": name,
+            "user": user.toDictionary(forLogging: true),
+            "time": time,
+            "value": value,
+            "metadata": metadataForLogging,
+            "statsigMetadata": statsigMetadata,
+            "secondaryExposures": secondaryExposures,
+            "allocatedExperimentHash": allocatedExperimentHash,
+        ].compactMapValues { $0 }
     }
 }
