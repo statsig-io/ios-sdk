@@ -7,14 +7,28 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5C67DB0628F743A700E37BD4 /* Statsig in Frameworks */ = {isa = PBXBuildFile; productRef = 5C67DB0528F743A700E37BD4 /* Statsig */; };
+		5C67DB0E28F7441C00E37BD4 /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C67DB0D28F7441C00E37BD4 /* PerformanceTests.swift */; };
+		5C67DB1528F744E500E37BD4 /* Statsig in Frameworks */ = {isa = PBXBuildFile; productRef = 5C67DB1428F744E500E37BD4 /* Statsig */; };
+		5C67DB1728F7453500E37BD4 /* TestUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C67DB1628F7453500E37BD4 /* TestUtils.swift */; };
+		5C67DB2328F745FB00E37BD4 /* OHHTTPStubs in Frameworks */ = {isa = PBXBuildFile; productRef = 5C67DB2228F745FB00E37BD4 /* OHHTTPStubs */; };
+		5C67DB2528F745FB00E37BD4 /* OHHTTPStubsSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 5C67DB2428F745FB00E37BD4 /* OHHTTPStubsSwift */; };
+		5C67DB2728F7468800E37BD4 /* OHHTTPStubsSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 5C67DB2628F7468800E37BD4 /* OHHTTPStubsSwift */; };
+		5C67DB2928F746DC00E37BD4 /* OHHTTPStubs in Frameworks */ = {isa = PBXBuildFile; productRef = 5C67DB2828F746DC00E37BD4 /* OHHTTPStubs */; };
 		5CBB282727A9DF4900FD643D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CBB282627A9DF4900FD643D /* AppDelegate.swift */; };
 		5CDEA5A727A9E1E4005AD3E0 /* ThreadTestTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CDEA5A627A9E1E4005AD3E0 /* ThreadTestTableViewController.swift */; };
-		5CDEA5AA27A9E332005AD3E0 /* Statsig in Frameworks */ = {isa = PBXBuildFile; productRef = 5CDEA5A927A9E332005AD3E0 /* Statsig */; };
 		5CDEA5B227A9E369005AD3E0 /* TopLevelMethodsThreadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CDEA5B127A9E369005AD3E0 /* TopLevelMethodsThreadTests.swift */; };
 		5CDEA5BB27A9EE15005AD3E0 /* StartingStatsigThreadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CDEA5BA27A9EE15005AD3E0 /* StartingStatsigThreadTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		5C67DB0F28F7441C00E37BD4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5CBB281B27A9DF4900FD643D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5CBB282227A9DF4900FD643D;
+			remoteInfo = "ios-sdk-testbed";
+		};
 		5CDEA5B527A9E369005AD3E0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 5CBB281B27A9DF4900FD643D /* Project object */;
@@ -25,9 +39,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5C67DB0B28F7441C00E37BD4 /* ios-sdk-testbed-tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ios-sdk-testbed-tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		5C67DB0D28F7441C00E37BD4 /* PerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
+		5C67DB1628F7453500E37BD4 /* TestUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtils.swift; sourceTree = "<group>"; };
 		5CBB282327A9DF4900FD643D /* ios-sdk-testbed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ios-sdk-testbed.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5CBB282627A9DF4900FD643D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		5CBB285727A9DFA300FD643D /* ios-client-sdk */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "ios-client-sdk"; path = ..; sourceTree = "<group>"; };
 		5CDEA5A627A9E1E4005AD3E0 /* ThreadTestTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ThreadTestTableViewController.swift; sourceTree = "<group>"; };
 		5CDEA5AF27A9E369005AD3E0 /* ios-sdk-testbed-ui-tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ios-sdk-testbed-ui-tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5CDEA5B127A9E369005AD3E0 /* TopLevelMethodsThreadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopLevelMethodsThreadTests.swift; sourceTree = "<group>"; };
@@ -35,11 +51,23 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		5C67DB0828F7441C00E37BD4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5C67DB1528F744E500E37BD4 /* Statsig in Frameworks */,
+				5C67DB2928F746DC00E37BD4 /* OHHTTPStubs in Frameworks */,
+				5C67DB2728F7468800E37BD4 /* OHHTTPStubsSwift in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		5CBB282027A9DF4900FD643D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5CDEA5AA27A9E332005AD3E0 /* Statsig in Frameworks */,
+				5C67DB0628F743A700E37BD4 /* Statsig in Frameworks */,
+				5C67DB2528F745FB00E37BD4 /* OHHTTPStubsSwift in Frameworks */,
+				5C67DB2328F745FB00E37BD4 /* OHHTTPStubs in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,12 +81,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5C67DB0C28F7441C00E37BD4 /* ios-sdk-testbed-tests */ = {
+			isa = PBXGroup;
+			children = (
+				5C67DB0D28F7441C00E37BD4 /* PerformanceTests.swift */,
+				5C67DB1628F7453500E37BD4 /* TestUtils.swift */,
+			);
+			path = "ios-sdk-testbed-tests";
+			sourceTree = "<group>";
+		};
 		5CBB281A27A9DF4900FD643D = {
 			isa = PBXGroup;
 			children = (
-				5CBB285627A9DFA300FD643D /* Packages */,
 				5CBB282527A9DF4900FD643D /* ios-sdk-testbed */,
 				5CDEA5B027A9E369005AD3E0 /* ios-sdk-testbed-ui-tests */,
+				5C67DB0C28F7441C00E37BD4 /* ios-sdk-testbed-tests */,
 				5CBB282427A9DF4900FD643D /* Products */,
 				5CDEA5A827A9E332005AD3E0 /* Frameworks */,
 			);
@@ -69,6 +106,7 @@
 			children = (
 				5CBB282327A9DF4900FD643D /* ios-sdk-testbed.app */,
 				5CDEA5AF27A9E369005AD3E0 /* ios-sdk-testbed-ui-tests.xctest */,
+				5C67DB0B28F7441C00E37BD4 /* ios-sdk-testbed-tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -80,14 +118,6 @@
 				5CBB282627A9DF4900FD643D /* AppDelegate.swift */,
 			);
 			path = "ios-sdk-testbed";
-			sourceTree = "<group>";
-		};
-		5CBB285627A9DFA300FD643D /* Packages */ = {
-			isa = PBXGroup;
-			children = (
-				5CBB285727A9DFA300FD643D /* ios-client-sdk */,
-			);
-			name = Packages;
 			sourceTree = "<group>";
 		};
 		5CDEA5A827A9E332005AD3E0 /* Frameworks */ = {
@@ -109,6 +139,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		5C67DB0A28F7441C00E37BD4 /* ios-sdk-testbed-tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5C67DB1128F7441C00E37BD4 /* Build configuration list for PBXNativeTarget "ios-sdk-testbed-tests" */;
+			buildPhases = (
+				5C67DB0728F7441C00E37BD4 /* Sources */,
+				5C67DB0828F7441C00E37BD4 /* Frameworks */,
+				5C67DB0928F7441C00E37BD4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5C67DB1028F7441C00E37BD4 /* PBXTargetDependency */,
+			);
+			name = "ios-sdk-testbed-tests";
+			packageProductDependencies = (
+				5C67DB1428F744E500E37BD4 /* Statsig */,
+				5C67DB2628F7468800E37BD4 /* OHHTTPStubsSwift */,
+				5C67DB2828F746DC00E37BD4 /* OHHTTPStubs */,
+			);
+			productName = "ios-sdk-testbed-tests";
+			productReference = 5C67DB0B28F7441C00E37BD4 /* ios-sdk-testbed-tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		5CBB282227A9DF4900FD643D /* ios-sdk-testbed */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 5CBB284D27A9DF4900FD643D /* Build configuration list for PBXNativeTarget "ios-sdk-testbed" */;
@@ -123,7 +176,9 @@
 			);
 			name = "ios-sdk-testbed";
 			packageProductDependencies = (
-				5CDEA5A927A9E332005AD3E0 /* Statsig */,
+				5C67DB0528F743A700E37BD4 /* Statsig */,
+				5C67DB2228F745FB00E37BD4 /* OHHTTPStubs */,
+				5C67DB2428F745FB00E37BD4 /* OHHTTPStubsSwift */,
 			);
 			productName = "ios-sdk-testbed";
 			productReference = 5CBB282327A9DF4900FD643D /* ios-sdk-testbed.app */;
@@ -154,9 +209,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1320;
+				LastSwiftUpdateCheck = 1400;
 				LastUpgradeCheck = 1320;
 				TargetAttributes = {
+					5C67DB0A28F7441C00E37BD4 = {
+						CreatedOnToolsVersion = 14.0;
+					};
 					5CBB282227A9DF4900FD643D = {
 						CreatedOnToolsVersion = 13.2.1;
 					};
@@ -175,17 +233,29 @@
 				Base,
 			);
 			mainGroup = 5CBB281A27A9DF4900FD643D;
+			packageReferences = (
+				5C67DB0428F743A700E37BD4 /* XCRemoteSwiftPackageReference "ios-sdk" */,
+				5C67DB2128F745FB00E37BD4 /* XCRemoteSwiftPackageReference "OHHTTPStubs" */,
+			);
 			productRefGroup = 5CBB282427A9DF4900FD643D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				5CBB282227A9DF4900FD643D /* ios-sdk-testbed */,
 				5CDEA5AE27A9E369005AD3E0 /* ios-sdk-testbed-ui-tests */,
+				5C67DB0A28F7441C00E37BD4 /* ios-sdk-testbed-tests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		5C67DB0928F7441C00E37BD4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		5CBB282127A9DF4900FD643D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -203,6 +273,15 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		5C67DB0728F7441C00E37BD4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5C67DB0E28F7441C00E37BD4 /* PerformanceTests.swift in Sources */,
+				5C67DB1728F7453500E37BD4 /* TestUtils.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		5CBB281F27A9DF4900FD643D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -224,6 +303,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		5C67DB1028F7441C00E37BD4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5CBB282227A9DF4900FD643D /* ios-sdk-testbed */;
+			targetProxy = 5C67DB0F28F7441C00E37BD4 /* PBXContainerItemProxy */;
+		};
 		5CDEA5B627A9E369005AD3E0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 5CBB282227A9DF4900FD643D /* ios-sdk-testbed */;
@@ -232,6 +316,40 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		5C67DB1228F7441C00E37BD4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.statsig.ios-swift-server.ios-sdk-testbed-tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5C67DB1328F7441C00E37BD4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.statsig.ios-swift-server.ios-sdk-testbed-tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		5CBB284B27A9DF4900FD643D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -433,6 +551,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		5C67DB1128F7441C00E37BD4 /* Build configuration list for PBXNativeTarget "ios-sdk-testbed-tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5C67DB1228F7441C00E37BD4 /* Debug */,
+				5C67DB1328F7441C00E37BD4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		5CBB281E27A9DF4900FD643D /* Build configuration list for PBXProject "ios-sdk-testbed" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -462,10 +589,55 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		5C67DB0428F743A700E37BD4 /* XCRemoteSwiftPackageReference "ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/statsig-io/ios-sdk.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		5C67DB2128F745FB00E37BD4 /* XCRemoteSwiftPackageReference "OHHTTPStubs" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AliSoftware/OHHTTPStubs.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
-		5CDEA5A927A9E332005AD3E0 /* Statsig */ = {
+		5C67DB0528F743A700E37BD4 /* Statsig */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = 5C67DB0428F743A700E37BD4 /* XCRemoteSwiftPackageReference "ios-sdk" */;
 			productName = Statsig;
+		};
+		5C67DB1428F744E500E37BD4 /* Statsig */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5C67DB0428F743A700E37BD4 /* XCRemoteSwiftPackageReference "ios-sdk" */;
+			productName = Statsig;
+		};
+		5C67DB2228F745FB00E37BD4 /* OHHTTPStubs */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5C67DB2128F745FB00E37BD4 /* XCRemoteSwiftPackageReference "OHHTTPStubs" */;
+			productName = OHHTTPStubs;
+		};
+		5C67DB2428F745FB00E37BD4 /* OHHTTPStubsSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5C67DB2128F745FB00E37BD4 /* XCRemoteSwiftPackageReference "OHHTTPStubs" */;
+			productName = OHHTTPStubsSwift;
+		};
+		5C67DB2628F7468800E37BD4 /* OHHTTPStubsSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5C67DB2128F745FB00E37BD4 /* XCRemoteSwiftPackageReference "OHHTTPStubs" */;
+			productName = OHHTTPStubsSwift;
+		};
+		5C67DB2828F746DC00E37BD4 /* OHHTTPStubs */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5C67DB2128F745FB00E37BD4 /* XCRemoteSwiftPackageReference "OHHTTPStubs" */;
+			productName = OHHTTPStubs;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

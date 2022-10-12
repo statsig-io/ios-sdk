@@ -38,6 +38,16 @@
                ReferencedContainer = "container:ios-sdk-testbed.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "5C67DB0A28F7441C00E37BD4"
+               BuildableName = "ios-sdk-testbed-tests.xctest"
+               BlueprintName = "ios-sdk-testbed-tests"
+               ReferencedContainer = "container:ios-sdk-testbed.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
