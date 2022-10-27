@@ -42,7 +42,7 @@ jobs:
             -scheme ios-sdk-testbed \
             -project ios-sdk-testbed/ios-sdk-testbed.xcodeproj/ \
             -configuration Debug \
-            -destination "platform=iOS Simulator,name=iPod touch (7th generation)" \
+            -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)" \
             | xcbeautify && exit ${PIPESTATUS[0]}
         env:
           STATSIG_CLIENT_KEY: ${{ secrets.IOS_SDK_E2E_CLIENT_KEY }}

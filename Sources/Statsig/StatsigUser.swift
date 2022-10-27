@@ -1,14 +1,54 @@
 import Foundation
 
+/**
+ The user object to be evaluated against your Statsig configurations (gates/experiments/dynamic configs).
+ */
 public struct StatsigUser {
+    /**
+     An identifier for this user. Evaluated against the [User ID](https://docs.statsig.com/feature-gates/conditions#userid) criteria.
+     */
     public let userID: String?
+
+    /**
+     An email address for this user. Evaluated against the [Email](https://docs.statsig.com/feature-gates/conditions#email) criteria.
+     */
     public let email: String?
+
+    /**
+     An IP address associated with this user. Evaluated against the [IP Address](https://docs.statsig.com/feature-gates/conditions#ip) criteria.
+     */
     public let ip: String?
+
+    /**
+     The country code associated with this user (e.g New Zealand => NZ). Evaluated against the [Country](https://docs.statsig.com/feature-gates/conditions#country) criteria.
+     */
     public let country: String?
+
+    /**
+     An locale for this user.
+     */
     public let locale: String?
+
+    /**
+     The current app version the user is interacting with. Evaluated against the [App Version](https://docs.statsig.com/feature-gates/conditions#app-version) criteria.
+     */
     public let appVersion: String?
+
+    /**
+     Any custom fields for this user. Evaluated against the [Custom](https://docs.statsig.com/feature-gates/conditions#custom) criteria.
+     */
     public let custom: [String: StatsigUserCustomTypeConvertible]?
+
+    /**
+     Any value you wish to use in evaluation, but not have logged with events can be stored in this field.
+     */
     public let privateAttributes: [String: StatsigUserCustomTypeConvertible]?
+
+    /**
+     Any Custom IDs to associated with the user.
+
+     See Also [Experiments With Custom ID Types](https://docs.statsig.com/guides/experiment-on-custom-id-types)
+     */
     public let customIDs: [String: String]?
 
     var statsigEnvironment: [String: String] = [:]

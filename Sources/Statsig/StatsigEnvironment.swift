@@ -1,5 +1,8 @@
 import Foundation
 
+/**
+ StatsigEnvironment is a class for you to set environment variables that apply to all of your users in the same session and will be used for targeting purposes.
+ */
 @objc public class StatsigEnvironment: NSObject {
     @objc public enum EnvironmentTier: Int {
         case Production

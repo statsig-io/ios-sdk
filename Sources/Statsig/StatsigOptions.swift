@@ -1,9 +1,28 @@
 import Foundation
 
+/**
+ Configuration options for the StatsigSDK.
+ */
 public class StatsigOptions {
+    /**
+     Used to decide how long the Statsig client waits for the initial network request to respond before calling the completion block. The Statsig client will return either cached values (if any) or default values if checkGate/getConfig/getExperiment is called before the initial network request completes
+     */
     public var initTimeout = 3.0
+
+    /**
+     By default, any custom event your application logs with Statsig.logEvent() includes the current root View Controller. This is so we can generate user journey funnels for your users. You can set this parameter to true to disable this behavior.
+     */
     public var disableCurrentVCLogging = false
+
+
+    /**
+     By default, feature values for a user are fetched once during Statsig.start and don't change throughout the session. Setting this value to true will make Statsig periodically fetch updated values for the current user.
+     */
     public var enableAutoValueUpdate = false
+
+    /**
+     Overrides the auto generated StableID that is set for the device.
+     */
     public var overrideStableID: String?
 
     internal var overrideURL: URL?
