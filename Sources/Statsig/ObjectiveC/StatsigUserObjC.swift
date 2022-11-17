@@ -1,7 +1,7 @@
 import Foundation
 
 @objc(StatsigUser)
-public final class ObjcStatsigUser: NSObject {
+public final class StatsigUserObjC: NSObject {
     var user: StatsigUser
 
     @objc override public init() {

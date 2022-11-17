@@ -1,0 +1,131 @@
+#import <XCTest/XCTest.h>
+
+@import Statsig;
+@import OCMock;
+
+@interface ObjcUsageSpec : XCTestCase
+@end
+
+@implementation ObjcUsageSpec {
+    XCTestExpectation *_requestExpectation;
+    StatsigUser *_user;
+    StatsigOptions *_options;
+    void (^_completion)(NSString * _Nullable);
+}
+
+- (void)setUp {
+    NSBundle *bundle = [NSBundle bundleForClass:[self class]];
+    NSString *resBundlePath = [bundle pathForResource:@"Statsig_StatsigObjcTests" ofType:@"bundle"];
+    NSBundle *resBundle = [NSBundle bundleWithPath:resBundlePath];
+    NSString *jsonPath = [resBundle pathForResource:@"initialize" ofType:@"json"];
+    NSData *data = [NSData dataWithContentsOfFile:jsonPath];
+
+    _requestExpectation = [[XCTestExpectation alloc] initWithDescription: @"Network Request"];
+    _user = [[StatsigUser alloc]
+             initWithUserID:@"a-user"
+             email:@""
+             ip:nil
+             country:nil
+             locale:nil
+             appVersion:nil
+             custom:nil
+             privateAttributes:nil];
+
+    _options = [[StatsigOptions alloc] initWithInitTimeout:2];
+    _completion = ^(NSString * _Nullable err) {};
+
+    id classMock = OCMClassMock([NSURLSession class]);
+    OCMStub([classMock sharedSession]).andReturn(classMock);
+
+    id mockUrlResponse = OCMClassMock([NSHTTPURLResponse class]);
+    OCMStub([mockUrlResponse statusCode]).andReturn(200);
+
+    id autoInvokeCompletion = [OCMArg invokeBlockWithArgs:data, mockUrlResponse, [NSNull null], nil];
+
+    OCMStub([classMock dataTaskWithRequest:[OCMArg any]
+                         completionHandler:autoInvokeCompletion])
+    .andFulfill(_requestExpectation);
+}
+
+- (void)tearDown {
+    [Statsig shutdown];
+}
+
+- (void)testStartWithKey {
+    [Statsig startWithSDKKey:@"client-"];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testStartWithKeyOptions {
+    [Statsig startWithSDKKey:@"client-" options:_options];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testStartWithKeyCompletion {
+    [Statsig startWithSDKKey:@"client-" completion:_completion];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testStartWithKeyUser {
+    [Statsig startWithSDKKey:@"client-" user:_user];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testStartWithKeyUserCompletion {
+    [Statsig startWithSDKKey:@"client-" user:_user completion:_completion];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testStartWithKeyUserOptions {
+    [Statsig startWithSDKKey:@"client-" user:_user options:_options];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testStartWithKeyOptionsCompletion {
+    [Statsig startWithSDKKey:@"client-" options:_options completion:_completion];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testStartWithKeyUserOptionsCompletion {
+    [Statsig startWithSDKKey:@"client-" user:_user options:_options completion:_completion];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testCheckGate {
+    [self initializeStatsig];
+
+    BOOL result = [Statsig checkGateForName:@"test_public"];
+    XCTAssertTrue(result);
+}
+
+- (void)testGetConfig {
+    [self initializeStatsig];
+
+    DynamicConfig *result = [Statsig getConfigForName:@"test_disabled_config"];
+    XCTAssertEqualObjects([result getStringForKey:@"default" defaultValue:@"err"], @"disabled but default");
+}
+
+- (void)testGetExperiment {
+    [self initializeStatsig];
+
+    DynamicConfig *result = [Statsig getExperimentForName:@"experiment_with_many_params"];
+    XCTAssertEqualObjects([result getStringForKey:@"a_string" defaultValue:@"err"], @"layer");
+}
+
+- (void)testGetLayer {
+    [self initializeStatsig];
+
+    Layer *result = [Statsig getLayerForName:@"layer_with_many_params"];
+    XCTAssertEqualObjects([result getStringForKey:@"another_string" defaultValue:@"err"], @"layer_default");
+}
+
+
+#pragma mark - Helpers
+
+- (void)initializeStatsig
+{
+    [Statsig startWithSDKKey:@"client-"];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+@end

@@ -1,7 +1,7 @@
 import Foundation
 
 @objc(StatsigOptions)
-public final class ObjcStatsigOptions: NSObject {
+public final class StatsigOptionsObjC: NSObject {
     var optionsInternal: StatsigOptions
 
     @objc override public init() {

@@ -1,7 +1,7 @@
 import Foundation
 
 @objc(DynamicConfig)
-public final class ObjcStatsigDynamicConfig: NSObject {
+public final class DynamicConfigObjC: NSObject {
     private var config: DynamicConfig
 
     @objc public var value: [String: Any] {

@@ -1,0 +1,898 @@
+{
+    "feature_gates": {
+        "D3YTUsVWT3LGiBXaxdYIKloyyfuAqC1HI17w1JnzUuM=": {
+            "name": "D3YTUsVWT3LGiBXaxdYIKloyyfuAqC1HI17w1JnzUuM=",
+            "value": false,
+            "rule_id": "disabled",
+            "secondary_exposures": []
+        },
+        "4MWZ6N2nL2fzBVf4baM7G+c8b+ungIt+FG0TyQdTPGQ=": {
+            "name": "4MWZ6N2nL2fzBVf4baM7G+c8b+ungIt+FG0TyQdTPGQ=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "5v6IDYah7WmooSLkL7W3ak4pzBq5KXvJdac3tRmLnzE=": {
+            "name": "5v6IDYah7WmooSLkL7W3ak4pzBq5KXvJdac3tRmLnzE=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "Us3aO5kZ/xEe3t2PTCSnoc38/r53HDHajQ6t2ukzst0=": {
+            "name": "Us3aO5kZ/xEe3t2PTCSnoc38/r53HDHajQ6t2ukzst0=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "cPaGkTiRBuP1SfwoxRtTvhT6Vxpa4v/342Z1N0pXUlc=": {
+            "name": "cPaGkTiRBuP1SfwoxRtTvhT6Vxpa4v/342Z1N0pXUlc=",
+            "value": true,
+            "rule_id": "6X3qJgyfwA81IJ2dxI7lYp",
+            "secondary_exposures": []
+        },
+        "Q/6W7j+st505c8PyuxayAI5eL7p75gYqikYnSQ8jFv0=": {
+            "name": "Q/6W7j+st505c8PyuxayAI5eL7p75gYqikYnSQ8jFv0=",
+            "value": false,
+            "rule_id": "z8TLPpo1vD3PEHQEGelqK",
+            "secondary_exposures": []
+        },
+        "vi9Xz4p9qyYUFX+hC/rwxrIMzReNemvt6W2sRnNaydY=": {
+            "name": "vi9Xz4p9qyYUFX+hC/rwxrIMzReNemvt6W2sRnNaydY=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "sQnlLY9mA9Mli8hLuih7bJTuM369Y6b9zoH11D+iuNk=": {
+            "name": "sQnlLY9mA9Mli8hLuih7bJTuM369Y6b9zoH11D+iuNk=",
+            "value": true,
+            "rule_id": "1yhP7ww1Ot82rjqi1kh4eR",
+            "secondary_exposures": []
+        },
+        "7sEqCumULuintpSr6j3uNueUfRoH3YS8aEshu1OoVQI=": {
+            "name": "7sEqCumULuintpSr6j3uNueUfRoH3YS8aEshu1OoVQI=",
+            "value": true,
+            "rule_id": "7CRdApC3iHXzDFisD1d4bH",
+            "secondary_exposures": []
+        },
+        "mVZQTrAwbxLSRwyETKFtiY1LuTZPvh4TjC7CCLpJHAI=": {
+            "name": "mVZQTrAwbxLSRwyETKFtiY1LuTZPvh4TjC7CCLpJHAI=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "5XLv0QFYub2nTbfL/uONzSlRPR/j8LR4hs88kN0YC9U=": {
+            "name": "5XLv0QFYub2nTbfL/uONzSlRPR/j8LR4hs88kN0YC9U=",
+            "value": true,
+            "rule_id": "5T0pMvNgNMVlysjjTaMfCy",
+            "secondary_exposures": []
+        },
+        "yioKl3Eynxk152NZHDsEIOwu94fVsqvKP/zQO3OMPvg=": {
+            "name": "yioKl3Eynxk152NZHDsEIOwu94fVsqvKP/zQO3OMPvg=",
+            "value": true,
+            "rule_id": "7D6TdBegTvqbRaX911ML2M",
+            "secondary_exposures": []
+        },
+        "Zb45SQmmYJ52OS4aitXko//71VK3sQKHP16P35Ta0P8=": {
+            "name": "Zb45SQmmYJ52OS4aitXko//71VK3sQKHP16P35Ta0P8=",
+            "value": true,
+            "rule_id": "7dLw42P46krCdgsoQ56Pmb",
+            "secondary_exposures": []
+        },
+        "Bv5wZ7RrSdjbXd2B+2NHRtw/IVkMroN07hYmUCCEAvk=": {
+            "name": "Bv5wZ7RrSdjbXd2B+2NHRtw/IVkMroN07hYmUCCEAvk=",
+            "value": true,
+            "rule_id": "szd83kcXtdcFnZE2PKtDM",
+            "secondary_exposures": []
+        },
+        "/KinqHBrI6ClYlZe9gXorsiMkHcfR/pHwryXxgQUNsk=": {
+            "name": "/KinqHBrI6ClYlZe9gXorsiMkHcfR/pHwryXxgQUNsk=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "N7ofnHotXpnXnazXaNOHJwK/Hj7ycIf4j2k6WIy20RU=": {
+            "name": "N7ofnHotXpnXnazXaNOHJwK/Hj7ycIf4j2k6WIy20RU=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "w2iy8QywqS75V831SpzlZJhczPuNjMUYSlHSUhvjG44=": {
+            "name": "w2iy8QywqS75V831SpzlZJhczPuNjMUYSlHSUhvjG44=",
+            "value": true,
+            "rule_id": "2ZvouPSlQPnTLWWiDWUlnF",
+            "secondary_exposures": []
+        },
+        "wBesih7k65wL15yLm2FoB54lDAW13hilDfmcRHNlrLc=": {
+            "name": "wBesih7k65wL15yLm2FoB54lDAW13hilDfmcRHNlrLc=",
+            "value": true,
+            "rule_id": "5M0PlwDuhhb2X2OYwOH0IC",
+            "secondary_exposures": []
+        },
+        "CeoV7si3UDyllW+k+jqQZldfuPWPdePRePjnGkh8QeE=": {
+            "name": "CeoV7si3UDyllW+k+jqQZldfuPWPdePRePjnGkh8QeE=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "unt7NOaHBdxhlUAOeDQuzQ4Zvey5bfVpcuanWwmkyko=": {
+            "name": "unt7NOaHBdxhlUAOeDQuzQ4Zvey5bfVpcuanWwmkyko=",
+            "value": true,
+            "rule_id": "5kiqP6V3pTnL6GCbm5Vgtg",
+            "secondary_exposures": []
+        },
+        "5qVeAYoIpBhlrTjiYxBEvovOk8rDiGqFiAm8IJQKRS8=": {
+            "name": "5qVeAYoIpBhlrTjiYxBEvovOk8rDiGqFiAm8IJQKRS8=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "FYAScqdxDIpjtgwc0mikCI4mVUm6QQeXaNSeSe2bIqg=": {
+            "name": "FYAScqdxDIpjtgwc0mikCI4mVUm6QQeXaNSeSe2bIqg=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "KDzMr1imwksYQx+HDlgoPeUY6GSCsOm27QixjBIC1Ss=": {
+            "name": "KDzMr1imwksYQx+HDlgoPeUY6GSCsOm27QixjBIC1Ss=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "+vutFYSu2GXLz8Vcd1HNAUnIVqqu74WoDYLO1uLlWZA=": {
+            "name": "+vutFYSu2GXLz8Vcd1HNAUnIVqqu74WoDYLO1uLlWZA=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "t7tWGO7y+ijeXipBVDUHB5DZL/A2+2Ramvu69um+C6w=": {
+            "name": "t7tWGO7y+ijeXipBVDUHB5DZL/A2+2Ramvu69um+C6w=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "mZKxj4P+XDVO4aSMF1fE4TXm3yAWo9zU60x/KIoQYYQ=": {
+            "name": "mZKxj4P+XDVO4aSMF1fE4TXm3yAWo9zU60x/KIoQYYQ=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "gHSnf+F57GPDCygi1E1w4+FNuBpiwI4XWcYIUOu8xlA=": {
+            "name": "gHSnf+F57GPDCygi1E1w4+FNuBpiwI4XWcYIUOu8xlA=",
+            "value": true,
+            "rule_id": "1A9FNoBLb7PEsfRVLScevg",
+            "secondary_exposures": []
+        },
+        "PXInyRUmHg9YfQxnrTlOLbXud99Olm/zWDs5dXZdfKs=": {
+            "name": "PXInyRUmHg9YfQxnrTlOLbXud99Olm/zWDs5dXZdfKs=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "E/4BAS6EcKEhrWzRxCm8mpxWDep1hmqwuN9a1/R59cY=": {
+            "name": "E/4BAS6EcKEhrWzRxCm8mpxWDep1hmqwuN9a1/R59cY=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "IbYvb0kfO5pSeIhXlLko5OwGcvupMbPbwdh0JjFCSjg=": {
+            "name": "IbYvb0kfO5pSeIhXlLko5OwGcvupMbPbwdh0JjFCSjg=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "fx77ir6vzLEyvJ+OtFp9HBRs01fhNdoqZ3NtGNDHMJ0=": {
+            "name": "fx77ir6vzLEyvJ+OtFp9HBRs01fhNdoqZ3NtGNDHMJ0=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "r4QlHk3m326LVMSxD5OaKaV2VywqaWLGDB5JGPfF/zU=": {
+            "name": "r4QlHk3m326LVMSxD5OaKaV2VywqaWLGDB5JGPfF/zU=",
+            "value": false,
+            "rule_id": "3ZI6LR6wUI0dddvG2WePmZ",
+            "secondary_exposures": []
+        },
+        "qkUYKjzqgc0y3j/VCTsyoqj45/Es2lOVKPD1ZGIy80g=": {
+            "name": "qkUYKjzqgc0y3j/VCTsyoqj45/Es2lOVKPD1ZGIy80g=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": []
+        },
+        "t3xspDurvciVBCIPKr2OEstTIJx9May7/JZv+xRunMc=": {
+            "name": "t3xspDurvciVBCIPKr2OEstTIJx9May7/JZv+xRunMc=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": [
+                {
+                    "gate": "7fGXfGb3ECxsEwozxFyY3X",
+                    "gateValue": "false",
+                    "ruleID": "3QoA4ncNdVGBaMt3N1KYjz"
+                }
+            ]
+        },
+        "tNw12WJ3KYc3eMrYMTVHtmbf7L91QPc9muQYWPOlEdc=": {
+            "name": "tNw12WJ3KYc3eMrYMTVHtmbf7L91QPc9muQYWPOlEdc=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": [
+                {
+                    "gate": "7fGXfGb3ECxsEwozxFyY3X",
+                    "gateValue": "false",
+                    "ruleID": "3QoA4ncNdVGBaMt3N1KYjz"
+                }
+            ]
+        },
+        "E4vBNL5g4LD4xc6QnUewP/WkRz1QFxXMybeO0obWauM=": {
+            "name": "E4vBNL5g4LD4xc6QnUewP/WkRz1QFxXMybeO0obWauM=",
+            "value": true,
+            "rule_id": "6MlXHRavmo1ujM1NkZNjhQ",
+            "secondary_exposures": [
+                {
+                    "gate": "4XBVXe7WRiQd22ZhNLlqnm",
+                    "gateValue": "false",
+                    "ruleID": "default"
+                },
+                {
+                    "gate": "OqVJscyA2r1t8iuIXifu7dWY5sjr2AsEGX5lRV9NVBG",
+                    "gateValue": "false",
+                    "ruleID": "default"
+                }
+            ]
+        },
+        "kI4ttALIAeJ+a7fOY/nIlE/B8NTZ2N3Jk/vvDnJ6DG4=": {
+            "name": "kI4ttALIAeJ+a7fOY/nIlE/B8NTZ2N3Jk/vvDnJ6DG4=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": [
+                {
+                    "gate": "4967Wp7vB3lBxMpUC4neL4a2FkBwQaqFnmy4zWNndrC",
+                    "gateValue": "false",
+                    "ruleID": "default"
+                },
+                {
+                    "gate": "ULeM4iTPRE4X3VnDRFO5g",
+                    "gateValue": "false",
+                    "ruleID": "default"
+                }
+            ]
+        },
+        "J6GbRsWBL8O0g9O1MbI/RAj4VwfXAMzAR0AZYXm4Xns=": {
+            "name": "J6GbRsWBL8O0g9O1MbI/RAj4VwfXAMzAR0AZYXm4Xns=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": [
+                {
+                    "gate": "1o0O9KAr63v5us4sItuYZt6ye23Q1ahAN2WkUdPxgwZ",
+                    "gateValue": "false",
+                    "ruleID": "default"
+                },
+                {
+                    "gate": "lSQXeC8xYauWrpwIh9vAswD5gsGxPD4tiloEn7KLeFN",
+                    "gateValue": "false",
+                    "ruleID": "default"
+                }
+            ]
+        },
+        "5vfU3+n7L33OuPBvPSQXAjPe2Vu3OMhZwx++nHIrkmg=": {
+            "name": "5vfU3+n7L33OuPBvPSQXAjPe2Vu3OMhZwx++nHIrkmg=",
+            "value": true,
+            "rule_id": "9GFfHZ3jf8EZa8yxn3Iva:100.00:1",
+            "secondary_exposures": [
+                {
+                    "gate": "1o0O9KAr63v5us4sItuYZt6ye23Q1ahAN2WkUdPxgwZ",
+                    "gateValue": "false",
+                    "ruleID": "default"
+                }
+            ]
+        },
+        "fq8DB1jNYUdoLj/Bo5yMBkG/pcsXE8AQZFfiSEQhHak=": {
+            "name": "fq8DB1jNYUdoLj/Bo5yMBkG/pcsXE8AQZFfiSEQhHak=",
+            "value": false,
+            "rule_id": "default",
+            "secondary_exposures": [
+                {
+                    "gate": "4967Wp7vB3lBxMpUC4neL4a2FkBwQaqFnmy4zWNndrC",
+                    "gateValue": "false",
+                    "ruleID": "default"
+                },
+                {
+                    "gate": "ULeM4iTPRE4X3VnDRFO5g",
+                    "gateValue": "false",
+                    "ruleID": "default"
+                },
+                {
+                    "gate": "vTybMoNXHtrJzzHvLqo2Oya4bVOusFDJN8kDdMu7ORM",
+                    "gateValue": "false",
+                    "ruleID": "default"
+                }
+            ]
+        }
+    },
+    "dynamic_configs": {
+        "08vesgK8K2Zmd9yMLb0Sp87YoEEoVLAQgjNMc6+MBW4=": {
+            "name": "08vesgK8K2Zmd9yMLb0Sp87YoEEoVLAQgjNMc6+MBW4=",
+            "value": {
+                "default": "disabled but default"
+            },
+            "rule_id": "disabled",
+            "group": "disabled",
+            "is_device_based": false,
+            "secondary_exposures": []
+        },
+        "hm2Segul7cB8Gd94gHFWDdz2MPjyQmh3i1IvNKu0cow=": {
+            "name": "hm2Segul7cB8Gd94gHFWDdz2MPjyQmh3i1IvNKu0cow=",
+            "value": {
+                "header_text": "production"
+            },
+            "rule_id": "default",
+            "group": "default",
+            "is_device_based": false,
+            "secondary_exposures": []
+        },
+        "snBbOh7MOiM+Lrl4sGxywSjBzQzrN4Arx4B93sYcnRA=": {
+            "name": "snBbOh7MOiM+Lrl4sGxywSjBzQzrN4Arx4B93sYcnRA=",
+            "value": {
+                "header_text": "everyone else"
+            },
+            "rule_id": "default",
+            "group": "default",
+            "is_device_based": false,
+            "secondary_exposures": []
+        },
+        "ttaJtWSg4jmnNVpH1/TBkIJ3EhZeWaIvsY2h7gyqtt8=": {
+            "name": "ttaJtWSg4jmnNVpH1/TBkIJ3EhZeWaIvsY2h7gyqtt8=",
+            "value": {
+                "header_text": "old user test"
+            },
+            "rule_id": "3ZCniK9rvnQyXDQlQ1tGD9",
+            "group": "3ZCniK9rvnQyXDQlQ1tGD9",
+            "is_device_based": false,
+            "secondary_exposures": []
+        },
+        "JN6BkmQcONjB4I2IrM97mO5Pt7yc/6o7ehZLVJk4qcU=": {
+            "name": "JN6BkmQcONjB4I2IrM97mO5Pt7yc/6o7ehZLVJk4qcU=",
+            "value": {
+                "num": 13,
+                "bool": true,
+                "str": "hello",
+                "arr": [
+                    "hi",
+                    "there"
+                ]
+            },
+            "rule_id": "default",
+            "group": "default",
+            "is_device_based": false,
+            "secondary_exposures": [
+                {
+                    "gate": "4XBVXe7WRiQd22ZhNLlqnm",
+                    "gateValue": "false",
+                    "ruleID": "default"
+                }
+            ]
+        },
+        "2bF7EmOxEM35hphY0DXcFlQhXdL5QkozbtxmaBs56sI=": {
+            "name": "2bF7EmOxEM35hphY0DXcFlQhXdL5QkozbtxmaBs56sI=",
+            "value": {
+                "test": "test"
+            },
+            "rule_id": "launchedGroup",
+            "group": "launchedGroup",
+            "is_device_based": false,
+            "is_experiment_active": false,
+            "is_user_in_experiment": false,
+            "secondary_exposures": []
+        },
+        "hl9NhEeof8GRsBLgoJsuvL4KG+fY/Ilz5hDtx1AysS8=": {
+            "name": "hl9NhEeof8GRsBLgoJsuvL4KG+fY/Ilz5hDtx1AysS8=",
+            "value": {},
+            "rule_id": "prestart",
+            "group": "prestart",
+            "is_device_based": false,
+            "is_experiment_active": false,
+            "is_user_in_experiment": false,
+            "secondary_exposures": []
+        },
+        "Xtjwq5VK07uX4MVyAwXhAFXop1gL6BhMxm4rzmL/v4k=": {
+            "name": "Xtjwq5VK07uX4MVyAwXhAFXop1gL6BhMxm4rzmL/v4k=",
+            "value": {},
+            "rule_id": "prestart",
+            "group": "prestart",
+            "is_device_based": false,
+            "is_experiment_active": false,
+            "is_user_in_experiment": false,
+            "secondary_exposures": []
+        },
+        "cDB5+BTeoTylPzl3LRDzcCEJZ0HXlRMHZuC7uYZLLJE=": {
+            "name": "cDB5+BTeoTylPzl3LRDzcCEJZ0HXlRMHZuC7uYZLLJE=",
+            "value": {},
+            "rule_id": "prestart",
+            "group": "prestart",
+            "is_device_based": false,
+            "is_experiment_active": false,
+            "is_user_in_experiment": false,
+            "secondary_exposures": []
+        },
+        "tEcW+D3G9Qm8ZAh0sb2Vj4IwuTDYsDDXOZtdVdUCHNE=": {
+            "name": "tEcW+D3G9Qm8ZAh0sb2Vj4IwuTDYsDDXOZtdVdUCHNE=",
+            "value": {},
+            "rule_id": "prestart",
+            "group": "prestart",
+            "is_device_based": false,
+            "is_experiment_active": false,
+            "is_user_in_experiment": false,
+            "secondary_exposures": []
+        },
+        "MW95ZvBw03BBfFNEO4bBnyFTgxL/6KqfIiP0TC9fRKE=": {
+            "name": "MW95ZvBw03BBfFNEO4bBnyFTgxL/6KqfIiP0TC9fRKE=",
+            "value": {
+                "shared_param": "layer_value"
+            },
+            "rule_id": "prestart",
+            "group": "prestart",
+            "is_device_based": false,
+            "is_experiment_active": false,
+            "is_user_in_experiment": false,
+            "is_in_layer": true,
+            "explicit_parameters": [],
+            "secondary_exposures": []
+        },
+        "PGxbC3EpEOjMyuU7Rg2s+leE0uRnj25OfzOqKcBWLs4=": {
+            "name": "PGxbC3EpEOjMyuU7Rg2s+leE0uRnj25OfzOqKcBWLs4=",
+            "value": {
+                "shared_param": "layer_value"
+            },
+            "rule_id": "prestart",
+            "group": "prestart",
+            "is_device_based": false,
+            "is_experiment_active": false,
+            "is_user_in_experiment": false,
+            "is_in_layer": true,
+            "explicit_parameters": [],
+            "secondary_exposures": []
+        },
+        "Ti7yf5Od0Lgn9UiV4qMleC1rztex16aRa2gb9t+KjBI=": {
+            "name": "Ti7yf5Od0Lgn9UiV4qMleC1rztex16aRa2gb9t+KjBI=",
+            "value": {
+                "value": "control"
+            },
+            "rule_id": "54QJztEPRLXK7ZCvXeY9q4",
+            "group": "54QJztEPRLXK7ZCvXeY9q4",
+            "is_device_based": false,
+            "is_experiment_active": true,
+            "is_user_in_experiment": true,
+            "secondary_exposures": []
+        },
+        "xOEUZtVzWhYnlkucUmEciGcMimwKtVfPbrQNJLBx6HI=": {
+            "name": "xOEUZtVzWhYnlkucUmEciGcMimwKtVfPbrQNJLBx6HI=",
+            "value": {},
+            "rule_id": "layerAssignment",
+            "group": "layerAssignment",
+            "is_device_based": false,
+            "is_experiment_active": true,
+            "is_user_in_experiment": false,
+            "secondary_exposures": []
+        },
+        "e3iqY+ASyK4vfkWS0pv8NkV7A9BgASwEUDJB6cpr4oo=": {
+            "name": "e3iqY+ASyK4vfkWS0pv8NkV7A9BgASwEUDJB6cpr4oo=",
+            "value": {
+                "bool": true,
+                "string": "test3"
+            },
+            "rule_id": "4qC3kJ5j58KwBAt2VLKL7M",
+            "group": "4qC3kJ5j58KwBAt2VLKL7M",
+            "is_device_based": false,
+            "is_experiment_active": true,
+            "is_user_in_experiment": true,
+            "secondary_exposures": []
+        },
+        "ZmmTKUPmrjR/+F+WwVtKhGVl1jTD9n2M4ZxCw2mPr+I=": {
+            "name": "ZmmTKUPmrjR/+F+WwVtKhGVl1jTD9n2M4ZxCw2mPr+I=",
+            "value": {
+                "sample_parameter": true
+            },
+            "rule_id": "1BnPPiHXxYqS92KGZ28lgK",
+            "group": "1BnPPiHXxYqS92KGZ28lgK",
+            "is_device_based": false,
+            "is_experiment_active": true,
+            "is_user_in_experiment": true,
+            "secondary_exposures": []
+        },
+        "vqQndBwrJ/a5gabQIvVPSGUkBBqeS7P1yd1N8t6wgyo=": {
+            "name": "vqQndBwrJ/a5gabQIvVPSGUkBBqeS7P1yd1N8t6wgyo=",
+            "value": {
+                "sample_parameter": false
+            },
+            "rule_id": "5UXv4dUhG3AEWrpzGzQ2Xy",
+            "group": "5UXv4dUhG3AEWrpzGzQ2Xy",
+            "is_device_based": true,
+            "is_experiment_active": true,
+            "is_user_in_experiment": true,
+            "secondary_exposures": []
+        },
+        "XFO0RObHjHQzZWX6lVNbHJXpfPT0Gk0cwXAXdhEV5EM=": {
+            "name": "XFO0RObHjHQzZWX6lVNbHJXpfPT0Gk0cwXAXdhEV5EM=",
+            "value": {
+                "layer_param": "a",
+                "another_param": true
+            },
+            "rule_id": "35Jndhypr5oomOzkR1i1Lf",
+            "group": "35Jndhypr5oomOzkR1i1Lf",
+            "is_device_based": false,
+            "is_experiment_active": true,
+            "is_user_in_experiment": true,
+            "is_in_layer": true,
+            "explicit_parameters": [
+                "another_param"
+            ],
+            "secondary_exposures": []
+        },
+        "q6f9OT43KjjPR+1MUqYav3Bh81xAP9whkJE/Wj8y+H8=": {
+            "name": "q6f9OT43KjjPR+1MUqYav3Bh81xAP9whkJE/Wj8y+H8=",
+            "value": {
+                "a_string": "layer",
+                "another_string": "layer_default",
+                "a_number": 0,
+                "a_bool": false,
+                "an_object": {
+                    "value": "layer_default"
+                },
+                "an_array": [
+                    "layer_default"
+                ],
+                "another_bool": false,
+                "another_number": 0
+            },
+            "rule_id": "layerAssignment",
+            "group": "layerAssignment",
+            "is_device_based": false,
+            "is_experiment_active": true,
+            "is_user_in_experiment": false,
+            "is_in_layer": true,
+            "explicit_parameters": [
+                "a_string",
+                "a_number",
+                "an_array",
+                "another_number",
+                "another_bool"
+            ],
+            "secondary_exposures": []
+        },
+        "izGnsR1Ve6cMxMnPt9HP63+zu7kdRtlXko/4Wievlx4=": {
+            "name": "izGnsR1Ve6cMxMnPt9HP63+zu7kdRtlXko/4Wievlx4=",
+            "value": {
+                "layer_param": "a",
+                "another_param": false
+            },
+            "rule_id": "layerAssignment",
+            "group": "layerAssignment",
+            "is_device_based": false,
+            "is_experiment_active": true,
+            "is_user_in_experiment": false,
+            "is_in_layer": true,
+            "explicit_parameters": [
+                "layer_param"
+            ],
+            "secondary_exposures": []
+        },
+        "bVLC48Eu7UHDvjoTXzB2faH/WbNIxtgN1wygjLCQ/eg=": {
+            "name": "bVLC48Eu7UHDvjoTXzB2faH/WbNIxtgN1wygjLCQ/eg=",
+            "value": {
+                "layer_param": "a",
+                "another_param": false
+            },
+            "rule_id": "layerAssignment",
+            "group": "layerAssignment",
+            "is_device_based": false,
+            "is_experiment_active": true,
+            "is_user_in_experiment": false,
+            "is_in_layer": true,
+            "explicit_parameters": [
+                "another_param",
+                "layer_param"
+            ],
+            "secondary_exposures": []
+        },
+        "SHAol7WfoCKyy16cZV7apDOT5Mg8MwpJsoTz1KxOPc0=": {
+            "name": "SHAol7WfoCKyy16cZV7apDOT5Mg8MwpJsoTz1KxOPc0=",
+            "value": {
+                "shared_string_param": "test_string",
+                "shared_number_param": 420
+            },
+            "rule_id": "5mM61GxB5D9yEqx0Of8wah",
+            "group": "5mM61GxB5D9yEqx0Of8wah",
+            "is_device_based": false,
+            "is_experiment_active": true,
+            "is_user_in_experiment": true,
+            "is_in_layer": true,
+            "explicit_parameters": [
+                "shared_string_param"
+            ],
+            "secondary_exposures": [
+                {
+                    "gate": "4ziZKZklPx19sEdH00qgHw",
+                    "gateValue": "false",
+                    "ruleID": "2bAVp6R3C85vCYrR6be36n:10.00:5"
+                },
+                {
+                    "gate": "6ZuEJCS9vCs6hSUEDU2YzB",
+                    "gateValue": "true",
+                    "ruleID": "6X3qJgyfwA81IJ2dxI7lYp"
+                }
+            ]
+        },
+        "1ignaR1iuT1ze+wb+ehp4hVYQGrbAfcCyyZ1VQiVbZg=": {
+            "name": "1ignaR1iuT1ze+wb+ehp4hVYQGrbAfcCyyZ1VQiVbZg=",
+            "value": {},
+            "rule_id": "layerAssignment",
+            "group": "layerAssignment",
+            "is_device_based": false,
+            "is_experiment_active": true,
+            "is_user_in_experiment": false,
+            "secondary_exposures": []
+        },
+        "S52jGlsKiXpNsVbAbe/hcTxLnaHOVT+rNsVP/ibJitY=": {
+            "name": "S52jGlsKiXpNsVbAbe/hcTxLnaHOVT+rNsVP/ibJitY=",
+            "value": {},
+            "rule_id": "5sRk9Hpny9GJ7Js6jOIhVn",
+            "group": "5sRk9Hpny9GJ7Js6jOIhVn",
+            "is_device_based": false,
+            "secondary_exposures": []
+        }
+    },
+    "layer_configs": {
+        "FJsjPaDrS4JydcV8A+6bAAH6PKUpax0Uh6WpfV1cltA=": {
+            "name": "FJsjPaDrS4JydcV8A+6bAAH6PKUpax0Uh6WpfV1cltA=",
+            "value": {
+                "a_param": "foo"
+            },
+            "rule_id": "default",
+            "group": "default",
+            "is_device_based": false,
+            "explicit_parameters": [],
+            "secondary_exposures": [],
+            "undelegated_secondary_exposures": []
+        },
+        "WVRs57b6Y+ljDGS/fALR4d9Rq9RHHWwdTk0NCE+TCvU=": {
+            "name": "WVRs57b6Y+ljDGS/fALR4d9Rq9RHHWwdTk0NCE+TCvU=",
+            "value": {},
+            "rule_id": "default",
+            "group": "default",
+            "is_device_based": false,
+            "explicit_parameters": [],
+            "secondary_exposures": [],
+            "undelegated_secondary_exposures": []
+        },
+        "n2pMOgtzIUGDH+8YstB2ij57utQwdnMh7ae8yeGVS/Q=": {
+            "name": "n2pMOgtzIUGDH+8YstB2ij57utQwdnMh7ae8yeGVS/Q=",
+            "value": {},
+            "rule_id": "default",
+            "group": "default",
+            "is_device_based": false,
+            "explicit_parameters": [],
+            "secondary_exposures": [],
+            "undelegated_secondary_exposures": []
+        },
+        "ttISRYkdgybYWrSv4NsVYRDlQh3a2gDhJLyW8XpaCyU=": {
+            "name": "ttISRYkdgybYWrSv4NsVYRDlQh3a2gDhJLyW8XpaCyU=",
+            "value": {
+                "value": "control"
+            },
+            "rule_id": "54QJztEPRLXK7ZCvXeY9q4",
+            "group": "54QJztEPRLXK7ZCvXeY9q4",
+            "allocated_experiment_name": "Ti7yf5Od0Lgn9UiV4qMleC1rztex16aRa2gb9t+KjBI=",
+            "is_device_based": false,
+            "is_experiment_active": true,
+            "explicit_parameters": [],
+            "is_user_in_experiment": true,
+            "secondary_exposures": [],
+            "undelegated_secondary_exposures": []
+        },
+        "5ksSaXrnAsqeD4wD1oSe3IqQjdMIbDUPkbAOSe/oORw=": {
+            "name": "5ksSaXrnAsqeD4wD1oSe3IqQjdMIbDUPkbAOSe/oORw=",
+            "value": {
+                "bool": true,
+                "string": "test3"
+            },
+            "rule_id": "4qC3kJ5j58KwBAt2VLKL7M",
+            "group": "4qC3kJ5j58KwBAt2VLKL7M",
+            "allocated_experiment_name": "e3iqY+ASyK4vfkWS0pv8NkV7A9BgASwEUDJB6cpr4oo=",
+            "is_device_based": false,
+            "is_experiment_active": true,
+            "explicit_parameters": [],
+            "is_user_in_experiment": true,
+            "secondary_exposures": [],
+            "undelegated_secondary_exposures": []
+        },
+        "q3VyXqq7CukE86o89rqleSjtrh7GMfD9BYjI4/6SlsI=": {
+            "name": "q3VyXqq7CukE86o89rqleSjtrh7GMfD9BYjI4/6SlsI=",
+            "value": {
+                "sample_parameter": false
+            },
+            "rule_id": "5UXv4dUhG3AEWrpzGzQ2Xy",
+            "group": "5UXv4dUhG3AEWrpzGzQ2Xy",
+            "allocated_experiment_name": "vqQndBwrJ/a5gabQIvVPSGUkBBqeS7P1yd1N8t6wgyo=",
+            "is_device_based": true,
+            "is_experiment_active": true,
+            "explicit_parameters": [],
+            "is_user_in_experiment": true,
+            "secondary_exposures": [],
+            "undelegated_secondary_exposures": []
+        },
+        "3J21IaPJVW3EHWJ1ACJE2u6+T3tYW2t7NoOwz/2i4ig=": {
+            "name": "3J21IaPJVW3EHWJ1ACJE2u6+T3tYW2t7NoOwz/2i4ig=",
+            "value": {},
+            "rule_id": "prestart",
+            "group": "prestart",
+            "allocated_experiment_name": "hl9NhEeof8GRsBLgoJsuvL4KG+fY/Ilz5hDtx1AysS8=",
+            "is_device_based": false,
+            "is_experiment_active": false,
+            "explicit_parameters": [],
+            "is_user_in_experiment": false,
+            "secondary_exposures": [],
+            "undelegated_secondary_exposures": []
+        },
+        "CX2ShuY6Oj+z4p+xbADhX5iIYR+DklCLMnuAqaoAQrg=": {
+            "name": "CX2ShuY6Oj+z4p+xbADhX5iIYR+DklCLMnuAqaoAQrg=",
+            "value": {},
+            "rule_id": "prestart",
+            "group": "prestart",
+            "allocated_experiment_name": "Xtjwq5VK07uX4MVyAwXhAFXop1gL6BhMxm4rzmL/v4k=",
+            "is_device_based": false,
+            "is_experiment_active": false,
+            "explicit_parameters": [],
+            "is_user_in_experiment": false,
+            "secondary_exposures": [],
+            "undelegated_secondary_exposures": []
+        },
+        "bKX5Eas32cczdeonG1Ktc0C0XTS4PxPEa365AhQn644=": {
+            "name": "bKX5Eas32cczdeonG1Ktc0C0XTS4PxPEa365AhQn644=",
+            "value": {
+                "a_string": "layer",
+                "another_string": "layer_default",
+                "a_number": 0,
+                "a_bool": false,
+                "an_object": {
+                    "value": "layer_default"
+                },
+                "an_array": [
+                    "layer_default"
+                ],
+                "another_bool": false,
+                "another_number": 0
+            },
+            "rule_id": "default",
+            "group": "default",
+            "is_device_based": false,
+            "explicit_parameters": [],
+            "secondary_exposures": [],
+            "undelegated_secondary_exposures": []
+        },
+        "D1djRgqa/iluzn8f7+S4kxnVQm9TsYLicUaIOCDdrcU=": {
+            "name": "D1djRgqa/iluzn8f7+S4kxnVQm9TsYLicUaIOCDdrcU=",
+            "value": {},
+            "rule_id": "prestart",
+            "group": "prestart",
+            "allocated_experiment_name": "cDB5+BTeoTylPzl3LRDzcCEJZ0HXlRMHZuC7uYZLLJE=",
+            "is_device_based": false,
+            "is_experiment_active": false,
+            "explicit_parameters": [],
+            "is_user_in_experiment": false,
+            "secondary_exposures": [],
+            "undelegated_secondary_exposures": []
+        },
+        "IoTjIn+umEY0MTE+6szJ2IW/wchx0ylAOkBhz2y6OHI=": {
+            "name": "IoTjIn+umEY0MTE+6szJ2IW/wchx0ylAOkBhz2y6OHI=",
+            "value": {
+                "sample_parameter": true
+            },
+            "rule_id": "1BnPPiHXxYqS92KGZ28lgK",
+            "group": "1BnPPiHXxYqS92KGZ28lgK",
+            "allocated_experiment_name": "ZmmTKUPmrjR/+F+WwVtKhGVl1jTD9n2M4ZxCw2mPr+I=",
+            "is_device_based": false,
+            "is_experiment_active": true,
+            "explicit_parameters": [],
+            "is_user_in_experiment": true,
+            "secondary_exposures": [],
+            "undelegated_secondary_exposures": []
+        },
+        "SVtxE3NtXioCpj3akdBzlhT68Mw4LCZWmfAH8jEugjw=": {
+            "name": "SVtxE3NtXioCpj3akdBzlhT68Mw4LCZWmfAH8jEugjw=",
+            "value": {
+                "layer_param": "a",
+                "another_param": true
+            },
+            "rule_id": "35Jndhypr5oomOzkR1i1Lf",
+            "group": "35Jndhypr5oomOzkR1i1Lf",
+            "allocated_experiment_name": "XFO0RObHjHQzZWX6lVNbHJXpfPT0Gk0cwXAXdhEV5EM=",
+            "is_device_based": false,
+            "is_experiment_active": true,
+            "explicit_parameters": [
+                "another_param"
+            ],
+            "is_user_in_experiment": true,
+            "secondary_exposures": [],
+            "undelegated_secondary_exposures": []
+        },
+        "LLxmV1PbUhgtcGql1LX1PRXHcq0lyCQxpBv04acvr1U=": {
+            "name": "LLxmV1PbUhgtcGql1LX1PRXHcq0lyCQxpBv04acvr1U=",
+            "value": {
+                "shared_string_param": "test_string",
+                "shared_number_param": 420
+            },
+            "rule_id": "5mM61GxB5D9yEqx0Of8wah",
+            "group": "5mM61GxB5D9yEqx0Of8wah",
+            "allocated_experiment_name": "SHAol7WfoCKyy16cZV7apDOT5Mg8MwpJsoTz1KxOPc0=",
+            "is_device_based": false,
+            "is_experiment_active": true,
+            "explicit_parameters": [
+                "shared_string_param"
+            ],
+            "is_user_in_experiment": true,
+            "secondary_exposures": [
+                {
+                    "gate": "4ziZKZklPx19sEdH00qgHw",
+                    "gateValue": "false",
+                    "ruleID": "2bAVp6R3C85vCYrR6be36n:10.00:5"
+                },
+                {
+                    "gate": "6ZuEJCS9vCs6hSUEDU2YzB",
+                    "gateValue": "true",
+                    "ruleID": "6X3qJgyfwA81IJ2dxI7lYp"
+                }
+            ],
+            "undelegated_secondary_exposures": [
+                {
+                    "gate": "4ziZKZklPx19sEdH00qgHw",
+                    "gateValue": "false",
+                    "ruleID": "2bAVp6R3C85vCYrR6be36n:10.00:5"
+                }
+            ]
+        },
+        "wIqH1w52biO/9yaURwL/Ljiaqu2hip2jk4eEuFm0n8c=": {
+            "name": "wIqH1w52biO/9yaURwL/Ljiaqu2hip2jk4eEuFm0n8c=",
+            "value": {},
+            "rule_id": "prestart",
+            "group": "prestart",
+            "allocated_experiment_name": "tEcW+D3G9Qm8ZAh0sb2Vj4IwuTDYsDDXOZtdVdUCHNE=",
+            "is_device_based": false,
+            "is_experiment_active": false,
+            "explicit_parameters": [],
+            "is_user_in_experiment": false,
+            "secondary_exposures": [],
+            "undelegated_secondary_exposures": []
+        },
+        "eGtkXZp8qa6l4qkGibKUzrOAFeiSLdXaydiCHZUJ4LQ=": {
+            "name": "eGtkXZp8qa6l4qkGibKUzrOAFeiSLdXaydiCHZUJ4LQ=",
+            "value": {
+                "shared_param": "layer_value"
+            },
+            "rule_id": "default",
+            "group": "default",
+            "is_device_based": false,
+            "explicit_parameters": [],
+            "secondary_exposures": [
+                {
+                    "gate": "7fGXfGb3ECxsEwozxFyY3X",
+                    "gateValue": "false",
+                    "ruleID": "3QoA4ncNdVGBaMt3N1KYjz"
+                }
+            ],
+            "undelegated_secondary_exposures": [
+                {
+                    "gate": "7fGXfGb3ECxsEwozxFyY3X",
+                    "gateValue": "false",
+                    "ruleID": "3QoA4ncNdVGBaMt3N1KYjz"
+                }
+            ]
+        }
+    },
+    "sdkParams": {},
+    "has_updates": true,
+    "generator": "scrapi-nest",
+    "time": 1667607747936,
+    "evaluated_keys": {
+        "userID": "tore",
+        "stableID": "272DE7E1-1947-4A8D-BDFE-005751F1EC2A"
+    }
+}
