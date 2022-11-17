@@ -341,11 +341,24 @@ public class Statsig {
 
      Parameters:
      - configName: The name of the config or experiment to be overridden
-     - value: The value that will be returned
+     - value: The value that the resulting DynamicConfig will contain
      */
     public static func overrideConfig(_ configName: String, value: [String: Any]) {
         errorBoundary.capture {
             client?.overrideConfig(configName, value: value)
+        }
+    }
+
+    /**
+     Sets a value to be returned for the given layer instead of the actual evaluated value.
+
+     Parameters:
+     - layerName: The name of the layer to be overridden
+     - value: The value that the resulting Layer will contain
+     */
+    public static func overrideLayer(_ layerName: String, value: [String: Any]) {
+        errorBoundary.capture {
+            client?.overrideLayer(layerName, value: value)
         }
     }
 

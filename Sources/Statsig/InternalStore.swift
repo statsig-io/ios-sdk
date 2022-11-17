@@ -314,6 +314,15 @@ class InternalStore {
 
     func getLayer(client: StatsigClient?, forName layerName: String, keepDeviceValue: Bool = false) -> Layer {
         let latestValue = storeQueue.sync {
+            if let override = (localOverrides[InternalStore.layerConfigsKey] as? [String: [String: Any]])?[layerName] {
+                return Layer(
+                    client: nil,
+                    name: layerName,
+                    value: override,
+                    ruleID: "override",
+                    evalDetails: EvaluationDetails(reason: .LocalOverride)
+                )
+            }
             return cache.getLayer(client, layerName)
         }
         return getPossiblyStickyValue(
@@ -367,10 +376,18 @@ class InternalStore {
         }
     }
 
+    func overrideLayer(_ layerName: String, _ value: [String: Any]) {
+        storeQueue.async(flags: .barrier) { [weak self] in
+            self?.localOverrides[jsonDict: InternalStore.layerConfigsKey]?[layerName] = value
+            self?.saveOverrides()
+        }
+    }
+
     func removeOverride(_ name: String) {
         storeQueue.async(flags: .barrier) { [weak self] in
             self?.localOverrides[jsonDict: InternalStore.gatesKey]?.removeValue(forKey: name)
             self?.localOverrides[jsonDict: InternalStore.configsKey]?.removeValue(forKey: name)
+            self?.localOverrides[jsonDict: InternalStore.layerConfigsKey]?.removeValue(forKey: name)
         }
     }
 
@@ -393,7 +410,7 @@ class InternalStore {
     }
 
     private static func getEmptyOverrides() -> [String: Any] {
-        return [InternalStore.gatesKey: [:], InternalStore.configsKey: [:]]
+        return [InternalStore.gatesKey: [:], InternalStore.configsKey: [:], InternalStore.layerConfigsKey: [:]]
     }
 
     // Sticky Logic: https://gist.github.com/daniel-statsig/3d8dfc9bdee531cffc96901c1a06a402

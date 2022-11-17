@@ -214,6 +214,10 @@ internal class StatsigClient {
         store.overrideConfig(configName, value)
     }
 
+    internal func overrideLayer(_ layerName: String, value: [String: Any]) {
+        store.overrideLayer(layerName, value)
+    }
+
     internal func removeOverride(_ name: String) {
         store.removeOverride(name)
     }
