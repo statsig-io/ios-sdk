@@ -31,7 +31,7 @@ Pod::Spec.new do |spec|
 
   spec.subspec 'CrashReporting' do |cr_spec|
     cr_spec.source_files = 'Sources/CrashReporting/**/*'
-    cr_spec.dependency "KSCrash"
+    cr_spec.dependency "KSCrash/Recording"
   end
 
   spec.test_spec 'Tests' do |test_spec|

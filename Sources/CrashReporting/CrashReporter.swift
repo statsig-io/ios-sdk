@@ -1,7 +1,7 @@
 import KSCrash
 
 internal class CrashReporter {
-    var installation: KSCrashInstallationStatsig?
+//    var installation: KSCrashInstallationStatsig?
     var kscrash: KSCrash?
 
     init() {
@@ -18,15 +18,16 @@ internal class CrashReporter {
             return
         }
 
-        let formatter = KSCrashReportFilterAppleFmt(reportStyle: KSAppleReportStyleSymbolicated)
+//        let formatter = KSCrashReportFilterAppleFmt(reportStyle: KSAppleReportStyleSymbolicated)
 
 
 
         for reportID in reportIDs {
-            let report = instance.report(withID: reportID) as! NSDictionary
-            formatter?.filterReports([report]) { a, b, c in
-                UserDefaults.standard.setValue("\((a as! [String])[0])", forKey: "com.dloomb.crash")
-            }
+            let report = instance.report(withID: reportID)
+            UserDefaults.standard.setValue("\(report)", forKey: "com.dloomb.crash")
+//            formatter?.filterReports([report]) { a, b, c in
+//                UserDefaults.standard.setValue("\((a as! [String])[0])", forKey: "com.dloomb.crash")
+//            }
 
         }
 
@@ -43,12 +44,12 @@ internal class CrashReporter {
     }
 }
 
-internal class KSCrashInstallationStatsig: KSCrashInstallation {
-    override init() {
-        super.init(requiredProperties:[])
-    }
-
-    override func sink() -> KSCrashReportFilter {
-        return KSCrashReportFilterAppleFmt(reportStyle: KSAppleReportStyleSymbolicated)
-    }
-}
+//internal class KSCrashInstallationStatsig: KSCrashInstallation {
+//    override init() {
+//        super.init(requiredProperties:[])
+//    }
+//
+//    override func sink() -> KSCrashReportFilter {
+//        return KSCrashReportFilterAppleFmt(reportStyle: KSAppleReportStyleSymbolicated)
+//    }
+//}
