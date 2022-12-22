@@ -16,6 +16,7 @@ internal class StatsigClient {
     private var listeners: [() -> StatsigListening?] = []
     private var hasInitialized: Bool = false
     private var lastInitializeError: String?
+    private var crashReporter: CrashReporter?
 
     private let exposureDedupeQueue = DispatchQueue(label: exposureDedupeQueueLabel, qos: .userInitiated, attributes: .concurrent)
 
@@ -30,6 +31,7 @@ internal class StatsigClient {
         self.logger = EventLogger(user: currentUser, networkService: networkService)
         self.logger.start()
         self.loggedExposures = [String: TimeInterval]()
+        self.crashReporter = CrashReporter()
 
         fetchAndScheduleSyncing { [weak self] errorMessage in
             self?.lastInitializeError = errorMessage

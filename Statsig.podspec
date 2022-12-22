@@ -27,6 +27,13 @@ Pod::Spec.new do |spec|
 
   spec.swift_version = '5.0'
 
+  spec.default_subspecs = :none
+
+  spec.subspec 'CrashReporting' do |cr_spec|
+    cr_spec.source_files = 'Sources/CrashReporting/**/*'
+    cr_spec.dependency "KSCrash"
+  end
+
   spec.test_spec 'Tests' do |test_spec|
       test_spec.source_files = 'Tests/StatsigTests/**/*.{swift}'
       test_spec.dependency 'Nimble'
