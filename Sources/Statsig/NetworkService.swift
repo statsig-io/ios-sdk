@@ -3,6 +3,7 @@ import Foundation
 fileprivate enum Endpoint: String {
     case initialize = "/v1/initialize"
     case logEvent = "/v1/rgstr"
+    case registerCrash = "/v1/rgstr_crash"
 }
 
 fileprivate typealias NetworkCompletionHandler = (Data?, URLResponse?, Error?) -> Void
@@ -139,6 +140,27 @@ class NetworkService {
 
             // Success
             completion(nil, nil)
+        }
+    }
+
+    func sendCrashReportEvent(_ event: Event, completion: @escaping ((_ success: Bool) -> Void)) {
+        let (body, _) = makeReqBody([
+            "report": event.toDictionary()
+        ])
+
+        guard let body = body else {
+            completion(false)
+            return
+        }
+
+        makeAndSendRequest(.registerCrash, body: body) { _, response, error in
+            var success = false
+            if let response = response as? HTTPURLResponse {
+                let code = response.statusCode
+                success = code >= 200 && code < 300
+            }
+
+            completion(success)
         }
     }
 

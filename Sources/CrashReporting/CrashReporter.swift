@@ -56,16 +56,15 @@ internal class CrashReporter: CrashReportable {
             ?? ["message": "Failed to load report"]
             
             let user = StatsigUser.fromCrashReport(report)
-            let events = [Event.fromCrashReport(report, user: user)]
-            self.network
-                .sendEvents(forUser: user, events: events) { err, data in
-                    if err != nil {
-                        // Well get it next time
-                        return
-                    }
-
-                    instance.deleteReport(withID: reportID)
+            let event = Event.fromCrashReport(report, user: user)
+            self.network.sendCrashReportEvent(event) { success in
+                if success != true {
+                    // We'll get it next time
+                    return
                 }
+
+                instance.deleteReport(withID: reportID)
+            }
         }
     }
 }
@@ -98,9 +97,9 @@ fileprivate extension Event {
     static func fromCrashReport(_ report: [String: Any], user: StatsigUser) -> Event {
         return Event.statsigInternalEvent(
             user: user,
-            name: Event.statsigPrefix + "crash_report",
+            name: "crash_report",
             value: nil,
-            metadata: ["report": report],
+            metadata: report,
             secondaryExposures: nil,
             disableCurrentVCLogging: true
         )
