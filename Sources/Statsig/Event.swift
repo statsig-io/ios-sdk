@@ -5,7 +5,7 @@ import UIKit
 class Event {
     let name: String
     let value: Any?
-    let metadata: [String: String]?
+    let metadata: [String: Any]?
     let time: TimeInterval
     let user: StatsigUser
     let secondaryExposures: [[String: String]]?
@@ -23,7 +23,7 @@ class Event {
         user: StatsigUser,
         name: String,
         value: Any? = nil,
-        metadata: [String: String]? = nil,
+        metadata: [String: Any]? = nil,
         secondaryExposures: [[String: String]]? = nil,
         disableCurrentVCLogging: Bool
     ) {
@@ -52,7 +52,7 @@ class Event {
         user: StatsigUser,
         name: String,
         value: Any? = nil,
-        metadata: [String: String]? = nil,
+        metadata: [String: Any]? = nil,
         secondaryExposures: [[String: String]]? = nil,
         disableCurrentVCLogging: Bool = true // for internal events, default to not log the VC, other than for exposures
     ) -> Event {

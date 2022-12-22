@@ -31,7 +31,7 @@ internal class StatsigClient {
         self.logger = EventLogger(user: currentUser, networkService: networkService)
         self.logger.start()
         self.loggedExposures = [String: TimeInterval]()
-        self.crashReporter = CrashReporterProvider.getCrashReporter()
+        self.crashReporter = CrashReporterProvider.attachCrashReporter(networkService, user: self.currentUser)
 
         fetchAndScheduleSyncing { [weak self] errorMessage in
             self?.lastInitializeError = errorMessage
@@ -328,6 +328,7 @@ internal class StatsigClient {
         currentUser = StatsigClient.normalizeUser(user, options: statsigOptions)
         store.updateUser(currentUser)
         logger.user = currentUser
+        crashReporter?.updateUser(currentUser)
         fetchAndScheduleSyncing { [weak self] errorMessage in
             self?.notifyOnUserUpdatedListeners(errorMessage)
             completion?(errorMessage)

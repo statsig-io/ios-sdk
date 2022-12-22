@@ -119,7 +119,7 @@ class NetworkService {
         ])
 
         guard let body = body else {
-            completion(parseErr?.localizedDescription, nil)
+            completion(parseErr?.localizedDescription ?? "Body was nil", nil)
             return
         }
 
@@ -136,6 +136,9 @@ class NetworkService {
                            + "\(String(describing: (response as? HTTPURLResponse)?.statusCode))", body)
                 return
             }
+
+            // Success
+            completion(nil, nil)
         }
     }
 

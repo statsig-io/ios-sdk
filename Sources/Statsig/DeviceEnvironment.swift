@@ -8,7 +8,7 @@ struct DeviceEnvironment {
     var deviceOS: String = "iOS"
     var sdkType: String = "ios-client"
     var sdkVersion: String = "1.17.0"
-    var sessionID: String? { UUID().uuidString }
+    var sessionToken: String? { UUID().uuidString }
     var systemVersion: String { UIDevice.current.systemVersion }
     var systemName: String { UIDevice.current.systemName }
     var language: String { Locale.preferredLanguages[0] }
@@ -45,7 +45,7 @@ struct DeviceEnvironment {
             "locale": locale,
             "sdkType": sdkType,
             "sdkVersion": sdkVersion,
-            "sessionID": sessionID,
+            "sessionToken": sessionToken,
             "stableID": getStableID(overrideStableID),
             "systemVersion": systemVersion,
             "systemName": systemName
