@@ -1,5 +1,5 @@
 Pod::Spec.new do |spec|
-  CR_ROOT = 'Sources/CrashReporting'
+  CR_ROOT = 'Sources/CrashReporting/KSCrash/Source/KSCrash'
   spec.name         = "Statsig"
   spec.version      = "1.17.0"
   spec.summary      = "Statsig enables developers to ship code faster and more safely."
@@ -38,18 +38,17 @@ Pod::Spec.new do |spec|
     cr_spec.xcconfig = { 'GCC_ENABLE_CPP_EXCEPTIONS' => 'YES' }
     cr_spec.frameworks = 'Foundation'
 
-    cr_spec.source_files = CR_ROOT+'/**/*.swift',
-      CR_ROOT+'/KSCrash/Recording/**/*.{h,m,mm,c,cpp}',
-      CR_ROOT+'/KSCrash/llvm/**/*.{h,m,mm,c,cpp}',
-      CR_ROOT+'/KSCrash/swift/**/*.{h,m,mm,c,cpp,def}',
-      CR_ROOT+'/KSCrash/Reporting/Filters/KSCrashReportFilter.h'
+    cr_spec.source_files = CR_ROOT+'/Recording/**/*.{h,m,mm,c,cpp}',
+      CR_ROOT+'/llvm/**/*.{h,m,mm,c,cpp}',
+      CR_ROOT+'/swift/**/*.{h,m,mm,c,cpp,def}',
+      CR_ROOT+'/Reporting/Filters/KSCrashReportFilter.h'
 
-    cr_spec.public_header_files = CR_ROOT+'/KSCrash/Recording/KSCrash.h',
-      CR_ROOT+'/KSCrash/Recording/KSCrashC.h',
-      CR_ROOT+'/KSCrash/Recording/KSCrashReportWriter.h',
-      CR_ROOT+'/KSCrash/Recording/KSCrashReportFields.h',
-      CR_ROOT+'/KSCrash/Recording/Monitors/KSCrashMonitorType.h',
-      CR_ROOT+'/KSCrash/Reporting/Filters/KSCrashReportFilter.h'
+    cr_spec.public_header_files = CR_ROOT+'/Recording/KSCrash.h',
+      CR_ROOT+'/Recording/KSCrashC.h',
+      CR_ROOT+'/Recording/KSCrashReportWriter.h',
+      CR_ROOT+'/Recording/KSCrashReportFields.h',
+      CR_ROOT+'/Recording/Monitors/KSCrashMonitorType.h',
+      CR_ROOT+'/Reporting/Filters/KSCrashReportFilter.h'
   end
 
   spec.test_spec 'Tests' do |test_spec|

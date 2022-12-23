@@ -15,13 +15,17 @@ let package = Package(
         .package(url: "https://github.com/Quick/Nimble.git", .upToNextMajor(from: "9.0.0")),
         .package(url: "https://github.com/Quick/Quick.git", .upToNextMajor(from: "3.1.2")),
         .package(url: "https://github.com/erikdoe/ocmock", .branch("master")),
+        .package(path: "Sources/CrashReporting/KSCrash")
     ],
     targets: [
+//        Main
         .target(
             name: "Statsig",
-            dependencies: [.target(name: "StatsigInternalObjC")],
+            dependencies: [.target(name: "StatsigInternalObjC"), "KSCrash"],
             path: "Sources/Statsig"),
-        .target(name: "StatsigInternalObjC", path: "Sources/StatsigInternalObjC"),
+        .target(
+            name: "StatsigInternalObjC",
+            path: "Sources/StatsigInternalObjC"),
         .testTarget(
             name: "StatsigTests",
             dependencies: ["Statsig", "Quick", "Nimble", "OHHTTPStubs", .product(name: "OHHTTPStubsSwift", package: "OHHTTPStubs")]),
