@@ -15,7 +15,7 @@ class DeviceEnvironmentSpec: QuickSpec {
 
             it("gets the same value across multiple times") {
                 for (key, value) in env1 {
-                    if key == "sessionID" {
+                    if key == "sessionToken" {
                         expect(value) != env2[key]
                     } else {
                         expect(value) == env2[key]
@@ -26,7 +26,7 @@ class DeviceEnvironmentSpec: QuickSpec {
 
             it("has all the fields and non-nil values for required ones") {
                 expect(env1.count) == 12
-                expect(env1["sessionID"]).toNot(beNil())
+                expect(env1["sessionToken"]).toNot(beNil())
                 expect(env1["stableID"]).toNot(beNil())
                 expect(env1["deviceOS"]).toNot(beNil())
                 expect(env1["sdkVersion"]).toNot(beNil())
