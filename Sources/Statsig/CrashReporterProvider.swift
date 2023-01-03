@@ -6,7 +6,7 @@ protocol CrashReportable {
 
 internal class CrashReporterProvider {
     static func attachCrashReporter(_ network: NetworkService, user: StatsigUser) -> CrashReportable? {
-#if STATSIG_CRASH_REPORTING
+#if STATSIG_CRASH_REPORTING || canImport(KSCrash_Installations)
         let reporter = CrashReporter(network)
         reporter.updateUser(user)
         return reporter
@@ -16,7 +16,12 @@ internal class CrashReporterProvider {
     }
 }
 
-#if STATSIG_CRASH_REPORTING
+#if STATSIG_CRASH_REPORTING || canImport(KSCrash_Installations)
+
+#if canImport(KSCrash_Installations)
+import KSCrash_Installations
+#endif
+
 internal class CrashReporter: CrashReportable {
     // Flush once on start, but wait X seconds giving the app time to boot up
     let waitSecondsUntilFlush = 5.0
