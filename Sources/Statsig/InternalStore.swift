@@ -313,7 +313,7 @@ class InternalStore {
     }
 
     func getLayer(client: StatsigClient?, forName layerName: String, keepDeviceValue: Bool = false) -> Layer {
-        let latestValue = storeQueue.sync {
+        let latestValue: Layer = storeQueue.sync {
             if let override = (localOverrides[InternalStore.layerConfigsKey] as? [String: [String: Any]])?[layerName] {
                 return Layer(
                     client: nil,
