@@ -32,7 +32,8 @@ class StatsigSpec: QuickSpec {
                 .merging(["allocated_experiment_name":"config".sha256()]) { (_, new) in new },
             "unallocated_layer".sha256(): DynamicConfigSpec
                 .TestMixedConfig
-        ]
+        ],
+        "has_updates": true
     ]
 
     override func spec() {
@@ -145,13 +146,11 @@ class StatsigSpec: QuickSpec {
                     stub(condition: isHost("api.statsig.com")) { request in
                         requestCount += 1
 
-                        let httpBody = try! JSONSerialization.jsonObject(
-                            with: request.ohhttpStubs_httpBody!,
-                            options: []) as! [String: Any]
+                        let httpBody = request.statsig_body ?? [:]
                         lastSyncTime = httpBody["lastSyncTimeForUser"] as? Double ?? 0
 
                         requestExpectation.fulfill()
-                        return HTTPStubsResponse(jsonObject: ["time": now * 1000], statusCode: 200, headers: nil)
+                        return HTTPStubsResponse(jsonObject: ["time": now * 1000, "has_updates": true], statusCode: 200, headers: nil)
                     }
 
                     Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(enableAutoValueUpdate: true))
@@ -170,7 +169,7 @@ class StatsigSpec: QuickSpec {
                 }
 
                 it("works with local cache with different user cache keys") {
-                    TestUtils.startWithResponseAndWait(StatsigSpec.mockUserValues, "client-api-key", StatsigUser(userID: "jkw"))
+                    _ = TestUtils.startWithResponseAndWait(StatsigSpec.mockUserValues, "client-api-key", StatsigUser(userID: "jkw"))
 
                     let gateName = "gate_name_2"
 
@@ -208,7 +207,7 @@ class StatsigSpec: QuickSpec {
                 }
 
                 it("works correctly with a valid JSON response") {
-                    TestUtils.startWithResponseAndWait(StatsigSpec.mockUserValues)
+                    _ = TestUtils.startWithResponseAndWait(StatsigSpec.mockUserValues)
 
                     let gate1 = Statsig.checkGate(gateName1)
                     let gate2 = Statsig.checkGate(gateName2)
@@ -292,10 +291,11 @@ class StatsigSpec: QuickSpec {
                                 "is_experiment_active": true,
                                 "allocated_experiment_name": "exp".sha256()
                             ]
-                        ]
+                        ],
+                        "has_updates": true
                     ]
 
-                    TestUtils.startWithResponseAndWait(response)
+                    _ = TestUtils.startWithResponseAndWait(response)
 
                     var exp = Statsig.getExperiment("exp", keepDeviceValue: true)
                     expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v1"))
@@ -324,10 +324,11 @@ class StatsigSpec: QuickSpec {
                                 "is_experiment_active": true,
                                 "allocated_experiment_name": "exp".sha256()
                             ]
-                        ]
+                        ],
+                        "has_updates": true
                     ]
 
-                    TestUtils.startWithResponseAndWait(response)
+                    _ = TestUtils.startWithResponseAndWait(response)
 
                     exp = Statsig.getExperiment("exp", keepDeviceValue: true)
                     expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v1"))
@@ -361,10 +362,11 @@ class StatsigSpec: QuickSpec {
                                 "is_experiment_active": true,
                                 "allocated_experiment_name": "new_exp".sha256()
                             ]
-                        ]
+                        ],
+                        "has_updates": true
                     ]
 
-                    TestUtils.startWithResponseAndWait(response)
+                    _ = TestUtils.startWithResponseAndWait(response)
 
                     exp = Statsig.getExperiment("exp", keepDeviceValue: true)
                     expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v3"))
@@ -398,10 +400,11 @@ class StatsigSpec: QuickSpec {
                                 "is_experiment_active": true,
                                 "allocated_experiment_name": "new_exp".sha256()
                             ]
-                        ]
+                        ],
+                        "has_updates": true
                     ]
 
-                    TestUtils.startWithResponseAndWait(response)
+                    _ = TestUtils.startWithResponseAndWait(response)
 
                     exp = Statsig.getExperiment("exp", keepDeviceValue: true)
                     expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v4"))
@@ -430,10 +433,11 @@ class StatsigSpec: QuickSpec {
                                 "is_experiment_active": false,
                                 "allocated_experiment_name": "exp".sha256()
                             ]
-                        ]
+                        ],
+                        "has_updates": true
                     ]
 
-                    TestUtils.startWithResponseAndWait(response)
+                    _ = TestUtils.startWithResponseAndWait(response)
 
                     exp = Statsig.getExperiment("exp", keepDeviceValue: false)
                     expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v5"))
@@ -464,10 +468,11 @@ class StatsigSpec: QuickSpec {
                                 "is_experiment_active": true,
                                 "allocated_experiment_name": "exp".sha256()
                             ]
-                        ]
+                        ],
+                        "has_updates": true
                     ]
 
-                    TestUtils.startWithResponseAndWait(response)
+                    _ = TestUtils.startWithResponseAndWait(response)
 
                     exp = Statsig.getExperiment("exp", keepDeviceValue: true)
                     expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v6"))

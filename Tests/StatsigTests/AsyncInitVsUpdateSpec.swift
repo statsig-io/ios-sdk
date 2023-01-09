@@ -25,6 +25,8 @@ func makeInitializeResponse(_ configValue: String) -> [String: Any] {
             ]
         ],
         "layer_configs": [:],
+        "time": 111,
+        "has_updates": true
     ]
 }
 

@@ -22,11 +22,11 @@ class NetworkService {
         self.store = store
     }
 
-    func fetchUpdatedValues(for user: StatsigUser, since: Double, completion: (() -> Void)?) {
+    func fetchUpdatedValues(for user: StatsigUser, lastSyncTimeForUser: Double, completion: (() -> Void)?) {
         let (body, _) = makeReqBody([
             "user": user.toDictionary(forLogging: false),
             "statsigMetadata": user.deviceEnvironment,
-            "lastSyncTimeForUser": since
+            "lastSyncTimeForUser": lastSyncTimeForUser
         ])
 
         guard let body = body else {
@@ -35,31 +35,31 @@ class NetworkService {
         }
 
         let cacheKey = user.getCacheKey()
+        let fullUserHash = user.getFullUserHash()
 
         makeAndSendRequest(.initialize, body: body) { [weak self] data, _, _ in
-            if let self = self,
-               let responseData = data,
-               let json = try? JSONSerialization.jsonObject(with: responseData, options: []),
-               let responseDict = json as? [String: Any],
-               let hasUpdates = responseDict["has_updates"] as? Bool,
-               hasUpdates
-            {
-                self.store.set(values: responseDict, withCacheKey: cacheKey, completion: completion)
-            } else {
-                DispatchQueue.main.async {
-                    completion?()
-                }
+            guard let self = self,
+                  let data = data,
+                  let json = try? JSONSerialization.jsonObject(with: data, options: []),
+                  let dict = json as? [String: Any],
+                  dict["has_updates"] as? Bool == true else {
+                completion?()
+                return
             }
+
+            self.store.saveValues(dict, cacheKey, fullUserHash, completion)
         }
     }
 
-    func fetchInitialValues(for user: StatsigUser, completion: completionBlock) {
+    func fetchInitialValues(for user: StatsigUser, sinceTime: Double, completion: completionBlock) {
         var task: URLSessionDataTask?
         var done: completionBlock = nil
         done = { err in
-            done = nil
-            task?.cancel()
-            completion?(err)
+            DispatchQueue.main.async {
+                done = nil
+                task?.cancel()
+                completion?(err)
+            }
         }
 
         if statsigOptions.initTimeout > 0 {
@@ -70,7 +70,8 @@ class NetworkService {
 
         let (body, parseErr) = makeReqBody([
             "user": user.toDictionary(forLogging: false),
-            "statsigMetadata": user.deviceEnvironment
+            "statsigMetadata": user.deviceEnvironment,
+            "sinceTime": sinceTime
         ])
 
         guard let body = body else {
@@ -79,31 +80,42 @@ class NetworkService {
         }
 
         let cacheKey = user.getCacheKey()
+        let fullUserHash = user.getFullUserHash()
 
         makeAndSendRequest(.initialize, body: body, retry: 3) { [weak self] data, response, error in
-            var errorMessage: String?
             if let error = error {
-                errorMessage = error.localizedDescription
-            } else if let statusCode = (response as? HTTPURLResponse)?.statusCode, !(200...299).contains(statusCode) {
-                errorMessage = "An error occurred during fetching values for the user. "
-                + "\(String(describing: statusCode))"
+                done?(error.localizedDescription)
+                return
             }
 
-
-
-            if let self = self,
-               let data = data,
-               let json = try? JSONSerialization.jsonObject(with: data, options: []),
-               let responseDict = json as? [String: Any]
-            {
-                self.store.set(values: responseDict, withCacheKey: cacheKey) {
-                    done?(errorMessage)
-                }
-            } else {
-                DispatchQueue.main.async {
-                    done?(errorMessage)
-                }
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+            if !(200...299).contains(statusCode) {
+                done?("An error occurred during fetching values for the user. \(statusCode)")
+                return
             }
+
+            guard let self = self else {
+                done?("Failed to call NetworkService as it has been released")
+                return
+            }
+
+            var values: [String: Any]? = nil
+            if statusCode == 204 {
+                values = ["has_updates": false]
+            } else if let data = data,
+                      let json = try? JSONSerialization.jsonObject(with: data, options: []) {
+                values = json as? [String: Any]
+            }
+
+            guard let values = values else {
+                done?("No values returned with initialize response")
+                return
+            }
+
+            self.store.saveValues(values, cacheKey, fullUserHash) {
+                done?(nil)
+            }
+
         } taskCapture: { capturedTask in
             task = capturedTask
         }

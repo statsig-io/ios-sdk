@@ -269,7 +269,9 @@ internal class StatsigClient {
 
         let currentUser = self.currentUser
         let shouldScheduleSync = statsigOptions.enableAutoValueUpdate
-        networkService.fetchInitialValues(for: currentUser) { [weak self] errorMessage in
+        let sinceTime = self.store.getLastUpdateTime(user: currentUser)
+
+        networkService.fetchInitialValues(for: currentUser, sinceTime: sinceTime) { [weak self] errorMessage in
             if let self = self {
                 if let errorMessage = errorMessage {
                     self.logger.log(Event.statsigInternalEvent(
@@ -291,7 +293,10 @@ internal class StatsigClient {
         let currentUser = self.currentUser
         syncTimer = Timer.scheduledTimer(withTimeInterval: StatsigClient.autoValueUpdateTime, repeats: false) { [weak self] _ in
             guard let self = self else { return }
-            self.networkService.fetchUpdatedValues(for: currentUser, since: self.store.updatedTime)
+
+            let sinceTime = self.store.getLastUpdateTime(user: currentUser)
+
+            self.networkService.fetchUpdatedValues(for: currentUser, lastSyncTimeForUser: sinceTime)
                 { [weak self] in
                     self?.scheduleRepeatingSync()
                 }

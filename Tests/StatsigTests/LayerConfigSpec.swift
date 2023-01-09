@@ -73,10 +73,11 @@ fileprivate struct Data {
         ]
     ]
 
-    static let CacheValues = [
+    static let CacheValues: [String: Any] = [
         "dynamic_configs": DynamicConfigs,
         "feature_gates": FeatureGates,
-        "layer_configs": LayerConfigs
+        "layer_configs": LayerConfigs,
+        "has_updates": true
     ]
 
     static let StickyValues = [
@@ -98,7 +99,8 @@ class LayerConfigSpec: QuickSpec {
                 InternalStore.deleteAllLocalStorage()
                 store = InternalStore(StatsigUser(userID: "dloomb"))
 
-                store.cache.saveValues(Data.CacheValues, forCacheKey: StatsigUser(userID: "dloomb").getCacheKey())
+                let user = StatsigUser(userID: "dloomb")
+                store.cache.saveValues(Data.CacheValues, user.getCacheKey(), user.getFullUserHash())
             }
 
             it("returns the experiment values") {
@@ -116,10 +118,11 @@ class LayerConfigSpec: QuickSpec {
                 var updatedValues: [String: Any] = Data.CacheValues
                 updatedValues[jsonDict: "dynamic_configs"]?[jsonDict: Data.HashConfigKey]?["is_user_in_experiment"] = false
 
-                store = InternalStore(StatsigUser(userID: "dloomb")) // reload the cache, and user is no longer in the experiment, but value should stick because experiment is active
+                let user = StatsigUser(userID: "dloomb")
+                store = InternalStore(user) // reload the cache, and user is no longer in the experiment, but value should stick because experiment is active
 
                 waitUntil { done in
-                    store.set(values: updatedValues, withCacheKey: store.cache.userCacheKey) {
+                    store.saveValues(updatedValues, store.cache.userCacheKey, user.getFullUserHash()) {
                         done()
                     }
                 }
@@ -138,10 +141,10 @@ class LayerConfigSpec: QuickSpec {
 
                 // reload the cache, and user is allocated to a different experiment,
                 // but should still get same value because previous experiment is still active
-                store = InternalStore(StatsigUser(userID: "dloomb"))
+                store = InternalStore(user)
 
                 waitUntil { done in
-                    store.set(values: updatedValues, withCacheKey: store.cache.userCacheKey) {
+                    store.saveValues(updatedValues, store.cache.userCacheKey, user.getFullUserHash()) {
                         done()
                     }
                 }
@@ -154,7 +157,7 @@ class LayerConfigSpec: QuickSpec {
                 store = InternalStore(StatsigUser(userID: "dloomb"))
 
                 waitUntil { done in
-                    store.set(values: updatedValues, withCacheKey: store.cache.userCacheKey) {
+                    store.saveValues(updatedValues, store.cache.userCacheKey, user.getFullUserHash()) {
                         done()
                     }
                 }
@@ -177,9 +180,10 @@ class LayerConfigSpec: QuickSpec {
                     "allocated_experiment_name": Data.AnotherConfigKey
                 ]
 
-                store = InternalStore(StatsigUser(userID: "dloomb"))
+                let user = StatsigUser(userID: "dloomb")
+                store = InternalStore(user)
                 waitUntil { done in
-                    store.set(values: updatedValues, withCacheKey: store.cache.userCacheKey) {
+                    store.saveValues(updatedValues, store.cache.userCacheKey, user.getFullUserHash()) {
                         done()
                     }
                 }

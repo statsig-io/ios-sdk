@@ -17,10 +17,11 @@ class LocalOverridesSpec: QuickSpec {
             beforeEach {
                 InternalStore.deleteAllLocalStorage()
 
-                TestUtils.startWithResponseAndWait([
+                _ = TestUtils.startWithResponseAndWait([
                     "feature_gates": [],
                     "dynamic_configs": [],
-                    "layer_configs": []
+                    "layer_configs": [],
+                    "has_updates": true
                 ])
             }
 

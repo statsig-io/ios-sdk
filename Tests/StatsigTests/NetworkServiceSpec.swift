@@ -35,7 +35,7 @@ class NetworkServiceSpec: QuickSpec {
                     StatsigUser(
                         userID: "jkw",
                         privateAttributes: ["email": "something@somethingelse.com"],
-                        customIDs: ["randomID": "ABCDE"]), completion: nil)
+                        customIDs: ["randomID": "ABCDE"]), sinceTime: 0, completion: nil)
                 let now = NSDate().timeIntervalSince1970
 
                 expect(actualRequestHttpBody?.keys).toEventually(contain("user", "statsigMetadata"))
@@ -63,7 +63,7 @@ class NetworkServiceSpec: QuickSpec {
                 let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(StatsigUser(userID: "jkw")))
                 let now = NSDate().epochTimeInMs()
                 waitUntil { done in
-                    ns.fetchUpdatedValues(for: StatsigUser(userID: "jkw"), since: now) {
+                    ns.fetchUpdatedValues(for: StatsigUser(userID: "jkw"), lastSyncTimeForUser: now) {
                         done()
                     }
                 }
@@ -173,7 +173,7 @@ class NetworkServiceSpec: QuickSpec {
 
                 var expected = -1
                 waitUntil { done in
-                    ns.fetchInitialValues(for: user) { err in
+                    ns.fetchInitialValues(for: user, sinceTime: 0) { err in
                         expected = calls
                         expect(err).to(equal("initTimeout Expired"))
                         timedout = true;

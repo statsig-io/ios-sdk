@@ -42,6 +42,7 @@ extension UserDefaults {
 struct StatsigValuesCache {
     var cacheByID: [String: [String: Any]]
     var userCacheKey: String
+    var userLastUpdateTime: Double
     var userCache: [String: Any]
     var stickyDeviceExperiments: [String: [String: Any]]
     var reason: EvaluationReason = .Uninitialized
@@ -52,6 +53,7 @@ struct StatsigValuesCache {
 
         self.userCache = [:]
         self.userCacheKey = "null"
+        self.userLastUpdateTime = 0
 
         self.setUserCacheKeyAndValues(user)
         self.migrateLegacyStickyExperimentValues(user)
@@ -126,8 +128,12 @@ struct StatsigValuesCache {
         }
     }
 
-    func getLastUpdatedTime() -> Double {
-        return userCache["time"] as? Double ?? 0
+    func getLastUpdatedTime(user: StatsigUser) -> Double {
+        if (userCache[InternalStore.userHashKey] as? String == user.getFullUserHash()) {
+            return userCache["time"] as? Double ?? 0
+        }
+
+        return 0
     }
 
     mutating func updateUser(_ newUser: StatsigUser) {
@@ -136,21 +142,24 @@ struct StatsigValuesCache {
         setUserCacheKeyAndValues(newUser)
     }
 
-    mutating func saveValues(_ values: [String: Any], forCacheKey cacheKey: String) {
+    mutating func saveValues(_ values: [String: Any], _ cacheKey: String, _ userHash: String?) {
         var cache = cacheKey == userCacheKey ? userCache : getCacheValues(forCacheKey: cacheKey)
 
-        cache[InternalStore.gatesKey] = values[InternalStore.gatesKey]
-        cache[InternalStore.configsKey] = values[InternalStore.configsKey]
-        cache[InternalStore.layerConfigsKey] = values[InternalStore.layerConfigsKey]
-        cache["time"] = values["time"] as? Double ?? userCache["time"]
-        cache[InternalStore.evalTimeKey] = NSDate().epochTimeInMs()
+        let hasUpdates = values["has_updates"] as? Bool
+        if hasUpdates == true {
+            cache[InternalStore.gatesKey] = values[InternalStore.gatesKey]
+            cache[InternalStore.configsKey] = values[InternalStore.configsKey]
+            cache[InternalStore.layerConfigsKey] = values[InternalStore.layerConfigsKey]
+            cache["time"] = values["time"] as? Double ?? 0
+            cache[InternalStore.evalTimeKey] = NSDate().epochTimeInMs()
+            cache[InternalStore.userHashKey] = userHash
+        }
 
         if (userCacheKey == cacheKey) {
             // Now the values we serve came from network request
-            reason = .Network
+            reason = hasUpdates == true ? .Network : .NetworkNotModified
             userCache = cache
         }
-
 
         cacheByID[cacheKey] = cache
         UserDefaults.standard.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
@@ -260,16 +269,20 @@ class InternalStore {
     static let stickyExpKey = "sticky_experiments"
     static let layerConfigsKey = "layer_configs"
     static let evalTimeKey = "evaluation_time"
+    static let userHashKey = "user_hash"
 
     var cache: StatsigValuesCache
     var localOverrides: [String: Any] = InternalStore.getEmptyOverrides()
-    var updatedTime: Double { cache.getLastUpdatedTime() }
     let storeQueue = DispatchQueue(label: storeQueueLabel, qos: .userInitiated, attributes: .concurrent)
 
     init(_ user: StatsigUser) {
         cache = StatsigValuesCache(user)
         localOverrides = UserDefaults.standard.dictionarySafe(forKey: InternalStore.localOverridesKey)
         ?? InternalStore.getEmptyOverrides()
+    }
+
+    func getLastUpdateTime(user: StatsigUser) -> Double {
+        return cache.getLastUpdatedTime(user: user)
     }
 
     func checkGate(forName: String) -> FeatureGate {
@@ -335,10 +348,10 @@ class InternalStore {
             })
     }
 
-    func set(values: [String: Any], withCacheKey cacheKey: String, completion: (() -> Void)? = nil) {
+    func saveValues(_ values: [String: Any], _ cacheKey: String, _ userHash: String?, _ completion: (() -> Void)? = nil) {
         storeQueue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
-            self.cache.saveValues(values, forCacheKey: cacheKey)
+            self.cache.saveValues(values, cacheKey, userHash)
             DispatchQueue.main.async {
                 completion?()
             }

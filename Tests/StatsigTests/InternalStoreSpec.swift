@@ -4,6 +4,25 @@ import Nimble
 import Quick
 @testable import Statsig
 
+extension Dictionary<String, Any> {
+    mutating func replaceAtPath(_ path: String, _ value: Any) {
+        var parts: [String] = path.components(separatedBy: ".")
+        let key = parts.removeFirst()
+
+        if parts.count > 0 {
+            guard var dict = self[key] as? [String: Any] else {
+                return
+            }
+
+            let remaining = parts.joined(separator: ".")
+            dict.replaceAtPath(remaining, value)
+            self[key] = dict
+        } else {
+            self[key] = value
+        }
+    }
+}
+
 class InternalStoreSpec: QuickSpec {
     private func cacheIsEmpty(_ cache: [String: Any]) -> Bool {
         return
@@ -28,7 +47,7 @@ class InternalStoreSpec: QuickSpec {
                 let user = StatsigUser()
                 let store = InternalStore(user)
                 waitUntil(timeout: .seconds(1)) { done in
-                    store.set(values: StatsigSpec.mockUserValues, withCacheKey: user.getCacheKey()) {
+                    store.saveValues(StatsigSpec.mockUserValues, user.getCacheKey(), user.getFullUserHash()) {
                         done()
                     }
                 }
@@ -55,7 +74,8 @@ class InternalStoreSpec: QuickSpec {
                 let gateKey = "gate"
                 let hashConfigKey = configKey.sha256()
                 let hashGateKey = gateKey.sha256()
-                let values: [String: [String: Any]] = [
+
+                let values: [String: Any] = [
                     "dynamic_configs": [
                         hashConfigKey: [
                             "rule_id": "default",
@@ -66,7 +86,8 @@ class InternalStoreSpec: QuickSpec {
                     ],
                     "feature_gates": [
                         hashGateKey: ["value": true, "rule_id": "rule_id_2"]
-                    ]
+                    ],
+                    "has_updates": true
                 ]
                 let stickyValues = [
                     hashConfigKey: [
@@ -107,9 +128,10 @@ class InternalStoreSpec: QuickSpec {
                     "feature_gates": [
                         hashGateKey: ["value": false, "rule_id": "rule_id_2"]
                     ],
+                    "has_updates": true,
                     "time": 12345
                 ]
-                store.set(values: newValues, withCacheKey: user.getCacheKey())
+                store.saveValues(newValues, user.getCacheKey(), user.getFullUserHash())
                 gate = store.checkGate(forName: gateKey)
                 expect(gate.value).to(beFalse())
 
@@ -129,7 +151,7 @@ class InternalStoreSpec: QuickSpec {
                 let gateKey = "gate"
                 let hashConfigKey = configKey.sha256()
                 let hashGateKey = gateKey.sha256()
-                let values: [String: [String: Any]] = [
+                let values: [String: Any] = [
                     "dynamic_configs": [
                         hashConfigKey: [
                             "rule_id": "default",
@@ -140,7 +162,8 @@ class InternalStoreSpec: QuickSpec {
                     ],
                     "feature_gates": [
                         hashGateKey: ["value": true, "rule_id": "rule_id_2"]
-                    ]
+                    ],
+                    "has_updates": true
                 ]
                 let stickyValues = [
                     hashConfigKey: [
@@ -172,7 +195,7 @@ class InternalStoreSpec: QuickSpec {
                 let nonStickyExpKey = "exp_non_stick"
                 let hashedNonStickyExpKey = nonStickyExpKey.sha256()
 
-                var values: [String: [String: [String: Any]]] = [
+                var values: [String: Any] = [
                     "dynamic_configs": [
                         hashConfigKey: [
                             "rule_id": "default",
@@ -199,8 +222,9 @@ class InternalStoreSpec: QuickSpec {
                             "is_experiment_active": true,
                         ],
                     ],
+                    "has_updates": true
                 ]
-                store.set(values: values, withCacheKey: user.getCacheKey())
+                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
 
                 var exp = store.getExperiment(forName: expKey, keepDeviceValue: false)
                 var deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: false)
@@ -210,10 +234,10 @@ class InternalStoreSpec: QuickSpec {
                 expect(nonStickExp.getValue(forKey: "label", defaultValue: "")).to(equal("non_stick_v0"))
 
                 // Change the values, now user should get updated values
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v1"]
-                values["dynamic_configs"]![hashedNonStickyExpKey]!["value"] = ["label": "non_stick_v1"]
-                store.set(values: values, withCacheKey: user.getCacheKey())
+                values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v1"])
+                values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v1"])
+                values.replaceAtPath("dynamic_configs.\(hashedNonStickyExpKey).value", ["label": "non_stick_v1"])
+                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
@@ -223,10 +247,10 @@ class InternalStoreSpec: QuickSpec {
                 expect(nonStickExp.getValue(forKey: "label", defaultValue: "")).to(equal("non_stick_v1"))
 
                 // change the values again, but this time the value should be sticky from last time, except for the non sticky one
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v2"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v2"]
-                values["dynamic_configs"]![hashedNonStickyExpKey]!["value"] = ["label": "non_stick_v2"]
-                store.set(values: values, withCacheKey: user.getCacheKey())
+                values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v2"])
+                values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v2"])
+                values.replaceAtPath("dynamic_configs.\(hashedNonStickyExpKey).value", ["label": "non_stick_v2"])
+                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
@@ -236,14 +260,14 @@ class InternalStoreSpec: QuickSpec {
                 expect(nonStickExp.getValue(forKey: "label", defaultValue: "")).to(equal("non_stick_v2"))
 
                 // Now we update the user to be no longer in the experiment, value should still be sticky
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v3"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v3"]
-                values["dynamic_configs"]![hashedNonStickyExpKey]!["value"] = ["label": "non_stick_v3"]
+                values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v3"])
+                values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v3"])
+                values.replaceAtPath("dynamic_configs.\(hashedNonStickyExpKey).value", ["label": "non_stick_v3"])
 
-                values["dynamic_configs"]![hashedExpKey]!["is_user_in_experiment"] = false
-                values["dynamic_configs"]![hashedDeviceExpKey]!["is_user_in_experiment"] = false
-                values["dynamic_configs"]![hashedNonStickyExpKey]!["is_user_in_experiment"] = false
-                store.set(values: values, withCacheKey: user.getCacheKey())
+                values.replaceAtPath("dynamic_configs.\(hashedExpKey).is_user_in_experiment", false)
+                values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).is_user_in_experiment", false)
+                values.replaceAtPath("dynamic_configs.\(hashedNonStickyExpKey).is_user_in_experiment", false)
+                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
@@ -253,14 +277,14 @@ class InternalStoreSpec: QuickSpec {
                 expect(nonStickExp.getValue(forKey: "label", defaultValue: "")).to(equal("non_stick_v3"))
 
                 // Then we update the experiment to not be active, value should NOT be sticky
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v4"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v4"]
-                values["dynamic_configs"]![hashedNonStickyExpKey]!["value"] = ["label": "non_stick_v4"]
+                values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v4"])
+                values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v4"])
+                values.replaceAtPath("dynamic_configs.\(hashedNonStickyExpKey).value", ["label": "non_stick_v4"])
 
-                values["dynamic_configs"]![hashedExpKey]!["is_experiment_active"] = false
-                values["dynamic_configs"]![hashedDeviceExpKey]!["is_experiment_active"] = false
-                values["dynamic_configs"]![hashedNonStickyExpKey]!["is_experiment_active"] = false
-                store.set(values: values, withCacheKey: user.getCacheKey())
+                values.replaceAtPath("dynamic_configs.\(hashedExpKey).is_experiment_active", false)
+                values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).is_experiment_active", false)
+                values.replaceAtPath("dynamic_configs.\(hashedNonStickyExpKey).is_experiment_active", false)
+                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
@@ -281,7 +305,7 @@ class InternalStoreSpec: QuickSpec {
                 let deviceExpKey = "device_exp"
                 let hashedDeviceExpKey = deviceExpKey.sha256()
 
-                var values: [String: [String: [String: Any]]] = [
+                var values: [String: Any] = [
                     "dynamic_configs": [
                         hashedExpKey: [
                             "rule_id": "rule_id_1",
@@ -298,8 +322,9 @@ class InternalStoreSpec: QuickSpec {
                             "is_experiment_active": true,
                         ],
                     ],
+                    "has_updates": true
                 ]
-                store.set(values: values, withCacheKey: user.getCacheKey())
+                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
 
                 var exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 var deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
@@ -309,9 +334,10 @@ class InternalStoreSpec: QuickSpec {
                 // Delete user sticky values (update user), change the latest values, now user should get updated values but device value stays the same
                 user = StatsigUser(userID: "tore")
                 store.updateUser(user)
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v1"]
-                store.set(values: values, withCacheKey: user.getCacheKey())
+
+                values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v1"])
+                values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v1"])
+                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
@@ -319,9 +345,10 @@ class InternalStoreSpec: QuickSpec {
                 expect(deviceExp.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v0"))
 
                 // Try to get value with keepDeviceValue set to false. Should get updated values
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v2"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v2"]
-                store.set(values: values, withCacheKey: user.getCacheKey())
+                values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v2"])
+                values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v2"])
+
+                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: false)
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: false)
@@ -339,7 +366,7 @@ class InternalStoreSpec: QuickSpec {
                 let deviceExpKey = "device_exp"
                 let hashedDeviceExpKey = deviceExpKey.sha256()
 
-                var values: [String: [String: [String: Any]]] = [
+                var values: [String: Any] = [
                     "dynamic_configs": [
                         hashedExpKey: [
                             "rule_id": "rule_id_1",
@@ -356,9 +383,13 @@ class InternalStoreSpec: QuickSpec {
                             "is_experiment_active": true,
                         ],
                     ],
+                    "has_updates": true
                 ]
+
+
                 waitUntil { done in
-                    store.set(values: values, withCacheKey: StatsigUser(userID: "jkw").getCacheKey()) {
+                    let user = StatsigUser(userID: "jkw")
+                    store.saveValues(values, user.getCacheKey(), user.getFullUserHash()) {
                         done()
                     }
                 }
@@ -370,10 +401,14 @@ class InternalStoreSpec: QuickSpec {
 
                 // Reinitialize, same user ID, should keep sticky values
                 store = InternalStore(StatsigUser(userID: "jkw"))
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"] // this value changed, but old value should be sticky
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v1"]
+                values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v1"]) // this value changed, but old value should be sticky
+                values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v1"])
+//                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"] // this value changed, but old value should be sticky
+//                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v1"]
+
                 waitUntil { done in
-                    store.set(values: values, withCacheKey: StatsigUser(userID: "jkw").getCacheKey()) {
+                    let user = StatsigUser(userID: "jkw")
+                    store.saveValues(values, user.getCacheKey(), user.getFullUserHash()) {
                         done()
                     }
                 }
@@ -382,13 +417,16 @@ class InternalStoreSpec: QuickSpec {
                 expect(exp.getValue(forKey: "label", defaultValue: "")).to(equal("exp_v0")) // should still get old value
                 expect(deviceExp.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v0"))
 
-
                 // Re-initialize store with a different ID, change the latest values, now user should get updated values but device value stays the same
                 store = InternalStore(StatsigUser(userID: "tore"))
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v1"]
+//                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"]
+//                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v1"]
+                values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v1"])
+                values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v1"])
+
                 waitUntil { done in
-                    store.set(values: values, withCacheKey: StatsigUser(userID: "tore").getCacheKey()) {
+                    let user = StatsigUser(userID: "tore")
+                    store.saveValues(values, user.getCacheKey(), user.getFullUserHash()) {
                         done()
                     }
                 }
@@ -399,10 +437,14 @@ class InternalStoreSpec: QuickSpec {
                 expect(deviceExp.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v0"))
 
                 // Try to get value with keepDeviceValue set to false. Should get updated values
-                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v2"]
-                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v2"]
+//                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v2"]
+//                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v2"]
+                values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v2"])
+                values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v2"])
+
                 waitUntil { done in
-                    store.set(values: values, withCacheKey: StatsigUser(userID: "tore").getCacheKey()) {
+                    let user = StatsigUser(userID: "tore")
+                    store.saveValues(values, user.getCacheKey(), user.getFullUserHash()) {
                         done()
                     }
                 }

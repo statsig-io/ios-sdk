@@ -9,20 +9,12 @@ import Quick
 import OHHTTPStubsSwift
 #endif
 
-func skipFrame() {
-    waitUntil { done in
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            done()
-        }
-    }
-}
-
 class ExposureLoggingSpec: QuickSpec {
     override func spec() {
         describe("ExposureLogging") {
             var logs: [[String: Any]] = []
             beforeEach {
-                TestUtils.startWithResponseAndWait([
+                _ = TestUtils.startWithResponseAndWait([
                     "feature_gates": [
                         "a_gate".sha256(): [
                             "value": true
@@ -40,7 +32,9 @@ class ExposureLoggingSpec: QuickSpec {
                         "a_layer".sha256(): [
                             "value": ["a_bool": true],
                         ]
-                    ]
+                    ],
+                    "time": 321,
+                    "has_updates": true
                 ])
                 Statsig.client?.logger.flushBatchSize = 1
 

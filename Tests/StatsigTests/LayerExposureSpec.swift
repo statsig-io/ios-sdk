@@ -41,7 +41,7 @@ class LayerExposureSpec: QuickSpec {
     override func spec() {
         describe("Layer Exposure Logging") {
             it("logs layers without an allocated experiment correctly") {
-                TestUtils.startWithResponseAndWait([
+                _ = TestUtils.startWithResponseAndWait([
                     "layer_configs": [
                         "layer".sha256(): [
                             "value": ["an_int": 99],
@@ -51,7 +51,8 @@ class LayerExposureSpec: QuickSpec {
                             "allocated_experiment_name": "",
                             "explicit_parameters": []
                         ]
-                    ]
+                    ],
+                    "has_updates": true
                 ])
 
                 let layer = Statsig.getLayer("layer")
@@ -83,7 +84,7 @@ class LayerExposureSpec: QuickSpec {
             }
 
             it("logs explicit and implicit parameters correctly") {
-                TestUtils.startWithResponseAndWait([
+                _ = TestUtils.startWithResponseAndWait([
                     "layer_configs": [
                         "layer".sha256(): [
                             "value": ["an_int": 99, "a_string": "value"],
@@ -93,7 +94,8 @@ class LayerExposureSpec: QuickSpec {
                             "allocated_experiment_name": "the_allocated_experiment",
                             "explicit_parameters": ["an_int"]
                         ]
-                    ]
+                    ],
+                    "has_updates": true
                 ])
 
                 let layer = Statsig.getLayer("layer")
@@ -144,7 +146,7 @@ class LayerExposureSpec: QuickSpec {
             }
 
             it("logs different object types correctly") {
-                TestUtils.startWithResponseAndWait([
+                _ = TestUtils.startWithResponseAndWait([
                     "layer_configs": [
                         "layer".sha256(): [
                             "value": [
@@ -157,7 +159,8 @@ class LayerExposureSpec: QuickSpec {
                                 "an_object": ["key": "value"]
                             ],
                         ]
-                    ]
+                    ],
+                    "has_updates": true
                 ])
 
                 let layer = Statsig.getLayer("layer")
@@ -182,14 +185,15 @@ class LayerExposureSpec: QuickSpec {
             }
 
             it("does not log when shutdown") {
-                TestUtils.startWithResponseAndWait([
+                _ = TestUtils.startWithResponseAndWait([
                     "layer_configs": [
                         "layer".sha256(): [
                             "value": [
                                 "a_bool": true,
                             ],
                         ]
-                    ]
+                    ],
+                    "has_updates": true
                 ])
 
                 let layer = Statsig.getLayer("layer")
@@ -205,12 +209,13 @@ class LayerExposureSpec: QuickSpec {
             }
 
             it("logs the correct name and user values") {
-                TestUtils.startWithResponseAndWait([
+                _ = TestUtils.startWithResponseAndWait([
                     "layer_configs": [
                         "layer".sha256(): [
                             "value": ["an_int": 99],
                         ]
-                    ]
+                    ],
+                    "has_updates": true
                 ], "client-sdk-key", StatsigUser(userID: "dloomb", email: "dan@loomb.co.nz"))
 
                 let layer = Statsig.getLayer("layer")

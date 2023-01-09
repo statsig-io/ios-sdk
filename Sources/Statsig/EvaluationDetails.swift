@@ -19,6 +19,7 @@ public struct EvaluationDetails: Codable {
 
 public enum EvaluationReason: String, Codable {
     case Network;
+    case NetworkNotModified;
     case Cache;
     case Sticky;
     case LocalOverride;
