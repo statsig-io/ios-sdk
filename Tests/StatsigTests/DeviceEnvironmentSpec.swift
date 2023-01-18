@@ -4,10 +4,12 @@ import Nimble
 import Quick
 @testable import Statsig
 
-class DeviceEnvironmentSpec: QuickSpec {
+class DeviceEnvironmentSpec: BaseSpec {
     override func spec() {
+        super.spec()
+        
         describe("getting the environment info about current device") {
-            UserDefaults.standard.removeObject(forKey: "com.Statsig.InternalStore.stableIDKey")
+            StatsigUserDefaults.defaults.removeObject(forKey: "com.Statsig.InternalStore.stableIDKey")
             let env1 = DeviceEnvironment().get()
             let env2 = DeviceEnvironment().get()
             let env3 = DeviceEnvironment().get("12345")

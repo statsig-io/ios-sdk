@@ -20,7 +20,7 @@ func badStub() {
     }
 }
 
-class StatsigListeningSpec: QuickSpec {
+class StatsigListeningSpec: BaseSpec {
     class TestListener: StatsigListening {
         var onInitializedCalled = false
         var onInitializedError: String?
@@ -40,6 +40,8 @@ class StatsigListeningSpec: QuickSpec {
     }
 
     override func spec() {
+        super.spec()
+        
         beforeEach {
             InternalStore.deleteAllLocalStorage()
         }

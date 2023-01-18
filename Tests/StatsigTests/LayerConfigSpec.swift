@@ -88,9 +88,11 @@ fileprivate struct Data {
     ]
 }
 
-class LayerConfigSpec: QuickSpec {
+class LayerConfigSpec: BaseSpec {
 
     override func spec() {
+        super.spec()
+        
         describe("using getLayerConfig") {
             let client = StatsigClient(sdkKey: "", user: nil, options: nil, completion: nil)
             var store: InternalStore!

@@ -41,6 +41,11 @@ jobs:
           cd .swiftpm/xcode
           xcodebuild build -workspace package.xcworkspace -scheme Statsig -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO | xcbeautify && exit ${PIPESTATUS[0]}
 
+      - name: Build macOS
+        run: |
+          cd .swiftpm/xcode
+          xcodebuild build -workspace package.xcworkspace -scheme Statsig -destination "platform=macOS" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO | xcbeautify && exit ${PIPESTATUS[0]}
+
       - name: Test Internal Store
         run: |
           cd .swiftpm/xcode

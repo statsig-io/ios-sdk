@@ -1,6 +1,5 @@
 import Foundation
 
-import UIKit
 
 struct DeviceEnvironment {
     private let stableIDKey = "com.Statsig.InternalStore.stableIDKey"
@@ -9,8 +8,8 @@ struct DeviceEnvironment {
     var sdkType: String = "ios-client"
     var sdkVersion: String = "1.17.1"
     var sessionID: String? { UUID().uuidString }
-    var systemVersion: String { UIDevice.current.systemVersion }
-    var systemName: String { UIDevice.current.systemName }
+    var systemVersion: String { PlatformCompatibility.deviceInfo.systemVersion }
+    var systemName: String { PlatformCompatibility.deviceInfo.systemName }
     var language: String { Locale.preferredLanguages[0] }
     var locale: String { Locale.current.identifier }
     var appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
@@ -25,13 +24,13 @@ struct DeviceEnvironment {
         if let deviceModel = String(bytes: Data(bytes: &sysinfo.machine, count: Int(_SYS_NAMELEN)), encoding: .ascii) {
             return deviceModel.trimmingCharacters(in: .controlCharacters)
         } else {
-            return UIDevice.current.model
+            return PlatformCompatibility.deviceInfo.model
         }
     }
 
     func getStableID(_ overrideStableID: String? = nil) -> String {
-        let stableID = overrideStableID ?? UserDefaults.standard.string(forKey: stableIDKey) ?? UUID().uuidString
-        UserDefaults.standard.setValue(stableID, forKey: stableIDKey)
+        let stableID = overrideStableID ?? StatsigUserDefaults.defaults.string(forKey: stableIDKey) ?? UUID().uuidString
+        StatsigUserDefaults.defaults.setValue(stableID, forKey: stableIDKey)
         return stableID
     }
 

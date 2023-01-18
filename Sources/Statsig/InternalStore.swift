@@ -16,7 +16,7 @@ extension UserDefaults {
     func setDictionarySafe(_ dict: [String: Any], forKey key: String) {
         do {
             let json = try JSONSerialization.data(withJSONObject: dict)
-            UserDefaults.standard.set(json, forKey: key)
+            self.set(json, forKey: key)
         } catch {
             print("[Statsig]: Failed to save to cache")
         }
@@ -24,7 +24,7 @@ extension UserDefaults {
 
     func dictionarySafe(forKey key: String) -> [String: Any]? {
         do {
-            guard let data = UserDefaults.standard.data(forKey: key) else {
+            guard let data = self.data(forKey: key) else {
                 return nil
             }
 
@@ -162,7 +162,7 @@ struct StatsigValuesCache {
         }
 
         cacheByID[cacheKey] = cache
-        UserDefaults.standard.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
+        StatsigUserDefaults.defaults.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
     }
 
     mutating func saveStickyExperimentIfNeeded(_ expName: String, _ latestValue: ConfigProtocol) {
@@ -197,8 +197,8 @@ struct StatsigValuesCache {
 
     private mutating func saveToUserDefaults() {
         cacheByID[userCacheKey] = userCache
-        UserDefaults.standard.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
-        UserDefaults.standard.setDictionarySafe(stickyDeviceExperiments, forKey: InternalStore.stickyDeviceExperimentsKey)
+        StatsigUserDefaults.defaults.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
+        StatsigUserDefaults.defaults.setDictionarySafe(stickyDeviceExperiments, forKey: InternalStore.stickyDeviceExperimentsKey)
     }
 
     private mutating func setUserCacheKeyAndValues(_ user: StatsigUser) {
@@ -217,13 +217,13 @@ struct StatsigValuesCache {
     }
 
     private static func loadDictMigratingIfRequired(forKey key: String) -> [String: [String: Any]] {
-        if let dict = UserDefaults.standard.dictionarySafe(forKey: key) as? [String: [String: Any]] {
+        if let dict = StatsigUserDefaults.defaults.dictionarySafe(forKey: key) as? [String: [String: Any]] {
             return dict
         }
 
         // Load and Migrate Legacy
-        if let dict = UserDefaults.standard.dictionary(forKey: key) as? [String: [String: Any]] {
-            UserDefaults.standard.setDictionarySafe(dict, forKey: key)
+        if let dict = StatsigUserDefaults.defaults.dictionary(forKey: key) as? [String: [String: Any]] {
+            StatsigUserDefaults.defaults.setDictionarySafe(dict, forKey: key)
             return dict
         }
 
@@ -231,13 +231,13 @@ struct StatsigValuesCache {
     }
 
     private mutating func migrateLegacyStickyExperimentValues(_ currentUser: StatsigUser) {
-        let previousUserID = UserDefaults.standard.string(forKey: InternalStore.DEPRECATED_stickyUserIDKey) ?? ""
-        let previousUserStickyExperiments = UserDefaults.standard.dictionary(forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)
+        let previousUserID = StatsigUserDefaults.defaults.string(forKey: InternalStore.DEPRECATED_stickyUserIDKey) ?? ""
+        let previousUserStickyExperiments = StatsigUserDefaults.defaults.dictionary(forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)
         if previousUserID == currentUser.userID, let oldStickyExps = previousUserStickyExperiments {
             userCache[InternalStore.stickyExpKey] = oldStickyExps
         }
 
-        let previousCache = UserDefaults.standard.dictionary(forKey: InternalStore.DEPRECATED_localStorageKey)
+        let previousCache = StatsigUserDefaults.defaults.dictionary(forKey: InternalStore.DEPRECATED_localStorageKey)
         if let previousCache = previousCache {
             if let gates = userCache[InternalStore.gatesKey] as? [String: Bool], gates.count == 0 {
                 userCache[InternalStore.gatesKey] = previousCache[InternalStore.gatesKey]
@@ -247,9 +247,9 @@ struct StatsigValuesCache {
             }
         }
 
-        UserDefaults.standard.removeObject(forKey: InternalStore.DEPRECATED_localStorageKey)
-        UserDefaults.standard.removeObject(forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)
-        UserDefaults.standard.removeObject(forKey: InternalStore.DEPRECATED_stickyUserIDKey)
+        StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.DEPRECATED_localStorageKey)
+        StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)
+        StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.DEPRECATED_stickyUserIDKey)
     }
 }
 
@@ -277,7 +277,7 @@ class InternalStore {
 
     init(_ user: StatsigUser) {
         cache = StatsigValuesCache(user)
-        localOverrides = UserDefaults.standard.dictionarySafe(forKey: InternalStore.localOverridesKey)
+        localOverrides = StatsigUserDefaults.defaults.dictionarySafe(forKey: InternalStore.localOverridesKey)
         ?? InternalStore.getEmptyOverrides()
     }
 
@@ -365,13 +365,13 @@ class InternalStore {
     }
 
     static func deleteAllLocalStorage() {
-        UserDefaults.standard.removeObject(forKey: InternalStore.DEPRECATED_localStorageKey)
-        UserDefaults.standard.removeObject(forKey: InternalStore.localStorageKey)
-        UserDefaults.standard.removeObject(forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)
-        UserDefaults.standard.removeObject(forKey: InternalStore.stickyDeviceExperimentsKey)
-        UserDefaults.standard.removeObject(forKey: InternalStore.DEPRECATED_stickyUserIDKey)
-        UserDefaults.standard.removeObject(forKey: InternalStore.localOverridesKey)
-        UserDefaults.standard.synchronize()
+        StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.DEPRECATED_localStorageKey)
+        StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.localStorageKey)
+        StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)
+        StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.stickyDeviceExperimentsKey)
+        StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.DEPRECATED_stickyUserIDKey)
+        StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.localOverridesKey)
+        StatsigUserDefaults.defaults.synchronize()
     }
 
     // Local overrides functions
@@ -419,7 +419,7 @@ class InternalStore {
     }
 
     private func saveOverrides() {
-        UserDefaults.standard.setDictionarySafe(localOverrides, forKey: InternalStore.localOverridesKey)
+        StatsigUserDefaults.defaults.setDictionarySafe(localOverrides, forKey: InternalStore.localOverridesKey)
     }
 
     private static func getEmptyOverrides() -> [String: Any] {

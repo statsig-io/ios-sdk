@@ -1,6 +1,5 @@
 import Foundation
 
-import UIKit
 import StatsigInternalObjC
 
 public typealias completionBlock = ((_ errorMessage: String?) -> Void)?

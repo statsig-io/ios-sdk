@@ -1,4 +1,4 @@
-import UIKit
+import Foundation
 
 internal class StatsigClient {
     private static let exposureDedupeQueueLabel = "com.Statsig.exposureDedupeQueue"

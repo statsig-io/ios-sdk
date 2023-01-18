@@ -30,9 +30,11 @@ func makeInitializeResponse(_ configValue: String) -> [String: Any] {
     ]
 }
 
-class AsyncInitVsUpdateSpec: QuickSpec {
+class AsyncInitVsUpdateSpec: BaseSpec {
 
     override func spec() {
+        super.spec()
+
         describe("Race conditions between initializeAsync and updateUser") {
 
             it("does not overwrite user values when unawaited response return") {

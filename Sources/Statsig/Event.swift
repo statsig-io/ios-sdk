@@ -1,6 +1,5 @@
 import Foundation
 
-import UIKit
 
 class Event {
     let name: String
@@ -35,9 +34,9 @@ class Event {
         self.secondaryExposures = secondaryExposures
 
         if !disableCurrentVCLogging {
-            DispatchQueue.main.async { [weak self] in
-                if let self = self, let vc = UIApplication.shared.keyWindow?.rootViewController {
-                    self.statsigMetadata = [Event.currentVCKey: "\(vc.classForCoder)"]
+            PlatformCompatibility.getRootViewControllerClassName { name in
+                if let name = name {
+                    self.statsigMetadata = [Event.currentVCKey: "\(name)"]
                 }
             }
         }

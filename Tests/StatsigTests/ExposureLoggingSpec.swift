@@ -9,8 +9,10 @@ import Quick
 import OHHTTPStubsSwift
 #endif
 
-class ExposureLoggingSpec: QuickSpec {
+class ExposureLoggingSpec: BaseSpec {
     override func spec() {
+        super.spec()
+        
         describe("ExposureLogging") {
             var logs: [[String: Any]] = []
             beforeEach {

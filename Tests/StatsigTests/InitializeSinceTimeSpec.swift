@@ -9,7 +9,7 @@ import Quick
 import OHHTTPStubsSwift
 #endif
 
-class InitializeSinceTimeSpec: QuickSpec {
+class InitializeSinceTimeSpec: BaseSpec {
     let response: [String: Any] = [
         "feature_gates": [
             "a_gate".sha256(): [
@@ -32,6 +32,8 @@ class InitializeSinceTimeSpec: QuickSpec {
     }
 
     override func spec() {
+        super.spec()
+        
         describe("InitializeSinceTime") {
             beforeEach {
                 InternalStore.deleteAllLocalStorage()

@@ -4,8 +4,10 @@ import Nimble
 import Quick
 @testable import Statsig
 
-class EventSpec: QuickSpec {
+class EventSpec: BaseSpec {
     override func spec() {
+        super.spec()
+        
         describe("creating custom events") {
             it("creates basic events as expected") {
                 let event = Event(user: StatsigUser(), name: "purchase", disableCurrentVCLogging: false)

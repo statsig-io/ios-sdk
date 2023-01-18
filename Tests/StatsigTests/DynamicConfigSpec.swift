@@ -3,7 +3,7 @@ import Quick
 @testable import Statsig
 import XCTest
 
-class DynamicConfigSpec: QuickSpec {
+class DynamicConfigSpec: BaseSpec {
     static let TestMixedConfig: [String: Any] =
         [
             "name": "config".sha256(),
@@ -23,6 +23,8 @@ class DynamicConfigSpec: QuickSpec {
             "is_user_in_experiment": true,
         ]
     override func spec() {
+        super.spec()
+        
         describe("dummy config works as expected") {
             it("only returns the default values") {
                 let dc = DynamicConfig(configName: "dummy", evalDetails: EvaluationDetails(reason: .Uninitialized))

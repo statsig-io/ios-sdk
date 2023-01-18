@@ -36,9 +36,11 @@ extension Array {
     }
 }
 
-class LayerExposureSpec: QuickSpec {
+class LayerExposureSpec: BaseSpec {
 
     override func spec() {
+        super.spec()
+        
         describe("Layer Exposure Logging") {
             it("logs layers without an allocated experiment correctly") {
                 _ = TestUtils.startWithResponseAndWait([

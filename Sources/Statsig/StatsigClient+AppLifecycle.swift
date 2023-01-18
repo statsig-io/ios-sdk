@@ -1,23 +1,23 @@
-import UIKit
+import Foundation
 
 extension StatsigClient {
     internal func subscribeToApplicationLifecycle() {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(appWillBackground),
-            name: UIApplication.willResignActiveNotification,
+            name: PlatformCompatibility.willResignActiveNotification,
             object: nil)
 
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(appWillTerminate),
-            name: UIApplication.willTerminateNotification,
+            name: PlatformCompatibility.willTerminateNotification,
             object: nil)
 
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(appWillForeground),
-            name: UIApplication.willEnterForegroundNotification,
+            name: PlatformCompatibility.willEnterForegroundNotification,
             object: nil)
     }
 

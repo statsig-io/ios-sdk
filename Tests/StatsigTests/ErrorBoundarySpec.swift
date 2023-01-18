@@ -10,8 +10,10 @@ import OHHTTPStubsSwift
 #endif
 
 
-class ErrorBoundarySpec: QuickSpec {
+class ErrorBoundarySpec: BaseSpec {
     override func spec() {
+        super.spec()
+        
         describe("Error Boundary") {
             let defaults = UserDefaults(suiteName: "ErrorBoundarySpec")
 

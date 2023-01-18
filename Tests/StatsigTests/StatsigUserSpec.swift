@@ -3,8 +3,10 @@ import Nimble
 import Quick
 @testable import Statsig
 
-class StatsigUserSpec: QuickSpec {
+class StatsigUserSpec: BaseSpec {
     override func spec() {
+        super.spec()
+        
         let validJSONObject: [String: StatsigUserCustomTypeConvertible] =
             ["company": "Statsig", "YOE": 10.5, "alias": ["abby", "bob", "charlie"]]
         let invalidJSONObject: [String: StatsigUserCustomTypeConvertible] =

@@ -10,7 +10,7 @@ import OHHTTPStubsSwift
 
 @testable import Statsig
 
-class EventLoggerSpec: QuickSpec {
+class EventLoggerSpec: BaseSpec {
     class MockDefaults: UserDefaults {
         var data: [String: Any?] = [:]
 
@@ -32,6 +32,8 @@ class EventLoggerSpec: QuickSpec {
     }
 
     override func spec() {
+        super.spec()
+        
         describe("using EventLogger") {
             let sdkKey = "client-api-key"
             let ns = NetworkService(sdkKey: sdkKey, options: StatsigOptions(), store: InternalStore(StatsigUser(userID: "jkw")))

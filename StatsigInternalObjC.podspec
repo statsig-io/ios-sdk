@@ -16,6 +16,7 @@ Pod::Spec.new do |spec|
   spec.author             = { "Jiakan Wang" => "jkw@statsig.com", "Daniel Loomb" => "daniel@statsig.com" }
 
   spec.ios.deployment_target = "10.0"
+  spec.osx.deployment_target = "10.12"
 
   spec.source       = { :git => "https://github.com/statsig-io/ios-sdk.git", :tag => "v#{spec.version}" }
   spec.source_files  = "Sources/StatsigInternalObjC/**/*.{h,m}"

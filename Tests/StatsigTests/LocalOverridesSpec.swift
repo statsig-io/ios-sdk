@@ -11,8 +11,10 @@ import OHHTTPStubsSwift
 
 typealias Map = [String: AnyHashable]
 
-class LocalOverridesSpec: QuickSpec {
+class LocalOverridesSpec: BaseSpec {
     override func spec() {
+        super.spec()
+        
         describe("LocalOverrides") {
             beforeEach {
                 InternalStore.deleteAllLocalStorage()

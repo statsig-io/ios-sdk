@@ -10,8 +10,10 @@ import OHHTTPStubsSwift
 
 @testable import Statsig
 
-class NetworkServiceSpec: QuickSpec {
+class NetworkServiceSpec: BaseSpec {
     override func spec() {
+        super.spec()
+        
         describe("using NetworkService to make network requests to Statsig API endpoints") {
             let sdkKey = "client-api-key"
             afterEach {

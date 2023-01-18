@@ -18,11 +18,18 @@ func skipFrame() {
 
 class TestUtils {
     static func startStatsigAndWait(key: String, _ user: StatsigUser? = nil) {
-        waitUntil { done in
+        var called = false
+        waitUntil(timeout: .seconds(10)) { done in
             Statsig.client = nil
             Statsig.start(sdkKey: key, user: user) { _ in
+                called = true
                 done()
             }
+        }
+
+        if !called {
+            let stubs = HTTPStubs.allStubs() as? [HTTPStubsDescriptor]
+            fatalError("Failed to start Statsig. Stubs: \(String(describing: stubs))")
         }
     }
 
