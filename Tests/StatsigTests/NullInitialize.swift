@@ -61,7 +61,7 @@ class NullInitializeSpec: BaseSpec {
                     }
                 }
 
-                expect(called).to(be(true))
+                expect(called).to(beTrue())
             }
 
             it("works when override contains null") {
@@ -82,7 +82,7 @@ class NullInitializeSpec: BaseSpec {
                         }
                     }
                 }
-                expect(called).to(be(true))
+                expect(called).to(beTrue())
             }
         }
 
