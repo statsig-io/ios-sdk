@@ -282,7 +282,9 @@ class InternalStore {
     }
 
     func getLastUpdateTime(user: StatsigUser) -> Double {
-        return cache.getLastUpdatedTime(user: user)
+        storeQueue.sync {
+            return cache.getLastUpdatedTime(user: user)
+        }
     }
 
     func checkGate(forName: String) -> FeatureGate {
