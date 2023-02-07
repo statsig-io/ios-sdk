@@ -28,4 +28,8 @@ import Foundation
             }
         }
     }
+
+    @objc public init(tier: String) {
+        self.params["tier"] = tier
+    }
 }
