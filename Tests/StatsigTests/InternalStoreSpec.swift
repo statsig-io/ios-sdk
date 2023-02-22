@@ -32,9 +32,8 @@ class InternalStoreSpec: BaseSpec {
                 && (cache["time"] as? Int) == 0
     }
 
-    override func spec() {
-        super.spec()
-        
+    // Called by children
+    func specImpl() {        
         describe("using internal store to save and retrieve values") {
             beforeEach {
                 InternalStore.deleteAllLocalStorage()
@@ -405,8 +404,6 @@ class InternalStoreSpec: BaseSpec {
                 store = InternalStore(StatsigUser(userID: "jkw"))
                 values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v1"]) // this value changed, but old value should be sticky
                 values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v1"])
-//                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"] // this value changed, but old value should be sticky
-//                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v1"]
 
                 waitUntil { done in
                     let user = StatsigUser(userID: "jkw")
@@ -421,8 +418,6 @@ class InternalStoreSpec: BaseSpec {
 
                 // Re-initialize store with a different ID, change the latest values, now user should get updated values but device value stays the same
                 store = InternalStore(StatsigUser(userID: "tore"))
-//                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v1"]
-//                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v1"]
                 values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v1"])
                 values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v1"])
 
@@ -439,8 +434,6 @@ class InternalStoreSpec: BaseSpec {
                 expect(deviceExp.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v0"))
 
                 // Try to get value with keepDeviceValue set to false. Should get updated values
-//                values["dynamic_configs"]![hashedExpKey]!["value"] = ["label": "exp_v2"]
-//                values["dynamic_configs"]![hashedDeviceExpKey]!["value"] = ["label": "device_exp_v2"]
                 values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v2"])
                 values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v2"])
 
@@ -520,7 +513,7 @@ class InternalStoreSpec: BaseSpec {
                 // Save a value in the deprecated style
                 StatsigUserDefaults.defaults.setValue(cacheByID, forKey: InternalStore.localStorageKey)
                 StatsigUserDefaults.defaults.setValue(stickyDeviceExperiments, forKey: InternalStore.stickyDeviceExperimentsKey)
-                StatsigUserDefaults.defaults.synchronize()
+                _ = StatsigUserDefaults.defaults.synchronize()
 
                 let store = InternalStore(StatsigUser(userID: "jkw"))
                 let config = store.getConfig(forName:expKey)

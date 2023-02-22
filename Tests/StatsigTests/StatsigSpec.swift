@@ -81,7 +81,7 @@ class StatsigSpec: BaseSpec {
                 let now = NSDate().timeIntervalSince1970
                 StatsigClient.autoValueUpdateTime = 0.1
 
-                stub(condition: isHost("api.statsig.com")) { request in
+                stub(condition: isHost("api.statsig.enableAutoValueUpdateTest")) { request in
                     requestCount += 1
 
                     let httpBody = try! JSONSerialization.jsonObject(
@@ -92,7 +92,9 @@ class StatsigSpec: BaseSpec {
                     return HTTPStubsResponse(jsonObject: ["time": now * 1000], statusCode: 200, headers: nil)
                 }
 
-                Statsig.start(sdkKey: "client-api-key")
+                let opts = StatsigOptions()
+                opts.overrideURL = URL(string: "http://api.statsig.enableAutoValueUpdateTest")
+                Statsig.start(sdkKey: "client-api-key", options: opts)
 
                 // first request, "lastSyncTimeForUser" field should not be present in the request body
                 expect(requestCount).toEventually(equal(1), timeout: .milliseconds(200))
@@ -105,8 +107,11 @@ class StatsigSpec: BaseSpec {
                 let now = NSDate().timeIntervalSince1970
                 StatsigClient.autoValueUpdateTime = 0.1
 
+                let opts = StatsigOptions(enableAutoValueUpdate: true)
+                opts.overrideURL = URL(string: "http://StatsigSpec.enableAutoValueUpdateEQtrue")
+
                 var requestExpectation = self.expectation(description: "Request Made Once")
-                stub(condition: isHost("api.statsig.com")) { request in
+                stub(condition: isHost("StatsigSpec.enableAutoValueUpdateEQtrue")) { request in
                     requestCount += 1
 
                     let httpBody = request.statsig_body ?? [:]
@@ -116,7 +121,7 @@ class StatsigSpec: BaseSpec {
                     return HTTPStubsResponse(jsonObject: ["time": now * 1000, "has_updates": true], statusCode: 200, headers: nil)
                 }
 
-                Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(enableAutoValueUpdate: true))
+                Statsig.start(sdkKey: "client-api-key", options: opts)
 
                 self.wait(for: [requestExpectation], timeout: 0.05)
                 requestExpectation = self.expectation(description: "Request Made Twice")
@@ -125,7 +130,7 @@ class StatsigSpec: BaseSpec {
                 expect(requestCount).to(equal(1))
                 expect(lastSyncTime).to(equal(0))
 
-                self.wait(for: [requestExpectation], timeout: 0.11)
+                self.wait(for: [requestExpectation], timeout: 1)
                 // second request, "lastSyncTimeForUser" field should be the time when the first request was sent
                 expect(requestCount).to(equal(2))
                 expect(Int(lastSyncTime / 1000)).to(equal(Int(now)))

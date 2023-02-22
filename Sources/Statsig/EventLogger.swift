@@ -12,7 +12,7 @@ class EventLogger {
     var flushTimer: Timer?
     var user: StatsigUser
     let networkService: NetworkService
-    let userDefaults: UserDefaults
+    let userDefaults: DefaultsLike
 
     let logQueue = DispatchQueue(label: eventQueueLabel, qos: .userInitiated)
 
@@ -22,7 +22,7 @@ class EventLogger {
         let MAX_SAVED_LOG_REQUEST_SIZE = 1_000_000 //1 MB
     #endif
 
-    init(user: StatsigUser, networkService: NetworkService, userDefaults: UserDefaults = StatsigUserDefaults.defaults) {
+    init(user: StatsigUser, networkService: NetworkService, userDefaults: DefaultsLike = StatsigUserDefaults.defaults) {
         self.events = [Event]()
         self.failedRequestQueue = [Data]()
         self.user = user

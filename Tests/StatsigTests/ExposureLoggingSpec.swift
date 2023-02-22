@@ -14,6 +14,9 @@ class ExposureLoggingSpec: BaseSpec {
         super.spec()
         
         describe("ExposureLogging") {
+            let opts = StatsigOptions()
+            opts.overrideURL = URL(string: "http://ExposureLoggingSpec")
+
             var logs: [[String: Any]] = []
             beforeEach {
                 _ = TestUtils.startWithResponseAndWait([
@@ -37,11 +40,11 @@ class ExposureLoggingSpec: BaseSpec {
                     ],
                     "time": 321,
                     "has_updates": true
-                ])
+                ], options: opts)
                 Statsig.client?.logger.flushBatchSize = 1
 
                 logs = []
-                TestUtils.captureLogs { captured in
+                TestUtils.captureLogs(host: "ExposureLoggingSpec") { captured in
                     if let events = captured["events"] as? [[String: Any]] {
                         logs = events
                     }

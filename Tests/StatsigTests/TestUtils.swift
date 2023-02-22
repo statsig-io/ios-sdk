@@ -17,11 +17,11 @@ func skipFrame() {
 
 
 class TestUtils {
-    static func startStatsigAndWait(key: String, _ user: StatsigUser? = nil) {
+    static func startStatsigAndWait(key: String, _ user: StatsigUser? = nil, _ options: StatsigOptions? = nil) {
         var called = false
         waitUntil(timeout: .seconds(10)) { done in
             Statsig.client = nil
-            Statsig.start(sdkKey: key, user: user) { _ in
+            Statsig.start(sdkKey: key, user: user, options: options) { _ in
                 called = true
                 done()
             }
@@ -42,31 +42,36 @@ class TestUtils {
     }
 
     static func startWithResponseAndWait(_ response: [String: Any], _ key: String = "client-api-key", _ user: StatsigUser? = nil, _ statusCode: Int32 = 200) -> URLRequest? {
+        return startWithResponseAndWait(response, key, user, 200, options: nil)
+    }
+
+    static func startWithResponseAndWait(_ response: [String: Any], _ key: String = "client-api-key", _ user: StatsigUser? = nil, _ statusCode: Int32 = 200, options: StatsigOptions? = nil) -> URLRequest? {
         var result: URLRequest? = nil
-        stub(condition: isHost("api.statsig.com")) { req in
+        let host = options?.overrideURL?.host ?? "api.statsig.com"
+        stub(condition: isHost(host)) { req in
             result = req
             return HTTPStubsResponse(jsonObject: response, statusCode: statusCode, headers: nil)
         }
 
-        TestUtils.startStatsigAndWait(key: key, user)
+        TestUtils.startStatsigAndWait(key: key, user, options)
 
         return result
     }
 
-    static func startWithStatusAndWait(_ statusCode: Int32 = 200, _ key: String = "client-api-key", _ user: StatsigUser? = nil) -> URLRequest? {
+    static func startWithStatusAndWait(_ statusCode: Int32 = 200, _ key: String = "client-api-key", _ user: StatsigUser? = nil, options: StatsigOptions? = nil) -> URLRequest? {
         var result: URLRequest? = nil
         stub(condition: isHost("api.statsig.com")) { req in
             result = req
             return HTTPStubsResponse(data: Data(), statusCode: statusCode, headers: nil)
         }
 
-        TestUtils.startStatsigAndWait(key: key, user)
+        TestUtils.startStatsigAndWait(key: key, user, options)
 
         return result
     }
 
-    static func captureLogs(onLog: @escaping ([String: Any]) -> Void) {
-        stub(condition: isPath("/v1/rgstr")) { request in
+    static func captureLogs(host: String = "api.statsig.com", onLog: @escaping ([String: Any]) -> Void) {
+        stub(condition: isHost(host) && isPath("/v1/rgstr")) { request in
             let data = try! JSONSerialization.jsonObject(with: request.ohhttpStubs_httpBody!, options: []) as! [String: Any]
             onLog(data)
             return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)

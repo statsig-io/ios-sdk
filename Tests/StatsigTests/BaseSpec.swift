@@ -10,9 +10,12 @@ import OHHTTPStubsSwift
 
 
 class BaseSpec: QuickSpec {
+
     override func spec() {
         beforeSuite {
-            BaseSpec.resetUserDefaults()
+            if (self.shouldResetUserDefaultsBeforeSuite()) {
+                BaseSpec.resetUserDefaults()
+            }
 
             let stubs = HTTPStubs.allStubs()
             if !stubs.isEmpty {
@@ -29,12 +32,10 @@ class BaseSpec: QuickSpec {
             Statsig.client = nil
 
             BaseSpec.resetUserDefaults()
-
-
         }
     }
 
-    private static func resetUserDefaults() {
+    static func resetUserDefaults() {
         let random = Int.random(in: 1..<100)
         let name = "Test User Defaults \(random)"
         let userDefaults = UserDefaults(suiteName: name)!
@@ -42,6 +43,10 @@ class BaseSpec: QuickSpec {
         StatsigUserDefaults.defaults = userDefaults
 
         BaseSpec.verifyStorage()
+    }
+
+    func shouldResetUserDefaultsBeforeSuite() -> Bool {
+        return true
     }
 
     private static func verifyStorage() {

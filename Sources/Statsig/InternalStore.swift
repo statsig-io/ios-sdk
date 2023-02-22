@@ -12,33 +12,6 @@ public struct StatsigOverrides {
     }
 }
 
-extension UserDefaults {
-    func setDictionarySafe(_ dict: [String: Any], forKey key: String) {
-        do {
-            let json = try JSONSerialization.data(withJSONObject: dict)
-            self.set(json, forKey: key)
-        } catch {
-            print("[Statsig]: Failed to save to cache")
-        }
-    }
-
-    func dictionarySafe(forKey key: String) -> [String: Any]? {
-        do {
-            guard let data = self.data(forKey: key) else {
-                return nil
-            }
-
-            guard let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                return nil
-            }
-
-            return dict
-        } catch {
-            return nil
-        }
-    }
-}
-
 struct StatsigValuesCache {
     var cacheByID: [String: [String: Any]]
     var userCacheKey: String
@@ -373,7 +346,7 @@ class InternalStore {
         StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.stickyDeviceExperimentsKey)
         StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.DEPRECATED_stickyUserIDKey)
         StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.localOverridesKey)
-        StatsigUserDefaults.defaults.synchronize()
+        _ = StatsigUserDefaults.defaults.synchronize()
     }
 
     // Local overrides functions

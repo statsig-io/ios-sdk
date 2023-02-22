@@ -35,13 +35,24 @@ public class Statsig {
             return
         }
 
-        errorBoundary = ErrorBoundary(
-            key: sdkKey, deviceEnvironment: DeviceEnvironment().explicitGet()
-        )
+        func _initialize() {
+            errorBoundary = ErrorBoundary(
+                key: sdkKey, deviceEnvironment: DeviceEnvironment().explicitGet()
+            )
 
-        errorBoundary.capture {
-            client = StatsigClient(sdkKey: sdkKey, user: user, options: options, completion: completion)
-            addPendingListeners()
+            errorBoundary.capture {
+                client = StatsigClient(sdkKey: sdkKey, user: user, options: options, completion: completion)
+                addPendingListeners()
+            }
+        }
+
+        if options?.enableCacheByFile == true {
+            DispatchQueue.main.async {
+                StatsigUserDefaults.defaults = FileBasedUserDefaults()
+                _initialize()
+            }
+        } else {
+            _initialize()
         }
     }
 
