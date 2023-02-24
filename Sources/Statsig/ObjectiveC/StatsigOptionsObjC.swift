@@ -28,6 +28,11 @@ public final class StatsigOptionsObjC: NSObject {
         self.optionsInternal = StatsigOptions(overrideStableID: overrideStableID)
     }
 
+    @objc public init(environment: StatsigEnvironment, overrideStableID: String) {
+        self.optionsInternal = StatsigOptions(environment: environment,
+                                              overrideStableID: overrideStableID)
+    }
+
     @objc public init(enableCacheByFile: Bool) {
         self.optionsInternal = StatsigOptions(enableCacheByFile: enableCacheByFile)
     }
