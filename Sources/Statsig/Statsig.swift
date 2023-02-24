@@ -1,6 +1,8 @@
 import Foundation
 
+#if !COCOAPODS
 import StatsigInternalObjC
+#endif
 
 public typealias completionBlock = ((_ errorMessage: String?) -> Void)?
 
@@ -8,7 +10,6 @@ public class Statsig {
     internal static var client: StatsigClient?
     internal static var errorBoundary: ErrorBoundary = ErrorBoundary()
     internal static var pendingListeners: [StatsigListening] = []
-
 
     /**
      Initializes the Statsig SDK. Fetching latest values from Statsig.

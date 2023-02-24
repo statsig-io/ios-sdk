@@ -1,6 +1,29 @@
 import Foundation
 
-#if canImport(UIKit)
+
+#if TEST
+
+struct DeviceInfo {
+    let systemVersion = "test.system.version"
+    let systemName = "test_system"
+    let model = "test_model"
+}
+
+class PlatformCompatibility
+{
+    static let willResignActiveNotification = NSNotification.Name(rawValue: "test.willResignActiveNotification")
+    static let willTerminateNotification = NSNotification.Name(rawValue:"test.willTerminateNotification")
+    static let willEnterForegroundNotification = NSNotification.Name(rawValue:"test.willEnterForegroundNotification")
+
+    static let deviceInfo = DeviceInfo()
+
+    static func getRootViewControllerClassName(_ callback: @escaping (_ name: String?) -> Void) {
+        callback(nil)
+    }
+}
+
+#elseif canImport(UIKit)
+
 import UIKit
 
 struct DeviceInfo {
@@ -28,7 +51,7 @@ class PlatformCompatibility
     }
 }
 
-#else
+#elseif canImport(AppKit)
 import AppKit
 import IOKit
 
@@ -70,6 +93,10 @@ class PlatformCompatibility
         }
     }
 }
+
+#else
+
+// No PlatformCompatibility (Won't Compile)
 
 #endif
 

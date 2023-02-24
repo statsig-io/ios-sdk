@@ -55,7 +55,7 @@ class BaseSpec: QuickSpec {
     }
 
     private static func verifyStorage() {
-        let keys = StatsigUserDefaults.defaults.dictionaryRepresentation().keys
+        let keys = StatsigUserDefaults.defaults.keys()
         for key in keys {
             if key.starts(with: "com.Statsig") {
                 fatalError("User Defaults not cleared")

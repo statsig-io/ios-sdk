@@ -9,7 +9,7 @@ protocol DefaultsLike {
     func setValue(_ value: Any?, forKey: String)
     func set(_ value: Any?, forKey: String)
     func synchronize() -> Bool
-    func dictionaryRepresentation() -> [String : Any]
+    func keys() -> [String]
 
     func setDictionarySafe(_ dict: [String: Any], forKey key: String)
     func dictionarySafe(forKey key: String) -> [String: Any]?
@@ -40,19 +40,21 @@ extension UserDefaults: DefaultsLike {
             return nil
         }
     }
+
+    func keys() -> [String] {
+        return self.dictionaryRepresentation().keys.sorted()
+    }
 }
 
+private let FileBasedUserDefaultsQueue = "com.Statsig.FileBasedUserDefaults"
+
 class FileBasedUserDefaults: DefaultsLike {
+
     private let cacheUrl = FileManager
         .default.urls(for: .cachesDirectory, in: .userDomainMask)
         .first?.appendingPathComponent("statsig-cache.json")
 
-    private let queue = DispatchQueue(
-        label: "com.Statsig.FileBasedUserDefaults",
-        qos: .userInitiated,
-        attributes: .concurrent)
-
-    private var data: [String: Any?] = [:]
+    private var data: AtomicDictionary<Any?> = AtomicDictionary(label: FileBasedUserDefaultsQueue)
 
     init() {
         readFromDisk()
@@ -75,14 +77,8 @@ class FileBasedUserDefaults: DefaultsLike {
     }
 
     func removeObject(forKey defaultName: String) {
-        queue.sync {
-            guard self.data.index(forKey: defaultName) != nil else {
-                return
-            }
-
-            self.data.removeValue(forKey: defaultName)
-            _ = synchronize()
-        }
+        data[defaultName] = nil
+        _ = writeToDisk()
     }
 
     func setValue(_ value: Any?, forKey: String) {
@@ -90,18 +86,16 @@ class FileBasedUserDefaults: DefaultsLike {
     }
 
     func set(_ value: Any?, forKey: String) {
-        queue.sync {
-            data[forKey] = value
-            _ = synchronize()
-        }
+        data[forKey] = value
+        _ = writeToDisk()
     }
 
     func synchronize() -> Bool {
         return writeToDisk()
     }
 
-    func dictionaryRepresentation() -> [String : Any] {
-        return data as [String: Any]
+    func keys() -> [String] {
+        return data.keys()
     }
 
     func setDictionarySafe(_ dict: [String: Any], forKey key: String) {
@@ -115,9 +109,7 @@ class FileBasedUserDefaults: DefaultsLike {
     }
 
     private func getValue(forKey key: String) -> Any? {
-        queue.sync {
-            return data[key] as? Any
-        }
+        return data[key] as? Any
     }
 
     private func writeToDisk() -> Bool {
@@ -126,8 +118,7 @@ class FileBasedUserDefaults: DefaultsLike {
         }
 
         do {
-            let json = try JSONSerialization.data(withJSONObject: data)
-            try json.write(to: url)
+            try data.toJsonData()?.write(to: url)
         } catch {
             return false
         }
@@ -143,7 +134,7 @@ class FileBasedUserDefaults: DefaultsLike {
         do {
             let json = try Data(contentsOf: url)
             let dict = try JSONSerialization.jsonObject(with: json)
-            data = dict as? [String: Any] ?? [:]
+            data = AtomicDictionary(dict as? [String: Any] ?? [:], label: FileBasedUserDefaultsQueue)
         } catch {
             return
         }
