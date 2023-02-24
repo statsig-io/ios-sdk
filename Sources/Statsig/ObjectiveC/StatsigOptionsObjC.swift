@@ -24,14 +24,26 @@ public final class StatsigOptionsObjC: NSObject {
         self.optionsInternal = StatsigOptions(enableAutoValueUpdate: enableAutoValueUpdate)
     }
 
+    @objc public init(overrideStableID: String) {
+        self.optionsInternal = StatsigOptions(overrideStableID: overrideStableID)
+    }
+
+    @objc public init(enableCacheByFile: Bool) {
+        self.optionsInternal = StatsigOptions(enableCacheByFile: enableCacheByFile)
+    }
+
     @objc public init(initTimeout: Double,
                       disableCurrentVCLogging: Bool,
                       environment: StatsigEnvironment,
-                      enableAutoValueUpdate: Bool)
+                      enableAutoValueUpdate: Bool,
+                      overrideStableID: String,
+                      enableCacheByFile: Bool)
     {
         self.optionsInternal = StatsigOptions(initTimeout: initTimeout,
                                               disableCurrentVCLogging: disableCurrentVCLogging,
                                               environment: environment,
-                                              enableAutoValueUpdate: enableAutoValueUpdate)
+                                              enableAutoValueUpdate: enableAutoValueUpdate,
+                                              overrideStableID: overrideStableID,
+                                              enableCacheByFile: enableCacheByFile)
     }
 }

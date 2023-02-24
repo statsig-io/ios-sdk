@@ -1,7 +1,8 @@
 #import <XCTest/XCTest.h>
 
+#import "ObjcTestUtils.h"
+
 @import Statsig;
-@import OCMock;
 
 @interface ObjcUsageSpec : XCTestCase
 @end
@@ -14,13 +15,7 @@
 }
 
 - (void)setUp {
-    NSBundle *bundle = [NSBundle bundleForClass:[self class]];
-    NSString *resBundlePath = [bundle pathForResource:@"Statsig_StatsigObjcTests" ofType:@"bundle"];
-    NSBundle *resBundle = [NSBundle bundleWithPath:resBundlePath];
-    NSString *jsonPath = [resBundle pathForResource:@"initialize" ofType:@"json"];
-    NSData *data = [NSData dataWithContentsOfFile:jsonPath];
-
-    _requestExpectation = [[XCTestExpectation alloc] initWithDescription: @"Network Request"];
+    _requestExpectation = [ObjcTestUtils stubNetwork];
     _user = [[StatsigUser alloc]
              initWithUserID:@"a-user"
              email:@""
@@ -33,18 +28,6 @@
 
     _options = [[StatsigOptions alloc] initWithInitTimeout:2];
     _completion = ^(NSString * _Nullable err) {};
-
-    id classMock = OCMClassMock([NSURLSession class]);
-    OCMStub([classMock sharedSession]).andReturn(classMock);
-
-    id mockUrlResponse = OCMClassMock([NSHTTPURLResponse class]);
-    OCMStub([mockUrlResponse statusCode]).andReturn(200);
-
-    id autoInvokeCompletion = [OCMArg invokeBlockWithArgs:data, mockUrlResponse, [NSNull null], nil];
-
-    OCMStub([classMock dataTaskWithRequest:[OCMArg any]
-                         completionHandler:autoInvokeCompletion])
-    .andFulfill(_requestExpectation);
 }
 
 - (void)tearDown {

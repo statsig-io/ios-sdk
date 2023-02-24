@@ -25,6 +25,11 @@ class BaseSpec: QuickSpec {
             if (StatsigClient.autoValueUpdateTime != 10.0) {
                 fatalError("autoValueUpdate not reset")
             }
+
+            waitUntil { done in
+                while (Statsig.client != nil) {}
+                done()
+            }
         }
 
         afterSuite {
