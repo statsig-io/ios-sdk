@@ -3,9 +3,14 @@ import Foundation
 import Nimble
 import OHHTTPStubs
 import Quick
-import StatsigInternalObjC
+import Statsig
 
 #if !COCOAPODS
+
+#if canImport(StatsigInternalObjC)
+import StatsigInternalObjC
+#endif
+
 import OHHTTPStubsSwift
 #endif
 

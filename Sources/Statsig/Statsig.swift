@@ -1,6 +1,6 @@
 import Foundation
 
-#if !COCOAPODS
+#if !COCOAPODS && canImport(StatsigInternalObjC)
 import StatsigInternalObjC
 #endif
 
