@@ -34,7 +34,7 @@ class InternalStoreSpec: BaseSpec {
 
     // Called by children
     func specImpl() {        
-        describe("using iPlatformCompatibility.swiftnternal store to save and retrieve values") {
+        describe("using internal store to save and retrieve values") {
             beforeEach {
                 InternalStore.deleteAllLocalStorage()
             }
