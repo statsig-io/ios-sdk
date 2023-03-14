@@ -17,7 +17,7 @@ class LocalOverridesSpec: BaseSpec {
         
         describe("LocalOverrides") {
             beforeEach {
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
 
                 _ = TestUtils.startWithResponseAndWait([
                     "feature_gates": [],

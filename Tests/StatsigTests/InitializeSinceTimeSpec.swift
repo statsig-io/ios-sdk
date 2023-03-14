@@ -36,7 +36,7 @@ class InitializeSinceTimeSpec: BaseSpec {
         
         describe("InitializeSinceTime") {
             beforeEach {
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
             }
 
             afterEach {

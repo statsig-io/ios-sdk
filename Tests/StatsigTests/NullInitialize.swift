@@ -34,7 +34,7 @@ class NullInitializeSpec: BaseSpec {
         
         describe("Nil and Statsig") {
             beforeEach {
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
                 StatsigClient.autoValueUpdateTime = 10
 
                 stub(condition: isHost("api.statsig.com")) { _ in
@@ -45,7 +45,7 @@ class NullInitializeSpec: BaseSpec {
             afterEach {
                 HTTPStubs.removeAllStubs()
                 Statsig.shutdown()
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
             }
 
             it("works when initialize contains null") {

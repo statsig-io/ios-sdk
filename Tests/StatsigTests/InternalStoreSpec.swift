@@ -36,7 +36,7 @@ class InternalStoreSpec: BaseSpec {
     func specImpl() {        
         describe("using internal store to save and retrieve values") {
             beforeEach {
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
             }
 
             it("is empty initially") {
@@ -65,7 +65,7 @@ class InternalStoreSpec: BaseSpec {
                 expect(store.checkGate(forName: "gate_name_2").value).to(beTrue())
                 expect(store.getConfig(forName: "config").getValue(forKey: "str", defaultValue: "wrong")).to(equal("string"))
 
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
                 expect(self.cacheIsEmpty(InternalStore(StatsigUser()).cache.userCache)).to(beTrue())
             }
 
@@ -294,7 +294,7 @@ class InternalStoreSpec: BaseSpec {
                 expect(deviceExp.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v4"))
                 expect(nonStickExp.getValue(forKey: "label", defaultValue: "")).to(equal("non_stick_v4"))
 
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
             }
 
             it("it deletes user level sticky values but not device level sticky values when requested") {
@@ -356,7 +356,7 @@ class InternalStoreSpec: BaseSpec {
                 expect(exp.getValue(forKey: "label", defaultValue: "")).to(equal("exp_v2"))
                 expect(deviceExp.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v2"))
 
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
             }
 
             it("changing userID in between sessions should invalidate sticky values") {
@@ -463,7 +463,7 @@ class InternalStoreSpec: BaseSpec {
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: false)
                 expect(exp.getValue(forKey: "label", defaultValue: "")).to(equal(""))
 
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
             }
 
             it("migrates non serialized caches") {

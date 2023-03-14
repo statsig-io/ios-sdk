@@ -18,7 +18,7 @@ class NetworkServiceSpec: BaseSpec {
             let sdkKey = "client-api-key"
             afterEach {
                 HTTPStubs.removeAllStubs()
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
             }
 
             it("should send the correct request data when calling fetchInitialValues()") {

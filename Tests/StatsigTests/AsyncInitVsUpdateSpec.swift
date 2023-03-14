@@ -38,7 +38,7 @@ class AsyncInitVsUpdateSpec: BaseSpec {
         describe("Race conditions between initializeAsync and updateUser") {
 
             it("does not overwrite user values when unawaited response return") {
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
                 
                 let userA = StatsigUser(userID: "user-a", customIDs: ["workID": "employee-a"])
                 let userB = StatsigUser(userID: "user-b", customIDs: ["workID": "employee-b"])

@@ -43,13 +43,13 @@ class StatsigListeningSpec: BaseSpec {
         super.spec()
         
         beforeEach {
-            InternalStore.deleteAllLocalStorage()
+            TestUtils.clearStorage()
         }
 
         afterEach {
             HTTPStubs.removeAllStubs()
             Statsig.shutdown()
-            InternalStore.deleteAllLocalStorage()
+            TestUtils.clearStorage()
         }
 
         describe("checking if initialized") {

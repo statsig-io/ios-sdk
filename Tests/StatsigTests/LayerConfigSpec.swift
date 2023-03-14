@@ -98,7 +98,7 @@ class LayerConfigSpec: BaseSpec {
             var store: InternalStore!
 
             beforeEach {
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
                 store = InternalStore(StatsigUser(userID: "dloomb"))
 
                 let user = StatsigUser(userID: "dloomb")

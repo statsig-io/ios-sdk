@@ -41,14 +41,14 @@ class StatsigSpec: BaseSpec {
 
         describe("starting Statsig") {
             beforeEach {
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
                 StatsigClient.autoValueUpdateTime = 10
             }
 
             afterEach {
                 HTTPStubs.removeAllStubs()
                 Statsig.shutdown()
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
             }
 
             let gateName1 = "gate_name_1"

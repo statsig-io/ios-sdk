@@ -16,9 +16,20 @@ struct StatsigValuesCache {
     var cacheByID: [String: [String: Any]]
     var userCacheKey: String
     var userLastUpdateTime: Double
-    var userCache: [String: Any]
     var stickyDeviceExperiments: [String: [String: Any]]
     var reason: EvaluationReason = .Uninitialized
+
+    var gates: [String: [String: Any]]? = nil
+    var configs: [String: [String: Any]]? = nil
+    var layers: [String: [String: Any]]? = nil
+
+    var userCache: [String: Any] {
+        didSet {
+            gates = userCache[InternalStore.gatesKey] as? [String: [String: Any]]
+            configs = userCache[InternalStore.configsKey] as? [String: [String: Any]]
+            layers = userCache[InternalStore.layerConfigsKey] as? [String: [String: Any]]
+        }
+    }
 
     init(_ user: StatsigUser) {
         self.cacheByID = StatsigValuesCache.loadDictMigratingIfRequired(forKey: InternalStore.localStorageKey)
@@ -33,37 +44,43 @@ struct StatsigValuesCache {
     }
 
     func getGate(_ gateName: String) -> FeatureGate {
-        let gateNameHash = gateName.sha256()
-        if let gates = userCache[InternalStore.gatesKey] as? [String: [String: Any]], let gateObj = gates[gateNameHash] {
+        guard let gates = gates else {
+            print("[Statsig]: Failed to get feature gate with name \(gateName). Returning false as the default.")
+            return FeatureGate(name: gateName, value: false, ruleID: "", evalDetails: getEvaluationDetails(valueExists: false))
+        }
+
+        if let gateObj = (gates[gateName.sha256()] ?? gates[gateName]) {
             return FeatureGate(name: gateName, gateObj: gateObj, evalDetails: getEvaluationDetails(valueExists: true))
         }
-        if let gates = userCache[InternalStore.gatesKey] as? [String: [String: Any]], let gateObj = gates[gateName] {
-            return FeatureGate(name: gateName, gateObj: gateObj, evalDetails: getEvaluationDetails(valueExists: true))
-        }
+
         print("[Statsig]: The feature gate with name \(gateName) does not exist. Returning false as the default.")
         return FeatureGate(name: gateName, value: false, ruleID: "", evalDetails: getEvaluationDetails(valueExists: false))
     }
 
     func getConfig(_ configName: String) -> DynamicConfig {
-        let configNameHash = configName.sha256()
-        if let configObj = getConfigData(configNameHash, topLevelKey: InternalStore.configsKey) {
+        guard let configs = configs else {
+            print("[Statsig]: Failed to get config with name \(configName). Returning a dummy DynamicConfig that will only return default values.")
+            return DynamicConfig(configName: configName, evalDetails: getEvaluationDetails(valueExists: false))
+        }
+
+        if let configObj = (configs[configName.sha256()] ?? configs[configName]) {
             return DynamicConfig(configName: configName, configObj: configObj, evalDetails: getEvaluationDetails(valueExists: true))
         }
-        if let configObj = getConfigData(configName, topLevelKey: InternalStore.configsKey) {
-            return DynamicConfig(configName: configName, configObj: configObj, evalDetails: getEvaluationDetails(valueExists: true))
-        }
+
         print("[Statsig]: \(configName) does not exist. Returning a dummy DynamicConfig that will only return default values.")
         return DynamicConfig(configName: configName, evalDetails: getEvaluationDetails(valueExists: false))
     }
 
     func getLayer(_ client: StatsigClient?, _ layerName: String) -> Layer {
-        let layerNameHash = layerName.sha256()
-        if let configObj = getConfigData(layerNameHash, topLevelKey: InternalStore.layerConfigsKey) {
+        guard let layers = layers else {
+            print("[Statsig]: Failed to get layer with name \(layerName). Returning an empty Layer.")
+            return Layer(client: client, name: layerName, evalDetails: getEvaluationDetails(valueExists: false))
+        }
+
+        if let configObj = layers[layerName.sha256()] ?? layers[layerName] {
             return Layer(client: client, name: layerName, configObj: configObj, evalDetails: getEvaluationDetails(valueExists: true))
         }
-        if let configObj = getConfigData(layerName, topLevelKey: InternalStore.layerConfigsKey) {
-            return Layer(client: client, name: layerName, configObj: configObj, evalDetails: getEvaluationDetails(valueExists: true))
-        }
+
         print("[Statsig]: The layer with name \(layerName) does not exist. Returning an empty Layer.")
         return Layer(client: client, name: layerName, evalDetails: getEvaluationDetails(valueExists: false))
     }
@@ -75,14 +92,6 @@ struct StatsigValuesCache {
             return expObj
         } else if let expObj = stickyDeviceExperiments[expNameHash] {
             return expObj
-        }
-        return nil
-    }
-
-    func getConfigData(_ configNameHash: String, topLevelKey: String) -> [String: Any]? {
-        if let configs = userCache[topLevelKey] as? [String: [String: Any]],
-           let configObj = configs[configNameHash] {
-            return configObj
         }
         return nil
     }

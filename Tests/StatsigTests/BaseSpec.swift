@@ -37,6 +37,7 @@ class BaseSpec: QuickSpec {
             Statsig.client = nil
 
             BaseSpec.resetUserDefaults()
+            HTTPStubs.removeAllStubs()
         }
     }
 

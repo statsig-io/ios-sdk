@@ -41,14 +41,14 @@ class SDKKeySpec: BaseSpec {
         
         describe("SDK Keys") {
             beforeEach {
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
                 StatsigClient.autoValueUpdateTime = 10
             }
 
             afterEach {
                 HTTPStubs.removeAllStubs()
                 Statsig.shutdown()
-                InternalStore.deleteAllLocalStorage()
+                TestUtils.clearStorage()
             }
 
             it("works when provided invalid SDK key by returning default value") {
