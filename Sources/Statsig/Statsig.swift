@@ -98,7 +98,7 @@ public class Statsig {
      SeeAlso [Gate Documentation](https://docs.statsig.com/feature-gates/working-with)
      */
     public static func checkGate(_ gateName: String) -> Bool {
-        return checkGateImpl(gateName, withExposures: true, functionName: #function)
+        return checkGateImpl(gateName, withExposures: true, functionName: #function).value
     }
 
     /**
@@ -110,6 +110,18 @@ public class Statsig {
      SeeAlso [Gate Documentation](https://docs.statsig.com/feature-gates/working-with)
      */
     public static func checkGateWithExposureLoggingDisabled(_ gateName: String) -> Bool {
+        return checkGateImpl(gateName, withExposures: false, functionName: #function).value
+    }
+
+    /**
+     Get the value for the given feature gate. No exposure event will be logged.
+
+     Parameters:
+     - gateName: The name of the feature gate setup on console.statsig.com
+
+     SeeAlso [Gate Documentation](https://docs.statsig.com/feature-gates/working-with)
+     */
+    public static func getFeatureGateWithExposureLoggingDisabled(_ gateName: String) -> FeatureGate {
         return checkGateImpl(gateName, withExposures: false, functionName: #function)
     }
 
@@ -255,6 +267,58 @@ public class Statsig {
             }
 
             client.logLayerParameterExposure(layerName, parameterName: parameterName, keepDeviceValue: keepDeviceValue)
+        }
+    }
+
+    /**
+     Logs an exposure event for the given feature gate. Only required if a related getFeatureGateWithExposureLoggingDisabled call has been made.
+
+     Parameters:
+     - gate: The the feature gate class of a feature gate setup on console.statsig.com
+     */
+    public static func manuallyLogExposure(_ gate: FeatureGate) {
+        errorBoundary.capture {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling manuallyLogExposure.")
+                return
+            }
+
+            client.logGateExposureForGate(gate.name, gate: gate, isManualExposure: true)
+        }
+    }
+
+    /**
+     Logs an exposure event for the given dynamic config. Only required if a related getConfigWithExposureLoggingDisabled or getExperimentWithExposureLoggingDisabled call has been made.
+
+     Parameters:
+     - config: The dynamic config class of an experiment, autotune, or dynamic config setup on console.statsig.com
+     */
+    public static func manuallyLogExposure(_ config: DynamicConfig) {
+        errorBoundary.capture {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling manuallyLogExposure.")
+                return
+            }
+
+            client.logConfigExposureForConfig(config.name, config: config, isManualExposure: true)
+        }
+    }
+
+    /**
+     Logs an exposure event for the given layer. Only required if a related getLayerWithExposureLoggingDisabled call has been made.
+
+     Parameters:
+     - layer: The layer class of a layer setup on console.statsig.com
+     - paramterName: The name of the layer parameter that was checked
+     */
+    public static func manuallyLogExposure(_ layer: Layer, parameterName: String) {
+        errorBoundary.capture {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling manuallyLogExposure.")
+                return
+            }
+
+            client.logLayerParameterExposureForLayer(layer, parameterName: parameterName, isManualExposure: true)
         }
     }
 
@@ -409,8 +473,8 @@ public class Statsig {
     // MARK: - Private
     //
 
-    private static func checkGateImpl(_ gateName: String, withExposures: Bool, functionName: String) -> Bool {
-        var result = false
+    private static func checkGateImpl(_ gateName: String, withExposures: Bool, functionName: String) -> FeatureGate {
+        var result: FeatureGate? = nil
         errorBoundary.capture {
             guard let client = client else {
                 print("[Statsig]: Must start Statsig first and wait for it to complete before calling \(functionName). Returning false as the default.")
@@ -421,7 +485,7 @@ public class Statsig {
             ? client.checkGate(gateName)
             : client.checkGateWithExposureLoggingDisabled(gateName)
         }
-        return result
+        return result ?? FeatureGate(name: gateName, value: false, ruleID: "", evalDetails: EvaluationDetails(reason: .Uninitialized))
     }
 
     private static func getExperimentImpl(_ experimentName: String, keepDeviceValue: Bool, withExposures: Bool, functionName: String) -> DynamicConfig {

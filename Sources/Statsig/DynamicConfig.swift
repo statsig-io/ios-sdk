@@ -100,3 +100,44 @@ public struct DynamicConfig: ConfigProtocol {
         return typedResult ?? defaultValue
     }
 }
+
+extension DynamicConfig: Codable {
+    private enum CodingKeys: String, CodingKey {
+        case name
+        case value
+        case ruleID
+        case secondaryExposures
+        case evaluationDetails
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        self.name = try container.decode(String.self, forKey: .name)
+
+        let data = try container.decode(Data.self, forKey: .value)
+        let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+
+        self.value = dict ?? [:]
+        self.ruleID = try container.decode(String.self, forKey: .ruleID)
+        self.secondaryExposures = try container.decode([[String: String]].self, forKey: .secondaryExposures)
+        self.evaluationDetails = try container.decode(EvaluationDetails.self, forKey: .evaluationDetails)
+
+        self.hashedName = ""
+        self.isExperimentActive = false
+        self.isUserInExperiment = false
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        try container.encode(name, forKey: .name)
+
+        let json = try JSONSerialization.data(withJSONObject: value)
+        try container.encode(json, forKey: .value)
+
+        try container.encode(ruleID, forKey: .ruleID)
+        try container.encode(secondaryExposures, forKey: .secondaryExposures)
+        try container.encode(evaluationDetails, forKey: .evaluationDetails)
+    }
+}

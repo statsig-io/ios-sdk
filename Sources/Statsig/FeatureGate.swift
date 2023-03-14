@@ -1,11 +1,11 @@
-struct FeatureGate: Codable {
+public struct FeatureGate: Codable {
     let name: String
     let ruleID: String
     let value: Bool
     let secondaryExposures: [[String: String]]
     let evaluationDetails: EvaluationDetails
 
-    init(name: String, gateObj: [String: Any], evalDetails: EvaluationDetails) {
+    internal init(name: String, gateObj: [String: Any], evalDetails: EvaluationDetails) {
         self.name = name
         self.value = gateObj["value"] as? Bool ?? false
         self.ruleID = gateObj["rule_id"] as? String ?? ""
@@ -13,7 +13,7 @@ struct FeatureGate: Codable {
         self.evaluationDetails = evalDetails
     }
 
-    init(name: String, value: Bool, ruleID: String, evalDetails: EvaluationDetails) {
+    internal init(name: String, value: Bool, ruleID: String, evalDetails: EvaluationDetails) {
         self.name = name
         self.value = value
         self.ruleID = ruleID

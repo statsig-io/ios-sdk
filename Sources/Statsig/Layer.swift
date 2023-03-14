@@ -112,3 +112,53 @@ public struct Layer: ConfigProtocol {
         return typedResult ?? defaultValue
     }
 }
+
+extension Layer: Codable {
+    private enum CodingKeys: String, CodingKey {
+        case name
+        case value
+        case ruleID
+        case secondaryExposures
+        case undelegatedSecondaryExposures
+        case evaluationDetails
+        case explicitParameters
+        case allocatedExperimentName
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        let data = try container.decode(Data.self, forKey: .value)
+        let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+
+        self.client = nil
+        self.name = try container.decode(String.self, forKey: .name)
+        self.value = dict ?? [:]
+        self.ruleID = try container.decode(String.self, forKey: .ruleID)
+        self.allocatedExperimentName = try container.decode(String.self, forKey: .allocatedExperimentName)
+        self.secondaryExposures = try container.decode([[String: String]].self, forKey: .secondaryExposures)
+        self.undelegatedSecondaryExposures = try container.decode([[String: String]].self, forKey: .undelegatedSecondaryExposures)
+        self.evaluationDetails = try container.decode(EvaluationDetails.self, forKey: .evaluationDetails)
+        self.explicitParameters = try container.decode(Set<String>.self, forKey: .explicitParameters)
+
+        self.hashedName = ""
+        self.isExperimentActive = false
+        self.isUserInExperiment = false
+        self.isDeviceBased = false
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        let json = try JSONSerialization.data(withJSONObject: value)
+
+        try container.encode(name, forKey: .name)
+        try container.encode(json, forKey: .value)
+        try container.encode(ruleID, forKey: .ruleID)
+        try container.encode(allocatedExperimentName, forKey: .allocatedExperimentName)
+        try container.encode(secondaryExposures, forKey: .secondaryExposures)
+        try container.encode(undelegatedSecondaryExposures, forKey: .undelegatedSecondaryExposures)
+        try container.encode(evaluationDetails, forKey: .evaluationDetails)
+        try container.encode(explicitParameters, forKey: .explicitParameters)
+    }
+}

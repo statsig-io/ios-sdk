@@ -52,21 +52,25 @@ internal class StatsigClient {
         listeners.append({ [weak listener] in return listener })
     }
 
-    internal func checkGate(_ gateName: String) -> Bool {
+    internal func checkGate(_ gateName: String) -> FeatureGate {
         let gate = store.checkGate(forName: gateName)
 
         logGateExposure(gateName, gate: gate)
 
-        return gate.value
+        return gate
     }
 
     internal func logGateExposure(_ gateName: String, gate: FeatureGate? = nil) {
         let isManualExposure = gate == nil
         let gate = gate ?? store.checkGate(forName: gateName)
+
+        logGateExposureForGate(gateName, gate: gate, isManualExposure: isManualExposure)
+    }
+
+    internal func logGateExposureForGate(_ gateName: String, gate: FeatureGate, isManualExposure: Bool) {
         let gateValue = gate.value
         let ruleID = gate.ruleID
         let dedupeKey = gateName + (gateValue ? "true" : "false") + ruleID + gate.evaluationDetails.reason.rawValue
-
 
         if shouldLogExposure(key: dedupeKey) {
             logger.log(
@@ -82,8 +86,8 @@ internal class StatsigClient {
         }
     }
 
-    internal func checkGateWithExposureLoggingDisabled(_ gateName: String) -> Bool {
-        return store.checkGate(forName: gateName).value
+    internal func checkGateWithExposureLoggingDisabled(_ gateName: String) -> FeatureGate {
+        return store.checkGate(forName: gateName)
     }
 
     internal func getExperiment(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
@@ -125,6 +129,7 @@ internal class StatsigClient {
     internal func logConfigExposureForConfig(_ configName: String, config: DynamicConfig, isManualExposure: Bool) {
         let ruleID = config.ruleID
         let dedupeKey = configName + ruleID + config.evaluationDetails.reason.rawValue
+
         if shouldLogExposure(key: dedupeKey) {
             logger.log(
                 Event.configExposure(
