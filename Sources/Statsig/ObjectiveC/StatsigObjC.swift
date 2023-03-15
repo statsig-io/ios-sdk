@@ -73,6 +73,9 @@ public final class StatsigObjC: NSObject {
         return Statsig.checkGateWithExposureLoggingDisabled(gateName)
     }
 
+    @objc public static func getFeatureGateWithExposureLoggingDisabled(_ gateName: String) -> FeatureGateObjC {
+        return FeatureGateObjC(withGate: Statsig.getFeatureGateWithExposureLoggingDisabled(gateName))
+    }
 
     //
     // MARK: - Get Config
@@ -130,7 +133,7 @@ public final class StatsigObjC: NSObject {
     }
 
     //
-    // MARK: - Manual Exposure Logging
+    // MARK: - Manual Exposure Logging (Simple)
     //
 
     @objc public static func manuallyLogGateExposure(_ gateName: String) {
@@ -157,6 +160,21 @@ public final class StatsigObjC: NSObject {
         Statsig.manuallyLogLayerParameterExposure(layerName, parameterName, keepDeviceValue: keepDeviceValue)
     }
 
+    //
+    // MARK: - Manual Exposure Logging (Advanced)
+    //
+
+    @objc public static func manuallyLogExposureWithFeatureGate(_ gate: FeatureGateObjC) {
+        Statsig.manuallyLogExposure(gate.gate)
+    }
+
+    @objc public static func manuallyLogExposureWithDynamicConfig(_ config: DynamicConfigObjC) {
+        Statsig.manuallyLogExposure(config.config)
+    }
+
+    @objc public static func manuallyLogExposureWithLayer(_ layer: LayerObjC, parameterName: String) {
+        Statsig.manuallyLogExposure(layer.layer, parameterName: parameterName)
+    }
 
     //
     // MARK: - Log Event

@@ -6,7 +6,13 @@
 
 @implementation ObjcTestUtils
 
-+ (XCTestExpectation *_Nonnull)stubNetwork{
++ (XCTestExpectation *_Nonnull)stubNetwork {
+    return [self stubNetworkCapturingLogs:^(NSArray *logs) {
+        // noop
+    }];
+}
+
++ (XCTestExpectation *_Nonnull)stubNetworkCapturingLogs:(void (^_Nonnull)(NSArray * _Nonnull logs))onDidLog {
     NSBundle *bundle = [NSBundle bundleForClass:[self class]];
     NSString *resBundlePath = [bundle pathForResource:@"Statsig_StatsigObjcTests" ofType:@"bundle"];
     NSBundle *resBundle = [NSBundle bundleWithPath:resBundlePath];
@@ -22,8 +28,16 @@
     OCMStub([mockUrlResponse statusCode]).andReturn(200);
 
     id autoInvokeCompletion = [OCMArg invokeBlockWithArgs:data, mockUrlResponse, [NSNull null], nil];
+    id dataArg = [OCMArg checkWithBlock:^BOOL(NSURLRequest *obj) {
+        if ([obj.URL.absoluteString containsString:@"/v1/rgstr"]) {
+            id dict = [NSJSONSerialization JSONObjectWithData:obj.HTTPBody options:0 error:nil];
+            onDidLog(dict[@"events"]);
+        }
 
-    OCMStub([classMock dataTaskWithRequest:[OCMArg any]
+        return YES;
+    }];
+
+    OCMStub([classMock dataTaskWithRequest:dataArg
                          completionHandler:autoInvokeCompletion])
     .andFulfill(requestExpectation);
 

@@ -2,7 +2,7 @@ import Foundation
 
 @objc(Layer)
 public final class LayerObjC: NSObject {
-    private var layer: Layer
+    internal var layer: Layer
 
     init(_ layer: Layer) {
         self.layer = layer
@@ -30,5 +30,20 @@ public final class LayerObjC: NSObject {
 
     @objc public func getString(forKey: String, defaultValue: String) -> String {
         return layer.getValue(forKey: forKey, defaultValue: defaultValue)
+    }
+
+    @objc public func toData() -> Data? {
+        let encoder = JSONEncoder()
+        return try? encoder.encode(layer)
+    }
+
+    @objc public static func fromData(_ data: Data) -> LayerObjC? {
+        let decoder = JSONDecoder()
+        let swiftLayer = try? decoder.decode(Layer.self, from: data)
+        guard let swiftLayer = swiftLayer else {
+            return nil
+        }
+
+        return LayerObjC(swiftLayer)
     }
 }
