@@ -18,13 +18,7 @@ func skipFrame() {
 
 class TestUtils {
     static func clearStorage() {
-        waitUntil { done in
-            DispatchQueue.main.async {
-                InternalStore.deleteAllLocalStorage()
-                done()
-            }
-        }
-
+        InternalStore.deleteAllLocalStorage()
     }
 
     static func startStatsigAndWait(key: String, _ user: StatsigUser? = nil, _ options: StatsigOptions? = nil) {
