@@ -26,9 +26,9 @@ extension Dictionary<String, Any> {
 class InternalStoreSpec: BaseSpec {
     private func cacheIsEmpty(_ cache: [String: Any]) -> Bool {
         return
-            (cache[InternalStore.gatesKey] as! [String: Any]).count == 0
-                && (cache[InternalStore.configsKey] as! [String: Any]).count == 0
-                && (cache[InternalStore.stickyExpKey] as! [String: Any]).count == 0
+            (cache[StorageKeys.gatesKey] as! [String: Any]).count == 0
+                && (cache[StorageKeys.configsKey] as! [String: Any]).count == 0
+                && (cache[StorageKeys.stickyExpKey] as! [String: Any]).count == 0
                 && (cache["time"] as? Int) == 0
     }
 
@@ -96,9 +96,9 @@ class InternalStoreSpec: BaseSpec {
                         "value": ["key": "value_sticky"],
                     ],
                 ]
-                StatsigUserDefaults.defaults.setValue(values, forKey: InternalStore.DEPRECATED_localStorageKey)
-                StatsigUserDefaults.defaults.setValue("jkw", forKey: InternalStore.DEPRECATED_stickyUserIDKey)
-                StatsigUserDefaults.defaults.setValue(stickyValues, forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)
+                StatsigUserDefaults.defaults.setValue(values, forKey: StorageKeys.DEPRECATED_localStorageKey)
+                StatsigUserDefaults.defaults.setValue("jkw", forKey: StorageKeys.DEPRECATED_stickyUserIDKey)
+                StatsigUserDefaults.defaults.setValue(stickyValues, forKey: StorageKeys.DEPRECATED_stickyUserExperimentsKey)
 
                 let user = StatsigUser(userID: "jkw")
                 let store = InternalStore(user)
@@ -112,9 +112,9 @@ class InternalStoreSpec: BaseSpec {
                 expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("value_sticky"))
 
                 // old values should be deleted
-                expect(StatsigUserDefaults.defaults.dictionary(forKey: InternalStore.DEPRECATED_localStorageKey)).to(beNil())
-                expect(StatsigUserDefaults.defaults.string(forKey: InternalStore.DEPRECATED_stickyUserIDKey)).to(beNil())
-                expect(StatsigUserDefaults.defaults.dictionary(forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)).to(beNil())
+                expect(StatsigUserDefaults.defaults.dictionary(forKey: StorageKeys.DEPRECATED_localStorageKey)).to(beNil())
+                expect(StatsigUserDefaults.defaults.string(forKey: StorageKeys.DEPRECATED_stickyUserIDKey)).to(beNil())
+                expect(StatsigUserDefaults.defaults.dictionary(forKey: StorageKeys.DEPRECATED_stickyUserExperimentsKey)).to(beNil())
 
                 // Update to new values; sticky should still be sticky
                 let newValues: [String: Any] = [
@@ -172,9 +172,9 @@ class InternalStoreSpec: BaseSpec {
                         "value": ["key": "value_sticky"],
                     ],
                 ]
-                StatsigUserDefaults.defaults.setValue(values, forKey: InternalStore.DEPRECATED_localStorageKey)
-                StatsigUserDefaults.defaults.setValue("jkw", forKey: InternalStore.DEPRECATED_stickyUserIDKey)
-                StatsigUserDefaults.defaults.setValue(stickyValues, forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)
+                StatsigUserDefaults.defaults.setValue(values, forKey: StorageKeys.DEPRECATED_localStorageKey)
+                StatsigUserDefaults.defaults.setValue("jkw", forKey: StorageKeys.DEPRECATED_stickyUserIDKey)
+                StatsigUserDefaults.defaults.setValue(stickyValues, forKey: StorageKeys.DEPRECATED_stickyUserExperimentsKey)
 
                 let store = InternalStore(StatsigUser(userID: "not_jkw"))
                 let exp = store.getExperiment(forName: configKey, keepDeviceValue: true)
@@ -511,8 +511,8 @@ class InternalStoreSpec: BaseSpec {
                 ]
 
                 // Save a value in the deprecated style
-                StatsigUserDefaults.defaults.setValue(cacheByID, forKey: InternalStore.localStorageKey)
-                StatsigUserDefaults.defaults.setValue(stickyDeviceExperiments, forKey: InternalStore.stickyDeviceExperimentsKey)
+                StatsigUserDefaults.defaults.setValue(cacheByID, forKey: StorageKeys.localStorageKey)
+                StatsigUserDefaults.defaults.setValue(stickyDeviceExperiments, forKey: StorageKeys.stickyDeviceExperimentsKey)
                 _ = StatsigUserDefaults.defaults.synchronize()
 
                 let store = InternalStore(StatsigUser(userID: "jkw"))
