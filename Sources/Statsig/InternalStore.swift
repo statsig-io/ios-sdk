@@ -11,12 +11,14 @@ struct StatsigValuesCache {
     var gates: [String: [String: Any]]? = nil
     var configs: [String: [String: Any]]? = nil
     var layers: [String: [String: Any]]? = nil
+    var stickyUserExperiments: [String: [String: Any]]? = nil
 
     var userCache: [String: Any] {
         didSet {
             gates = userCache[StorageKeys.gatesKey] as? [String: [String: Any]]
             configs = userCache[StorageKeys.configsKey] as? [String: [String: Any]]
             layers = userCache[StorageKeys.layerConfigsKey] as? [String: [String: Any]]
+            stickyUserExperiments = userCache[StorageKeys.stickyExpKey] as? [String: [String: Any]]
         }
     }
 
@@ -29,7 +31,6 @@ struct StatsigValuesCache {
         self.userLastUpdateTime = 0
 
         self.setUserCacheKeyAndValues(user)
-        self.migrateLegacyStickyExperimentValues(user)
     }
 
     func getGate(_ gateName: String) -> FeatureGate {
@@ -76,8 +77,7 @@ struct StatsigValuesCache {
 
     func getStickyExperiment(_ expName: String) -> [String: Any]? {
         let expNameHash = expName.sha256()
-        if let stickyExps = userCache[StorageKeys.stickyExpKey] as? [String: [String: Any]],
-           let expObj = stickyExps[expNameHash] {
+        if let stickyExps = stickyUserExperiments, let expObj = stickyExps[expNameHash] {
             return expObj
         } else if let expObj = stickyDeviceExperiments[expNameHash] {
             return expObj
@@ -142,17 +142,24 @@ struct StatsigValuesCache {
         if latestValue.isExperimentActive, latestValue.isUserInExperiment {
             if latestValue.isDeviceBased {
                 stickyDeviceExperiments[expNameHash] = latestValue.rawValue
-            } else {
-                userCache[jsonDict: StorageKeys.stickyExpKey]?[expNameHash] = latestValue.rawValue
+            } else if var stickyUserExperiments = stickyUserExperiments {
+                stickyUserExperiments[expNameHash] = latestValue.rawValue
+                userCache[StorageKeys.stickyExpKey] = stickyUserExperiments
             }
             saveToUserDefaults()
         }
     }
 
     mutating func removeStickyExperiment(_ expName: String) {
+        if (stickyUserExperiments == nil || stickyUserExperiments?.isEmpty == true)
+            && stickyDeviceExperiments.isEmpty {
+            return
+        }
+
         let expNameHash = expName.sha256()
         stickyDeviceExperiments.removeValue(forKey: expNameHash)
-        userCache[jsonDict: StorageKeys.stickyExpKey]?.removeValue(forKey: expNameHash)
+        stickyUserExperiments?.removeValue(forKey: expNameHash)
+        userCache[StorageKeys.stickyExpKey] = stickyUserExperiments
         saveToUserDefaults()
     }
 
@@ -199,28 +206,6 @@ struct StatsigValuesCache {
         }
 
         return [:]
-    }
-
-    private mutating func migrateLegacyStickyExperimentValues(_ currentUser: StatsigUser) {
-        let previousUserID = StatsigUserDefaults.defaults.string(forKey: StorageKeys.DEPRECATED_stickyUserIDKey) ?? ""
-        let previousUserStickyExperiments = StatsigUserDefaults.defaults.dictionary(forKey: StorageKeys.DEPRECATED_stickyUserExperimentsKey)
-        if previousUserID == currentUser.userID, let oldStickyExps = previousUserStickyExperiments {
-            userCache[StorageKeys.stickyExpKey] = oldStickyExps
-        }
-
-        let previousCache = StatsigUserDefaults.defaults.dictionary(forKey: StorageKeys.DEPRECATED_localStorageKey)
-        if let previousCache = previousCache {
-            if let gates = userCache[StorageKeys.gatesKey] as? [String: Bool], gates.count == 0 {
-                userCache[StorageKeys.gatesKey] = previousCache[StorageKeys.gatesKey]
-            }
-            if let configs = userCache[StorageKeys.configsKey] as? [String: Any], configs.count == 0 {
-                userCache[StorageKeys.configsKey] = previousCache[StorageKeys.configsKey]
-            }
-        }
-
-        StatsigUserDefaults.defaults.removeObject(forKey: StorageKeys.DEPRECATED_localStorageKey)
-        StatsigUserDefaults.defaults.removeObject(forKey: StorageKeys.DEPRECATED_stickyUserExperimentsKey)
-        StatsigUserDefaults.defaults.removeObject(forKey: StorageKeys.DEPRECATED_stickyUserIDKey)
     }
 }
 
