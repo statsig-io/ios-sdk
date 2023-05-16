@@ -56,6 +56,10 @@ class NetworkService {
         var done: completionBlock = nil
         done = { err in
             DispatchQueue.main.async {
+                if (done == nil) {
+                    return
+                }
+
                 done = nil
                 task?.cancel()
                 completion?(err)

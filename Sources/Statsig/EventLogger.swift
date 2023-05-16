@@ -59,9 +59,11 @@ class EventLogger {
     }
 
     func start(flushInterval: Double = 60) {
-        flushTimer = Timer.scheduledTimer(withTimeInterval: flushInterval, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            self.flush()
+        DispatchQueue.main.async { [weak self] in
+            self?.flushTimer?.invalidate()
+            self?.flushTimer = Timer.scheduledTimer(withTimeInterval: flushInterval, repeats: true) { [weak self] _ in
+                self?.flush()
+            }
         }
     }
 
