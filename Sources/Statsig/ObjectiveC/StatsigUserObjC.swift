@@ -12,7 +12,12 @@ public final class StatsigUserObjC: NSObject {
         self.user = StatsigUser(userID: userID)
     }
 
-    @objc public init(userID: String? = nil,
+    @objc public init(customIDs: [String: String]) {
+        self.user = StatsigUser(customIDs: customIDs)
+
+    }
+
+    @objc public convenience init(userID: String? = nil,
                       email: String? = nil,
                       ip: String? = nil,
                       country: String? = nil,
@@ -20,6 +25,28 @@ public final class StatsigUserObjC: NSObject {
                       appVersion: String? = nil,
                       custom: [String: Any]? = nil,
                       privateAttributes: [String: Any]? = nil)
+    {
+        self.init(userID: userID,
+                  email: email,
+                  ip: ip,
+                  country: country,
+                  locale: locale,
+                  appVersion: appVersion,
+                  custom: custom,
+                  privateAttributes: privateAttributes,
+                  customIDs: nil)
+    }
+
+
+    @objc public init(userID: String? = nil,
+                      email: String? = nil,
+                      ip: String? = nil,
+                      country: String? = nil,
+                      locale: String? = nil,
+                      appVersion: String? = nil,
+                      custom: [String: Any]? = nil,
+                      privateAttributes: [String: Any]? = nil,
+                      customIDs: [String: String]? = nil)
     {
         var filteredCustom = [String: StatsigUserCustomTypeConvertible]()
         if let custom = custom {
@@ -51,6 +78,38 @@ public final class StatsigUserObjC: NSObject {
             locale: locale,
             appVersion: appVersion,
             custom: filteredCustom.isEmpty ? nil : filteredCustom,
-            privateAttributes: filteredPrivateAttributes.isEmpty ? nil : filteredPrivateAttributes)
+            privateAttributes: filteredPrivateAttributes.isEmpty ? nil : filteredPrivateAttributes,
+            customIDs: customIDs)
+    }
+
+    @objc public func getUserID() -> String? {
+        return user.userID
+    }
+
+    @objc public func getCustomIDs() -> NSDictionary? {
+        guard let dict = user.customIDs else {
+            return nil
+        }
+
+        let result = NSMutableDictionary()
+
+        for (key, value) in dict {
+            result[key] = value
+        }
+
+        return result
+    }
+
+    @objc public func toDictionary() -> NSDictionary {
+        let dict = user.toDictionary(forLogging: false)
+        let result = NSMutableDictionary()
+
+        for (key, value) in dict {
+            if let value = value {
+                result[key] = value
+            }
+        }
+
+        return result
     }
 }
