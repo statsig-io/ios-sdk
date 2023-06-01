@@ -53,14 +53,17 @@ class NetworkService {
 
     func fetchInitialValues(for user: StatsigUser, sinceTime: Double, completion: completionBlock) {
         var task: URLSessionDataTask?
-        var done: completionBlock = nil
-        done = { err in
+        var completed = false
+        let lock = NSLock()
+        
+        let done: (String?) -> Void = { err in
+            // Ensures the completion is invoked only once
+            lock.lock()
+            defer { lock.unlock() }
+            guard !completed else { return }
+            completed = true
+            
             DispatchQueue.main.async {
-                if (done == nil) {
-                    return
-                }
-
-                done = nil
                 task?.cancel()
                 completion?(err)
             }
@@ -68,7 +71,7 @@ class NetworkService {
 
         if statsigOptions.initTimeout > 0 {
             DispatchQueue.main.asyncAfter(deadline: .now() + statsigOptions.initTimeout) {
-                done?("initTimeout Expired")
+                done("initTimeout Expired")
             }
         }
 
@@ -79,7 +82,7 @@ class NetworkService {
         ])
 
         guard let body = body else {
-            done?(parseErr?.localizedDescription)
+            done(parseErr?.localizedDescription)
             return
         }
 
@@ -88,18 +91,18 @@ class NetworkService {
 
         makeAndSendRequest(.initialize, body: body, retry: 3) { [weak self] data, response, error in
             if let error = error {
-                done?(error.localizedDescription)
+                done(error.localizedDescription)
                 return
             }
 
             let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
             if !(200...299).contains(statusCode) {
-                done?("An error occurred during fetching values for the user. \(statusCode)")
+                done("An error occurred during fetching values for the user. \(statusCode)")
                 return
             }
 
             guard let self = self else {
-                done?("Failed to call NetworkService as it has been released")
+                done("Failed to call NetworkService as it has been released")
                 return
             }
 
@@ -112,12 +115,12 @@ class NetworkService {
             }
 
             guard let values = values else {
-                done?("No values returned with initialize response")
+                done("No values returned with initialize response")
                 return
             }
 
             self.store.saveValues(values, cacheKey, fullUserHash) {
-                done?(nil)
+                done(nil)
             }
 
         } taskCapture: { capturedTask in
