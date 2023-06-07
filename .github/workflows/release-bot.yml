@@ -1,0 +1,15 @@
+name: Release Bot
+
+on:
+  pull_request:
+    types: [opened, reopened, closed]
+
+jobs:
+  run:
+    if: startsWith(github.head_ref, 'releases/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: statsig-io/statsig-publish-sdk-action@main
+        with:
+          gh-token: ${{ secrets.KONG_FINE_GRAINED_REPO_PAT }}
+          npm-token: ${{ secrets.NPM_AUTOMATION_KEY }}
