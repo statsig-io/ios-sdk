@@ -51,13 +51,16 @@ class AtomicDictionary<T>
     func toData() -> Data? {
         self.queue.sync {
             let dict = self.internalDictionary
-            guard let data = try? NSKeyedArchiver.archivedData(withRootObject: dict, requiringSecureCoding: false) else {
-                print("[Statsig]: Failed create Data from AtomicDictionary")
-                return nil
+            if #available(iOS 11.0, tvOS 11.0, *) {
+                guard let data = try? NSKeyedArchiver.archivedData(withRootObject: dict, requiringSecureCoding: false) else {
+                    print("[Statsig]: Failed create Data from AtomicDictionary")
+                    return nil
+                }
+                return data
+            } else {
+                let data = NSKeyedArchiver.archivedData(withRootObject: dict)
+                return data
             }
-
-            return data
-
         }
     }
 }
