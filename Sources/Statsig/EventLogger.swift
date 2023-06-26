@@ -86,9 +86,12 @@ class EventLogger {
         }
 
         let oldEvents = events
-        events = [Event]()
-        networkService.sendEvents(forUser: user, events: oldEvents) { [weak self] errorMessage, requestData in
-            guard let self = self else { return }
+        events = []
+
+
+        let capturedSelf = shutdown ? self : nil
+        networkService.sendEvents(forUser: user, events: oldEvents) { [weak self, capturedSelf] errorMessage, requestData in
+            guard let self = self ?? capturedSelf else { return }
 
             if errorMessage == nil {
                 return

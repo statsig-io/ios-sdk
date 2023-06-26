@@ -41,8 +41,9 @@ class AtomicDictionarySpec: BaseSpec {
                 expect(dict["one"]).to(equal("foo"))
             }
 
-            it("can be created with initial values") {
-                let new = AtomicDictionary(["a": "b"])
+            it("can be created with data") {
+                let data = try! NSKeyedArchiver.archivedData(withRootObject: ["a": "b"], requiringSecureCoding: false)
+                let new = AtomicDictionary<String>.fromData(data, label: "")
                 expect(new["a"]).to(equal("b"))
             }
         }

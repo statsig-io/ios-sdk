@@ -127,7 +127,8 @@ public struct StatsigUser {
 
     func getFullUserHash() -> String? {
         let dict = toDictionary(forLogging: false)
-        guard JSONSerialization.isValidJSONObject(dict), let data = try? JSONSerialization.data(withJSONObject: dict) else {
+        guard JSONSerialization.isValidJSONObject(dict),
+              let data = try? JSONSerialization.data(withJSONObject: dict) else {
             return nil
         }
 

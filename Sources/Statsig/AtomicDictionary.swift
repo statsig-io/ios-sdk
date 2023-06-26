@@ -5,7 +5,16 @@ class AtomicDictionary<T>
     private var internalDictionary:Dictionary<String, T>
     private let queue: DispatchQueue
 
-    init(_ initialValues: [String: T] = [:], label: String = "com.Statsig.AtomicDictionary") {
+    static func fromData(_ data: Data, label: String) -> AtomicDictionary<T> {
+        let dict = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as? [String: T]
+        return AtomicDictionary(dict ?? [:], label: label)
+    }
+
+    convenience init(label: String = "com.Statsig.AtomicDictionary") {
+        self.init([:], label: label)
+    }
+
+    private init(_ initialValues: [String: T] = [:], label: String) {
         queue = DispatchQueue(label: label, attributes: .concurrent)
         internalDictionary = initialValues
     }
@@ -39,15 +48,16 @@ class AtomicDictionary<T>
         return keys
     }
 
-    func toJsonData() -> Data? {
-        var data: Data?
+    func toData() -> Data? {
         self.queue.sync {
-            do {
-                data = try JSONSerialization.data(withJSONObject: self.internalDictionary)
-            } catch {
-
+            let dict = self.internalDictionary
+            guard let data = try? NSKeyedArchiver.archivedData(withRootObject: dict, requiringSecureCoding: false) else {
+                print("[Statsig]: Failed create Data from AtomicDictionary")
+                return nil
             }
+
+            return data
+
         }
-        return data
     }
 }
