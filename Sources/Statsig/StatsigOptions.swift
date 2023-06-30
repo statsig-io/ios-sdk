@@ -30,6 +30,12 @@ public class StatsigOptions {
      */
     public var enableCacheByFile = false
 
+    /**
+     Provide a Dictionary representing the "initiailize response" required  to synchronously initialize the SDK.
+     This value can be obtained from a Statsig server SDK.
+     */
+    public var initializeValues: [String: Any]? = nil
+
     internal var overrideURL: URL?
     var environment: [String: String] = [:]
 
@@ -38,7 +44,8 @@ public class StatsigOptions {
                 environment: StatsigEnvironment? = nil,
                 enableAutoValueUpdate: Bool? = false,
                 overrideStableID: String? = nil,
-                enableCacheByFile: Bool? = false)
+                enableCacheByFile: Bool? = false,
+                initializeValues: [String: Any]? = nil)
     {
         if let initTimeout = initTimeout, initTimeout >= 0 {
             self.initTimeout = initTimeout
@@ -58,6 +65,10 @@ public class StatsigOptions {
 
         if let enableCacheByFile = enableCacheByFile {
             self.enableCacheByFile = enableCacheByFile
+        }
+
+        if let initializeValues = initializeValues {
+            self.initializeValues = initializeValues
         }
 
         self.overrideStableID = overrideStableID

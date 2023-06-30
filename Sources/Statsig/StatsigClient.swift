@@ -25,17 +25,31 @@ internal class StatsigClient {
         self.sdkKey = sdkKey
         self.currentUser = StatsigClient.normalizeUser(user, options: options)
         self.statsigOptions = options ?? StatsigOptions()
-        self.store = InternalStore(self.currentUser)
+        self.store = InternalStore(self.currentUser, options: statsigOptions)
         self.networkService = NetworkService(sdkKey: sdkKey, options: statsigOptions, store: store)
         self.logger = EventLogger(user: currentUser, networkService: networkService)
         self.logger.start()
         self.loggedExposures = [String: TimeInterval]()
 
-        fetchAndScheduleSyncing { [weak self] errorMessage in
-            self?.lastInitializeError = errorMessage
-            self?.hasInitialized = true
-            self?.notifyOnInitializedListeners(errorMessage)
-            completion?(errorMessage)
+        let _onComplete: (String?) -> Void = { [weak self, completion] error in
+            guard let self = self else {
+                return
+            }
+
+            if (self.statsigOptions.enableAutoValueUpdate) {
+                self.scheduleRepeatingSync()
+            }
+
+            self.hasInitialized = true
+            self.lastInitializeError = error
+            self.notifyOnInitializedListeners(error)
+            completion?(error)
+        }
+
+        if (options?.initializeValues != nil) {
+            _onComplete(nil)
+        } else {
+            fetchValuesFromNetwork(completion: _onComplete)
         }
 
         subscribeToApplicationLifecycle()
@@ -105,7 +119,7 @@ internal class StatsigClient {
     internal func logExperimentExposure(_ experimentName: String, keepDeviceValue: Bool, experiment: DynamicConfig? = nil) {
         let isManualExposure = experiment == nil
         let experiment = experiment ?? store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
-       logConfigExposureForConfig(experimentName, config: experiment, isManualExposure: isManualExposure)
+        logConfigExposureForConfig(experimentName, config: experiment, isManualExposure: isManualExposure)
     }
 
     internal func getConfig(_ configName: String) -> DynamicConfig {
@@ -269,9 +283,7 @@ internal class StatsigClient {
         )
     }
 
-    private func fetchAndScheduleSyncing(completion: completionBlock) {
-        syncTimer?.invalidate()
-
+    private func fetchValuesFromNetwork(completion: completionBlock) {
         let currentUser = self.currentUser
         let shouldScheduleSync = statsigOptions.enableAutoValueUpdate
         let sinceTime = self.store.getLastUpdateTime(user: currentUser)
@@ -295,6 +307,8 @@ internal class StatsigClient {
     }
 
     private func scheduleRepeatingSync() {
+        syncTimer?.invalidate()
+
         let currentUser = self.currentUser
         syncTimer = Timer.scheduledTimer(withTimeInterval: StatsigClient.autoValueUpdateTime, repeats: false) { [weak self] _ in
             guard let self = self else { return }
@@ -302,9 +316,9 @@ internal class StatsigClient {
             let sinceTime = self.store.getLastUpdateTime(user: currentUser)
 
             self.networkService.fetchUpdatedValues(for: currentUser, lastSyncTimeForUser: sinceTime)
-                { [weak self] in
-                    self?.scheduleRepeatingSync()
-                }
+            { [weak self] in
+                self?.scheduleRepeatingSync()
+            }
         }
     }
 
@@ -336,9 +350,18 @@ internal class StatsigClient {
         currentUser = StatsigClient.normalizeUser(user, options: statsigOptions)
         store.updateUser(currentUser)
         logger.user = currentUser
-        fetchAndScheduleSyncing { [weak self] errorMessage in
-            self?.notifyOnUserUpdatedListeners(errorMessage)
-            completion?(errorMessage)
+
+        fetchValuesFromNetwork { [weak self, completion] error in
+            guard let self = self else {
+                return
+            }
+
+            if self.statsigOptions.enableAutoValueUpdate {
+                self.scheduleRepeatingSync()
+            }
+
+            self.notifyOnUserUpdatedListeners(error)
+            completion?(error)
         }
     }
 

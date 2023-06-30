@@ -25,4 +25,5 @@ public enum EvaluationReason: String, Codable {
     case LocalOverride;
     case Unrecognized;
     case Uninitialized;
+    case Bootstrap;
 }
