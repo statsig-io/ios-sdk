@@ -189,7 +189,9 @@ struct StatsigValuesCache {
         if let providedValues = providedValues {
             cacheByID[userCacheKey] = providedValues
             userCache = providedValues
-            reason = .Bootstrap
+            reason = BootstrapValidator.isValid(user, providedValues)
+            ? .Bootstrap
+            : .InvalidBootstrap
             return
         }
 

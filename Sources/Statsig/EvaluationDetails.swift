@@ -26,4 +26,5 @@ public enum EvaluationReason: String, Codable {
     case Unrecognized;
     case Uninitialized;
     case Bootstrap;
+    case InvalidBootstrap;
 }
