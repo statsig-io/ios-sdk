@@ -23,36 +23,29 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        command:
-          [
-            'xcodebuild build -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)"',
-            'xcodebuild build -destination "platform=macOS"',
-            'xcodebuild test -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)" -only-testing:StatsigTests/InternalStoreSpec',
-            'xcodebuild test -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)" -only-testing:StatsigTests/StatsigSpec',
-            'xcodebuild test -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)" -skip-testing:StatsigTests/InternalStoreSpec -skip-testing:StatsigTests/StatsigSpec ',
-          ]
     steps:
       - name: Checkout
         uses: actions/checkout@main
 
-      - name: Configure cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/Library/Caches/Homebrew/xcbeautify*
-            ~/Library/Caches/Homebrew/downloads/*xcbeautify*
-            ~/Library/Developer/Xcode/DerivedData/*
-          key: ios-cache-
-          restore-keys: ios-cache-
-
       - name: Install XCBeautify
         run: brew install xcbeautify
 
-      - name: Run ${{ matrix.command }}
+      - name: Configure cache
+        uses: actions/cache@v3
+        with:
+          path: build
+          key: ios-cache-
+          restore-keys: ios-cache-
+
+      - name: Run Build iOS
         run: |
           cd .swiftpm/xcode
-          ${{ matrix.command }} -workspace package.xcworkspace -scheme Statsig \
-          | xcbeautify && exit ${PIPESTATUS[0]}
+          xcodebuild build -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)" -workspace package.xcworkspace -scheme Statsig -derivedDataPath "build" | xcbeautify && exit ${PIPESTATUS[0]}
+
+      - name: Run Build macOS
+        run: |
+          cd .swiftpm/xcode
+          xcodebuild build -destination "platform=macOS" -workspace package.xcworkspace -scheme Statsig -derivedDataPath "build" | xcbeautify && exit ${PIPESTATUS[0]}
+
+      - name: Run Tests
+        run: ./run_tests.sh
