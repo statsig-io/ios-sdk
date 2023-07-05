@@ -15,6 +15,10 @@ on:
       - Tests/**
       - .github/workflows/test.yaml
 
+env:
+  CODE_SIGNING_REQUIRED: NO
+  CODE_SIGN_IDENTITY: ""
+
 jobs:
   build-and-test:
     name: Build and Test
@@ -40,7 +44,7 @@ jobs:
           path: |
             ~/Library/Caches/Homebrew/xcbeautify*
             ~/Library/Caches/Homebrew/downloads/*xcbeautify*
-            ~/Library/Developer/Xcode/DerivedData/ios-client-sdk*
+            ~/Library/Developer/Xcode/DerivedData/*
           key: ios-cache-
           restore-keys: ios-cache-
 
@@ -50,10 +54,5 @@ jobs:
       - name: Run ${{ matrix.command }}
         run: |
           cd .swiftpm/xcode
-          ${{ matrix.command }} -workspace package.xcworkspace \
-          -scheme Statsig \
-          CODE_SIGN_IDENTITY="" \
-          CODE_SIGNING_REQUIRED=NO \
-          ONLY_ACTIVE_ARCH=NO \
-          | xcbeautify \
-          && exit ${PIPESTATUS[0]}
+          ${{ matrix.command }} -workspace package.xcworkspace -scheme Statsig \
+          | xcbeautify && exit ${PIPESTATUS[0]}
