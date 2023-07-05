@@ -10,7 +10,6 @@ while [ $retry -lt $MAX_RETRIES ]; do
         -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)" \
         -scheme Statsig \
         -workspace package.xcworkspace \
-        -derivedDataPath="build" \
         | xcbeautify
     exit_code=${PIPESTATUS[0]}
     
