@@ -40,7 +40,7 @@ jobs:
           path: |
             ~/Library/Caches/Homebrew/xcbeautify*
             ~/Library/Caches/Homebrew/downloads/*xcbeautify*
-            ~/Library/Developer/Xcode/DerivedData/ios-client-sdk*
+            ~/Library/Developer/Xcode/DerivedData/*
           key: ios-cache-
           restore-keys: ios-cache-
 
