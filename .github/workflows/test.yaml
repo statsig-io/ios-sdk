@@ -19,6 +19,17 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        command:
+          [
+            'xcodebuild build -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)"',
+            'xcodebuild build -destination "platform=macOS"',
+            'xcodebuild test -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)" -only-testing:StatsigTests/InternalStoreSpec',
+            'xcodebuild test -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)" -only-testing:StatsigTests/StatsigSpec',
+            'xcodebuild test -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)" -skip-testing:StatsigTests/InternalStoreSpec -skip-testing:StatsigTests/StatsigSpec ',
+          ]
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -36,27 +47,13 @@ jobs:
       - name: Install XCBeautify
         run: brew install xcbeautify
 
-      - name: Build
+      - name: Run ${{ matrix.command }}
         run: |
           cd .swiftpm/xcode
-          xcodebuild build -workspace package.xcworkspace -scheme Statsig -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO | xcbeautify && exit ${PIPESTATUS[0]}
-
-      - name: Build macOS
-        run: |
-          cd .swiftpm/xcode
-          xcodebuild build -workspace package.xcworkspace -scheme Statsig -destination "platform=macOS" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO | xcbeautify && exit ${PIPESTATUS[0]}
-
-      - name: Test Internal Store
-        run: |
-          cd .swiftpm/xcode
-          xcodebuild test -only-testing:StatsigTests/InternalStoreSpec -workspace package.xcworkspace -scheme Statsig -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO | xcbeautify && exit ${PIPESTATUS[0]}
-
-      - name: Test Statsig
-        run: |
-          cd .swiftpm/xcode
-          xcodebuild test -only-testing:StatsigTests/StatsigSpec -workspace package.xcworkspace -scheme Statsig -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO | xcbeautify && exit ${PIPESTATUS[0]}
-
-      - name: Test Everything Else
-        run: |
-          cd .swiftpm/xcode
-          xcodebuild test -skip-testing:StatsigTests/InternalStoreSpec -skip-testing:StatsigTests/StatsigSpec -workspace package.xcworkspace -scheme Statsig -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO | xcbeautify && exit ${PIPESTATUS[0]}
+          ${{ matrix.command }} -workspace package.xcworkspace \
+          -scheme Statsig \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          ONLY_ACTIVE_ARCH=NO \
+          | xcbeautify \
+          && exit ${PIPESTATUS[0]}
