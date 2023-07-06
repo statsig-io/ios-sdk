@@ -14,4 +14,4 @@ jobs:
     steps:
       - uses: statsig-io/statsig-publish-sdk-action@main
         with:
-          gh-token: ${{ secrets.KONG_FINE_GRAINED_REPO_PAT }}
+          kong-private-key: ${{ secrets.KONG_GH_APP_PRIVATE_KEY }}
