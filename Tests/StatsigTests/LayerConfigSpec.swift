@@ -106,10 +106,10 @@ class LayerConfigSpec: BaseSpec {
             }
 
             it("returns the experiment values") {
-                let config = store.getLayer(client: client, forName: Data.LayerConfigWithExperimentKey)
+                let config = store.getLayer(client: client, forName: Data.LayerConfigWithExperimentKey, keepDeviceValue: false)
                 expect(config.getValue(forKey: "key", defaultValue: "ERR")).to(equal("value"))
 
-                let another = store.getLayer(client: client, forName: Data.LayerConfigWithoutExperimentKey)
+                let another = store.getLayer(client: client, forName: Data.LayerConfigWithoutExperimentKey, keepDeviceValue: false)
                 expect(another.getValue(forKey: "key", defaultValue: "ERR")).to(equal("another_value"))
             }
 

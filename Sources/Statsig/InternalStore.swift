@@ -317,7 +317,7 @@ class InternalStore {
             })
     }
 
-    func getLayer(client: StatsigClient?, forName layerName: String, keepDeviceValue: Bool = false) -> Layer {
+    func getLayer(client: StatsigClient?, forName layerName: String, keepDeviceValue: Bool) -> Layer {
         let latestValue: Layer = storeQueue.sync {
             if let override = (localOverrides[InternalStore.layerConfigsKey] as? [String: [String: Any]])?[layerName] {
                 return Layer(
@@ -426,9 +426,7 @@ class InternalStore {
         isLayer: Bool,
         factory: (_ name: String, _ data: [String: Any]) -> T) -> T {
         return storeQueue.sync {
-            // We don't want sticky behavior. Clear any sticky values and return latest.
             if (!keepDeviceValue) {
-                removeStickyExperimentThreaded(name)
                 return latestValue
             }
 
