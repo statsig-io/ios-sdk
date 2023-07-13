@@ -94,11 +94,22 @@ class LayerConfigSpec: BaseSpec {
         super.spec()
         
         describe("using getLayerConfig") {
-            let client = StatsigClient(sdkKey: "", user: nil, options: nil, completion: nil)
+            var client: StatsigClient!
             var store: InternalStore!
 
             beforeEach {
                 TestUtils.clearStorage()
+
+                stub(condition: isHost("api.statsig.com")) { req in
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
+                }
+
+                waitUntil { done in
+                    client = StatsigClient(sdkKey: "", user: nil, options: nil) { err in
+                        done()
+                    }
+                }
+
                 store = InternalStore(StatsigUser(userID: "dloomb"))
 
                 let user = StatsigUser(userID: "dloomb")

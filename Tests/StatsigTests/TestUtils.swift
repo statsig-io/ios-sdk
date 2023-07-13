@@ -81,6 +81,28 @@ class TestUtils {
             return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
         }
     }
+
+    static func getBody(fromRequest req: URLRequest) -> [String: Any] {
+        return try! JSONSerialization.jsonObject(
+            with: req.ohhttpStubs_httpBody!,
+            options: []) as! [String: Any]
+    }
+
+    static func makeInitializeResponse(_ configValue: String) -> [String: Any] {
+        return [
+            "feature_gates": [:],
+            "dynamic_configs": [
+                "a_config".sha256(): [
+                    "name": "a_config".sha256(),
+                    "rule_id": "default",
+                    "value": ["key": configValue],
+                ]
+            ],
+            "layer_configs": [:],
+            "time": 111,
+            "has_updates": true
+        ]
+    }
 }
 
 extension URLRequest {

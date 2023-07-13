@@ -8,30 +8,7 @@ import OHHTTPStubsSwift
 #endif
 @testable import Statsig
 
-func getBody(fromRequest req: URLRequest) -> [String: Any] {
-    return try! JSONSerialization.jsonObject(
-        with: req.ohhttpStubs_httpBody!,
-        options: []) as! [String: Any]
-}
-
-func makeInitializeResponse(_ configValue: String) -> [String: Any] {
-    return [
-        "feature_gates": [:],
-        "dynamic_configs": [
-            "a_config".sha256(): [
-                "name": "a_config".sha256(),
-                "rule_id": "default",
-                "value": ["key": configValue],
-            ]
-        ],
-        "layer_configs": [:],
-        "time": 111,
-        "has_updates": true
-    ]
-}
-
 class AsyncInitVsUpdateSpec: BaseSpec {
-
     override func spec() {
         super.spec()
 
@@ -48,14 +25,14 @@ class AsyncInitVsUpdateSpec: BaseSpec {
                         return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
                     }
 
-                    let body = getBody(fromRequest: req)
+                    let body = TestUtils.getBody(fromRequest: req)
                     let userId = body[jsonDict: "user"]?["userID"] as? String
                     if (userId == "user-a") {
-                        return HTTPStubsResponse(jsonObject: makeInitializeResponse("user_a_value"), statusCode: 200, headers: nil).responseTime(0.1)
+                        return HTTPStubsResponse(jsonObject: TestUtils.makeInitializeResponse("user_a_value"), statusCode: 200, headers: nil).responseTime(0.1)
                     }
 
                     if (userId == "user-b") {
-                        return HTTPStubsResponse(jsonObject: makeInitializeResponse("user_b_value"), statusCode: 200, headers: nil).responseTime(0.2)
+                        return HTTPStubsResponse(jsonObject: TestUtils.makeInitializeResponse("user_b_value"), statusCode: 200, headers: nil).responseTime(0.2)
                     }
 
                     return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 500))

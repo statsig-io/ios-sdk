@@ -211,9 +211,7 @@ internal class StatsigClient {
             self?.loggedExposures.removeAll()
         }
 
-        DispatchQueue.main.async { [weak self] in
-            self?.updateUserImpl(user, completion: completion)
-        }
+        self.updateUserImpl(user, completion: completion)
     }
 
     internal func shutdown() {
