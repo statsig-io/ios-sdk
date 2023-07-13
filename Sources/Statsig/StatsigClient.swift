@@ -349,17 +349,19 @@ internal class StatsigClient {
         store.updateUser(currentUser)
         logger.user = currentUser
 
-        fetchValuesFromNetwork { [weak self, completion] error in
-            guard let self = self else {
-                return
-            }
+        DispatchQueue.main.async { [weak self, completion] in
+            self?.fetchValuesFromNetwork { [weak self, completion] error in
+                guard let self = self else {
+                    return
+                }
 
-            if self.statsigOptions.enableAutoValueUpdate {
-                self.scheduleRepeatingSync()
-            }
+                if self.statsigOptions.enableAutoValueUpdate {
+                    self.scheduleRepeatingSync()
+                }
 
-            self.notifyOnUserUpdatedListeners(error)
-            completion?(error)
+                self.notifyOnUserUpdatedListeners(error)
+                completion?(error)
+            }
         }
     }
 
