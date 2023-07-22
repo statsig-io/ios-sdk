@@ -5,6 +5,11 @@ fileprivate enum Endpoint: String {
     case logEvent = "/v1/rgstr"
 }
 
+fileprivate let RetryLimits: [Endpoint: Int] = [
+    .initialize: 3,
+    .logEvent: 0
+]
+
 fileprivate typealias NetworkCompletionHandler = (Data?, URLResponse?, Error?) -> Void
 fileprivate typealias TaskCaptureHandler = ((URLSessionDataTask) -> Void)?
 
@@ -89,7 +94,7 @@ class NetworkService {
         let cacheKey = user.getCacheKey()
         let fullUserHash = user.getFullUserHash()
 
-        makeAndSendRequest(.initialize, body: body, retry: 3) { [weak self] data, response, error in
+        makeAndSendRequest(.initialize, body: body) { [weak self] data, response, error in
             if let error = error {
                 done(error.localizedDescription)
                 return
@@ -187,7 +192,12 @@ class NetworkService {
         return (nil, StatsigError.invalidJSONParam("requestBody"))
     }
 
-    private func makeAndSendRequest(_ endpoint: Endpoint, body: Data, retry: Int = 0, completion: @escaping NetworkCompletionHandler, taskCapture: TaskCaptureHandler = nil)
+    private func makeAndSendRequest(
+        _ endpoint: Endpoint,
+        body: Data,
+        completion: @escaping NetworkCompletionHandler,
+        taskCapture: TaskCaptureHandler = nil
+    )
     {
         var urlComponents = URLComponents()
         urlComponents.scheme = "https"
@@ -212,18 +222,34 @@ class NetworkService {
         request.httpBody = body
         request.httpMethod = "POST"
 
-        sendRequest(request, retry: retry, completion: completion, taskCapture: taskCapture)
+        sendRequest(
+            request,
+            retryLimit: RetryLimits[endpoint] ?? 0,
+            completion: completion,
+            taskCapture: taskCapture)
     }
 
-    private func sendRequest(_ request: URLRequest, retry: Int = 0, backoff: Double = 1, completion: @escaping NetworkCompletionHandler, taskCapture: TaskCaptureHandler) {
+    private func sendRequest(
+        _ request: URLRequest,
+        failedAttempts: Int = 0,
+        retryLimit: Int,
+        completion: @escaping NetworkCompletionHandler,
+        taskCapture: TaskCaptureHandler
+    ) {
         DispatchQueue.main.async {
             let task = URLSession.shared.dataTask(with: request) { [weak self] responseData, response, error in
-                if retry > 0,
+                if failedAttempts < retryLimit,
                    let self = self,
-                   let statusCode = (response as? HTTPURLResponse)?.statusCode,
-                   self.networkRetryErrorCodes.contains(statusCode)
+                   let code = response?.status,
+                   self.networkRetryErrorCodes.contains(code)
                 {
-                    self.sendRequest(request, retry: retry - 1, backoff: backoff * 2, completion: completion, taskCapture: taskCapture)
+                    self.sendRequest(
+                        request,
+                        failedAttempts: failedAttempts + 1,
+                        retryLimit: retryLimit,
+                        completion: completion,
+                        taskCapture: taskCapture
+                    )
                 } else {
                     Statsig.errorBoundary.capture {
                         completion(responseData, response, error)
@@ -231,11 +257,25 @@ class NetworkService {
                         completion(nil, nil, StatsigError.unexpectedError("Response Handling"))
                     }
                 }
-
             }
 
             taskCapture?(task)
             task.resume()
+        }
+    }
+}
+
+
+extension URLResponse {
+    fileprivate var asHttpResponse: HTTPURLResponse? {
+        get {
+            return self as? HTTPURLResponse
+        }
+    }
+
+    fileprivate var status: Int? {
+        get {
+            return self.asHttpResponse?.statusCode
         }
     }
 }
