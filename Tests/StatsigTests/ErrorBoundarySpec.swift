@@ -21,35 +21,41 @@ class ErrorBoundarySpec: BaseSpec {
         
         describe("Error Boundary") {
             let defaults = UserDefaults(suiteName: "ErrorBoundarySpec")
+            var requests: [[String: Any]] = []
 
-            it("logs to the endpoint") {
-                var called = false
-                stub(condition: isPath("/v1/sdk_exception")) { _ in
-                    called = true
+            beforeEach {
+                requests = []
+                stub(condition: isPath("/v1/sdk_exception")) { req in
+                    requests.append(req.statsig_body ?? [:])
                     return HTTPStubsResponse(jsonObject: [:], statusCode: 202, headers: nil)
                 }
+            }
 
+            afterEach {
+                HTTPStubs.removeAllStubs()
+            }
+
+            it("logs to the endpoint") {
                 let boundary = ErrorBoundary(key: "client-key", deviceEnvironment: ["sdkType": "ios"])
-                boundary.capture {
+                boundary.capture("a-tag") {
                     defaults?.set(["crash": nil], forKey: "ShouldCrash")
                 }
 
-                expect(called).toEventually(beTrue())
+                expect(requests).toEventually(haveCount(1))
+                expect(requests[0]["tag"] as? String).to(equal("a-tag"))
             }
 
             it("recovers") {
-                stub(condition: isPath("/v1/sdk_exception")) { _ in
-                    return HTTPStubsResponse(jsonObject: [:], statusCode: 202, headers: nil)
-                }
-
                 let boundary = ErrorBoundary(key: "client-key", deviceEnvironment: ["sdkType": "ios"])
                 var recovered = false
-                boundary.capture {
+                boundary.capture("another-tag") {
                     defaults?.set(["crash": nil], forKey: "ShouldCrash")
                 } withRecovery: {
                     recovered = true
                 }
 
+                expect(requests).toEventually(haveCount(1))
+                expect(requests[0]["tag"] as? String).to(equal("another-tag"))
                 expect(recovered).toEventually(beTrue())
             }
         }

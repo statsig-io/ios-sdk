@@ -19,11 +19,13 @@
     return it;
 }
 
-- (void)capture:(void (^_Nonnull)(void))task {
-    [self capture:task withRecovery:nil];
+- (void)capture:(NSString *)tag
+           task:(void (^_Nonnull)(void))task {
+    [self capture:tag task:task withRecovery:nil];
 }
 
-- (void)capture:(void (^_Nonnull)(void))task
+- (void)capture:(NSString *)tag
+           task:(void (^ _Nonnull)(void))task
    withRecovery:(void (^_Nullable)(void))recovery {
     @try {
         task();
@@ -34,7 +36,7 @@
 
         if (![self.seen containsObject:exception.name]) {
             [self.seen addObject:exception.name];
-            [self logException:exception];
+            [self logException:tag exception:exception];
         }
 
         if (recovery != nil) {
@@ -43,7 +45,7 @@
     }
 }
 
-- (void)logException:(NSException *)exception {
+- (void)logException:(NSString *)tag exception:(NSException *)exception {
     @try {
         NSURL *url = [NSURL URLWithString:@"https://statsigapi.net/v1/sdk_exception"];
         NSMutableURLRequest *request =
@@ -56,7 +58,8 @@
         @{
             @"exception": exception.name,
             @"info": exception.debugDescription,
-            @"statsigMetadata": self.deviceEnvironment ?: @{}
+            @"statsigMetadata": self.deviceEnvironment ?: @{},
+            @"tag": tag
         };
 
         NSError *error;
@@ -69,9 +72,6 @@
         if (error) {
             return;
         }
-
-        NSString *length = [NSString stringWithFormat:@"%lu", (unsigned long) [jsonData length]];
-        [request setValue:length forHTTPHeaderField:@"Content-length"];
 
         if (self.clientKey) {
             [request setValue:self.clientKey forHTTPHeaderField:@"STATSIG-API-KEY"];
