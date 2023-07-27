@@ -57,7 +57,9 @@ class TestUtils {
             return HTTPStubsResponse(jsonObject: response, statusCode: statusCode, headers: nil)
         }
 
-        TestUtils.startStatsigAndWait(key: key, user, options)
+        let opts = options ?? StatsigOptions(disableDiagnostics: true)
+
+        TestUtils.startStatsigAndWait(key: key, user, opts)
 
         return result
     }
@@ -69,7 +71,8 @@ class TestUtils {
             return HTTPStubsResponse(data: Data(), statusCode: statusCode, headers: nil)
         }
 
-        TestUtils.startStatsigAndWait(key: key, user, options)
+        let opts = options ?? StatsigOptions(disableDiagnostics: true)
+        TestUtils.startStatsigAndWait(key: key, user, opts)
 
         return result
     }

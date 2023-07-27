@@ -13,7 +13,7 @@ class CompletionCallbackRaceSpec: BaseSpec {
         super.spec()
 
         let user = StatsigUser(userID: "jkw")
-        let opts = StatsigOptions(initTimeout: 0.01)
+        let opts = StatsigOptions(initTimeout: 0.01, disableDiagnostics: true)
 
         var client: StatsigClient?
 

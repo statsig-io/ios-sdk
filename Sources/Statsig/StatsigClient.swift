@@ -22,6 +22,9 @@ internal class StatsigClient {
     let maxEventNameLength = 64
 
     internal init(sdkKey: String, user: StatsigUser?, options: StatsigOptions?, completion: completionBlock) {
+        Diagnostics.boot(options)
+        Diagnostics.mark?.overall.start();
+
         self.sdkKey = sdkKey
         self.currentUser = StatsigClient.normalizeUser(user, options: options)
         self.statsigOptions = options ?? StatsigOptions()
@@ -31,6 +34,9 @@ internal class StatsigClient {
         self.logger.start()
         self.loggedExposures = [String: TimeInterval]()
 
+        subscribeToApplicationLifecycle()
+
+        let capturedUser = self.currentUser
         let _onComplete: (String?) -> Void = { [weak self, completion] error in
             guard let self = self else {
                 return
@@ -44,6 +50,9 @@ internal class StatsigClient {
             self.lastInitializeError = error
             self.notifyOnInitializedListeners(error)
             completion?(error)
+
+            Diagnostics.mark?.overall.end(success: error == nil)
+            Diagnostics.log(self.logger, user: capturedUser, context: .initialize)
         }
 
         if (options?.initializeValues != nil) {
@@ -52,7 +61,6 @@ internal class StatsigClient {
             fetchValuesFromNetwork(completion: _onComplete)
         }
 
-        subscribeToApplicationLifecycle()
     }
 
     internal func isInitialized() -> Bool {
@@ -216,6 +224,7 @@ internal class StatsigClient {
 
     internal func shutdown() {
         logger.stop()
+        Diagnostics.shutdown()
         syncTimer?.invalidate()
     }
 

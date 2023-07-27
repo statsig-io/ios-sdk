@@ -68,9 +68,10 @@ class StatsigSpec: BaseSpec {
                     return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
                 }
 
-                Statsig.start(sdkKey: "client-api-key")
-                Statsig.start(sdkKey: "client-api-key")
-                Statsig.start(sdkKey: "client-api-key")
+                let opts = StatsigOptions(disableDiagnostics: true)
+                Statsig.start(sdkKey: "client-api-key", options: opts)
+                Statsig.start(sdkKey: "client-api-key", options: opts)
+                Statsig.start(sdkKey: "client-api-key", options: opts)
 
                 expect(requests.count).toEventually(equal(1))
             }
@@ -92,7 +93,7 @@ class StatsigSpec: BaseSpec {
                     return HTTPStubsResponse(jsonObject: ["time": now * 1000], statusCode: 200, headers: nil)
                 }
 
-                let opts = StatsigOptions()
+                let opts = StatsigOptions(disableDiagnostics: true)
                 opts.overrideURL = URL(string: "http://api.statsig.enableAutoValueUpdateTest")
                 Statsig.start(sdkKey: "client-api-key", options: opts)
 
@@ -107,7 +108,7 @@ class StatsigSpec: BaseSpec {
                 let now = NSDate().timeIntervalSince1970
                 StatsigClient.autoValueUpdateTime = 0.1
 
-                let opts = StatsigOptions(enableAutoValueUpdate: true)
+                let opts = StatsigOptions(enableAutoValueUpdate: true, disableDiagnostics: true)
                 opts.overrideURL = URL(string: "http://StatsigSpec.enableAutoValueUpdateEQtrue")
 
                 var requestExpectation = self.expectation(description: "Request Made Once")
@@ -466,7 +467,7 @@ class StatsigSpec: BaseSpec {
                 var timeDiff = 0.0
 
                 let initTimeoutExpect = self.expectation(description: "Init Timeout")
-                Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(initTimeout: 0.1)) { errorMessage in
+                Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(initTimeout: 0.1, disableDiagnostics: true)) { errorMessage in
                     error = errorMessage
                     gate = Statsig.checkGate(gateName2)
                     dc = Statsig.getConfig(configName)
@@ -510,14 +511,14 @@ class StatsigSpec: BaseSpec {
                 var nonExistentDC: DynamicConfig?
 
                 // First call start() to fetch and store values in local storage
-                Statsig.start(sdkKey: "client-api-key") { _ in
+                Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(disableDiagnostics: true)) { _ in
                     // shutdown client to call start() again, and makes response slow so we can test early timeout with cached return
                     Statsig.shutdown()
                     stub(condition: isHost("api.statsig.com")) { _ in
                         HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil).responseTime(3)
                     }
 
-                    Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(initTimeout: 0.1)) { _ in
+                    Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(initTimeout: 0.1, disableDiagnostics: true)) { _ in
                         gate = Statsig.checkGate(gateName2)
                         nonExistentGate = Statsig.checkGate(nonExistentGateName)
                         dc = Statsig.getConfig(configName)
@@ -559,7 +560,7 @@ class StatsigSpec: BaseSpec {
                 waitUntil { done in
                     Statsig.start(sdkKey: "client-api-key",
                                   user: StatsigUser(userID: "123", email: "123@statsig.com"),
-                                  options: StatsigOptions(overrideStableID: "custom_stable_id"))
+                                  options: StatsigOptions(overrideStableID: "custom_stable_id", disableDiagnostics: true))
                     { err in
                         expect(err).to(beNil())
 

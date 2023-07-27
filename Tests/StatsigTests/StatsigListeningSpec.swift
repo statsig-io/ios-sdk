@@ -41,6 +41,8 @@ class StatsigListeningSpec: BaseSpec {
 
     override func spec() {
         super.spec()
+
+        let opts = StatsigOptions(disableDiagnostics: true)
         
         beforeEach {
             TestUtils.clearStorage()
@@ -58,7 +60,8 @@ class StatsigListeningSpec: BaseSpec {
 
                 expect(Statsig.isInitialized()).to(beFalse())
                 var called = false
-                Statsig.start(sdkKey: "client-key") { _ in
+                let opts = StatsigOptions(disableDiagnostics: true)
+                Statsig.start(sdkKey: "client-key", options: opts) { _ in
                     called = true
                 }
                 expect(called).toEventually(beTrue())
@@ -71,8 +74,8 @@ class StatsigListeningSpec: BaseSpec {
                 badStub()
 
                 let listener = TestListener()
-
-                Statsig.start(sdkKey: "client-key")
+                let opts = StatsigOptions(disableDiagnostics: true)
+                Statsig.start(sdkKey: "client-key", options: opts)
                 Statsig.addListener(listener)
 
                 expect(listener.onInitializedError).toEventually(contain("An error occurred during fetching values for the user. 500"))
@@ -83,7 +86,7 @@ class StatsigListeningSpec: BaseSpec {
 
                 let listener = TestListener()
 
-                Statsig.start(sdkKey: "client-key")
+                Statsig.start(sdkKey: "client-key", options: opts)
                 Statsig.addListener(listener)
 
                 expect(listener.onInitializedCalled).toEventually(beTrue())
@@ -96,7 +99,7 @@ class StatsigListeningSpec: BaseSpec {
                 let listener1 = TestListener()
                 let listener2 = TestListener()
 
-                Statsig.start(sdkKey: "client-key")
+                Statsig.start(sdkKey: "client-key", options: opts)
                 Statsig.addListener(listener1)
                 Statsig.addListener(listener2)
 
@@ -107,7 +110,7 @@ class StatsigListeningSpec: BaseSpec {
             it("responds immediately if initialzing has previously completed") {
                 goodStub()
                 var initialized = false
-                Statsig.start(sdkKey: "client-key") { _ in
+                Statsig.start(sdkKey: "client-key", options: opts) { _ in
                     initialized = true
                 }
 
@@ -120,7 +123,7 @@ class StatsigListeningSpec: BaseSpec {
             it("responds immediately with error if initialzing has previously completed") {
                 badStub()
                 var error: String?
-                Statsig.start(sdkKey: "client-key") { err in
+                Statsig.start(sdkKey: "client-key", options: opts) { err in
                     error = err
                 }
 
@@ -138,7 +141,7 @@ class StatsigListeningSpec: BaseSpec {
                 Statsig.addListener(listener)
 
 
-                Statsig.start(sdkKey: "client-key")
+                Statsig.start(sdkKey: "client-key", options: opts)
 
                 expect(listener.onInitializedCalled).toEventually(beTrue())
                 expect(listener.onInitializedError).to(beNil())
@@ -150,7 +153,7 @@ class StatsigListeningSpec: BaseSpec {
                 goodStub()
 
                 var initialized = false
-                Statsig.start(sdkKey: "client-key") { _ in
+                Statsig.start(sdkKey: "client-key", options: opts) { _ in
                     initialized = true
                 }
                 expect(initialized).toEventually(beTrue())

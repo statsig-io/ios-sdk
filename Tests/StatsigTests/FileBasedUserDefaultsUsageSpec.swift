@@ -26,7 +26,7 @@ class FileBasedUserDefaultsUsageSpec: BaseSpec {
                     "layer_configs": [],
                     "time": 321,
                     "has_updates": true
-                ], options: StatsigOptions(enableCacheByFile: true))
+                ], options: StatsigOptions(enableCacheByFile: true, disableDiagnostics: true))
             }
 
 
@@ -39,7 +39,7 @@ class FileBasedUserDefaultsUsageSpec: BaseSpec {
             it("returns config from cache") {
                 Statsig.shutdown()
 
-                _ = TestUtils.startWithStatusAndWait(500, options: StatsigOptions(enableCacheByFile: true))
+                _ = TestUtils.startWithStatusAndWait(500, options: StatsigOptions(enableCacheByFile: true, disableDiagnostics: true))
 
                 let result = Statsig.getConfig("a_config")
                 expect(result.value as? [String: Bool]).to(equal(["a_bool": true]))

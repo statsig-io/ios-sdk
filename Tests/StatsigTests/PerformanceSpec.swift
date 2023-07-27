@@ -13,7 +13,7 @@ import OHHTTPStubsSwift
 final class PerformanceSpec: XCTestCase {
 
     override func setUpWithError() throws {
-        let opts = StatsigOptions()
+        let opts = StatsigOptions(disableDiagnostics: true)
         opts.overrideURL = URL(string: "http://PerformanceSpec")
 
         _ = TestUtils.startWithResponseAndWait([

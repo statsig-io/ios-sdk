@@ -61,7 +61,8 @@ class SDKKeySpec: BaseSpec {
                 var gate: Bool?
                 var config: DynamicConfig?
                 waitUntil { done in
-                    Statsig.start(sdkKey: "invalid_sdk_key", options: StatsigOptions()) { errorMessage in
+                    let opts = StatsigOptions(disableDiagnostics: true)
+                    Statsig.start(sdkKey: "invalid_sdk_key", options: opts) { errorMessage in
                         error = errorMessage
                         gate = Statsig.checkGate("show_coupon")
                         config = Statsig.getConfig("my_config")

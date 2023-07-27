@@ -14,7 +14,7 @@ class CodableSpec: BaseSpec {
         super.spec()
 
         describe("Codable") {
-            let opts = StatsigOptions()
+            let opts = StatsigOptions(disableDiagnostics: true)
             opts.overrideURL = URL(string: "http://CodableSpec")
 
             let encoder = JSONEncoder()

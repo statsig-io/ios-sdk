@@ -14,7 +14,7 @@ class ExposureLoggingSpec: BaseSpec {
         super.spec()
         
         describe("ExposureLogging") {
-            let opts = StatsigOptions()
+            let opts = StatsigOptions(disableDiagnostics: true)
             opts.overrideURL = URL(string: "http://ExposureLoggingSpec")
 
             var logs: [[String: Any]] = []

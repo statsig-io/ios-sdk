@@ -36,6 +36,11 @@ public class StatsigOptions {
      */
     public var initializeValues: [String: Any]? = nil
 
+    /**
+     Prevent the SDK from sending useful debug information to Statsig
+     */
+    public var disableDiagnostics = false;
+
     internal var overrideURL: URL?
     var environment: [String: String] = [:]
 
@@ -45,7 +50,8 @@ public class StatsigOptions {
                 enableAutoValueUpdate: Bool? = false,
                 overrideStableID: String? = nil,
                 enableCacheByFile: Bool? = false,
-                initializeValues: [String: Any]? = nil)
+                initializeValues: [String: Any]? = nil,
+                disableDiagnostics: Bool? = false)
     {
         if let initTimeout = initTimeout, initTimeout >= 0 {
             self.initTimeout = initTimeout
@@ -69,6 +75,10 @@ public class StatsigOptions {
 
         if let initializeValues = initializeValues {
             self.initializeValues = initializeValues
+        }
+
+        if let disableDiagnostics = disableDiagnostics {
+            self.disableDiagnostics = disableDiagnostics
         }
 
         self.overrideStableID = overrideStableID

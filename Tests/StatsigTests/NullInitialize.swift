@@ -51,7 +51,8 @@ class NullInitializeSpec: BaseSpec {
             it("works when initialize contains null") {
                 var called = false
                 waitUntil { done in
-                    Statsig.start(sdkKey: "client-api-key") { _ in
+                    let opts = StatsigOptions(disableDiagnostics: true)
+                    Statsig.start(sdkKey: "client-api-key", options: opts) { _ in
                         let config = Statsig.getConfig("null_value_config")
 
                         let defaultVal = config.getValue(forKey: "null", defaultValue: "default")
@@ -67,7 +68,8 @@ class NullInitializeSpec: BaseSpec {
             it("works when override contains null") {
                 var called = false
                 waitUntil { done in
-                    Statsig.start(sdkKey: "client-api-key") { _ in
+                    let opts = StatsigOptions(disableDiagnostics: true)
+                    Statsig.start(sdkKey: "client-api-key", options: opts) { _ in
 
                         let dict = ["foo": nil] as [String : Any?]
                         Statsig.overrideConfig("config", value: dict as [String: Any])

@@ -94,13 +94,17 @@ class NetworkService {
         let cacheKey = user.getCacheKey()
         let fullUserHash = user.getFullUserHash()
 
-        makeAndSendRequest(.initialize, body: body) { [weak self] data, response, error in
+        makeAndSendRequest(
+            .initialize,
+            body: body,
+            marker: Diagnostics.mark?.initialize.network
+        ) { [weak self] data, response, error in
             if let error = error {
                 done(error.localizedDescription)
                 return
             }
 
-            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+            let statusCode = response?.status ?? 0
             if !(200...299).contains(statusCode) {
                 done("An error occurred during fetching values for the user. \(statusCode)")
                 return
@@ -111,6 +115,7 @@ class NetworkService {
                 return
             }
 
+            Diagnostics.mark?.initialize.process.start()
             var values: [String: Any]? = nil
             if statusCode == 204 {
                 values = ["has_updates": false]
@@ -120,11 +125,13 @@ class NetworkService {
             }
 
             guard let values = values else {
+                Diagnostics.mark?.initialize.process.end(success: false)
                 done("No values returned with initialize response")
                 return
             }
 
             self.store.saveValues(values, cacheKey, fullUserHash) {
+                Diagnostics.mark?.initialize.process.end(success: true)
                 done(nil)
             }
 
@@ -153,25 +160,24 @@ class NetworkService {
                 return
             }
 
-            guard let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode)
-            else {
+            guard response?.isOK == true else {
                 completion("An error occurred during sending events to server. "
-                           + "\(String(describing: (response as? HTTPURLResponse)?.statusCode))", body)
+                           + "\(String(describing: response?.status))", body)
                 return
             }
         }
     }
 
-    func sendRequestsWithData(_ dataArray: [Data], completion: @escaping ((_ failedRequestsData: [Data]?) -> Void)) {
+    func sendRequestsWithData(
+        _ dataArray: [Data],
+        completion: @escaping ((_ failedRequestsData: [Data]?) -> Void)
+    ) {
         var failedRequests: [Data] = []
         let dispatchGroup = DispatchGroup()
         for data in dataArray {
             dispatchGroup.enter()
             makeAndSendRequest(.logEvent, body: data) { _, response, error in
-                let httpResponse = response as? HTTPURLResponse
-                if error != nil ||
-                    (httpResponse != nil && !(200...299).contains(httpResponse!.statusCode))
+                if error != nil || response?.isOK != true
                 {
                     failedRequests.append(data)
                 }
@@ -195,6 +201,7 @@ class NetworkService {
     private func makeAndSendRequest(
         _ endpoint: Endpoint,
         body: Data,
+        marker: NetworkMarker? = nil,
         completion: @escaping NetworkCompletionHandler,
         taskCapture: TaskCaptureHandler = nil
     )
@@ -225,6 +232,7 @@ class NetworkService {
         sendRequest(
             request,
             retryLimit: RetryLimits[endpoint] ?? 0,
+            marker: marker,
             completion: completion,
             taskCapture: taskCapture)
     }
@@ -233,11 +241,23 @@ class NetworkService {
         _ request: URLRequest,
         failedAttempts: Int = 0,
         retryLimit: Int,
+        marker: NetworkMarker? = nil,
         completion: @escaping NetworkCompletionHandler,
         taskCapture: TaskCaptureHandler
     ) {
         DispatchQueue.main.async {
+            let currentAttempt = failedAttempts + 1
+            marker?.start(attempt: currentAttempt)
+
             let task = URLSession.shared.dataTask(with: request) { [weak self] responseData, response, error in
+
+                marker?.end(
+                    success: error == nil && response?.isOK == true,
+                    attempt: currentAttempt,
+                    status: response?.status,
+                    region: response?.statsigRegion
+                )
+
                 if failedAttempts < retryLimit,
                    let self = self,
                    let code = response?.status,
@@ -245,8 +265,9 @@ class NetworkService {
                 {
                     self.sendRequest(
                         request,
-                        failedAttempts: failedAttempts + 1,
+                        failedAttempts: currentAttempt,
                         retryLimit: retryLimit,
+                        marker: marker,
                         completion: completion,
                         taskCapture: taskCapture
                     )
@@ -276,6 +297,23 @@ extension URLResponse {
     fileprivate var status: Int? {
         get {
             return self.asHttpResponse?.statusCode
+        }
+    }
+
+    fileprivate var statsigRegion: String? {
+        get {
+            if #available(macOS 10.15, iOS 13.0, *) {
+                return self.asHttpResponse?.value(forHTTPHeaderField: "x-statsig-region")
+            }
+
+            return nil
+        }
+    }
+
+    fileprivate var isOK: Bool {
+        get {
+            let code = self.status ?? 0
+            return code >= 200 && code < 300
         }
     }
 }
