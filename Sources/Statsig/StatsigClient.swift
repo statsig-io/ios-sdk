@@ -49,10 +49,11 @@ internal class StatsigClient {
             self.hasInitialized = true
             self.lastInitializeError = error
             self.notifyOnInitializedListeners(error)
-            completion?(error)
 
             Diagnostics.mark?.overall.end(success: error == nil)
             Diagnostics.log(self.logger, user: capturedUser, context: .initialize)
+
+            completion?(error)
         }
 
         if (options?.initializeValues != nil) {
