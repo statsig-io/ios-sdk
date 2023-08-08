@@ -23,7 +23,7 @@ jobs:
             // Kong
             github.rest.actions.createWorkflowDispatch({
               ...args,
-              workflow_id: 'kong.yml'
+              workflow_id: 'kong.yaml'
             })
 
             // Tests
