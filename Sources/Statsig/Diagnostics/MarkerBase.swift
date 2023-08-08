@@ -5,7 +5,7 @@ fileprivate let NANO_IN_MS = 1_000_000.0
 
 enum MarkerContext: String {
     case initialize = "initialize"
-    case errorBoundary = "error_boundary"
+    case apiCall = "api_call"
 }
 
 class MarkerBase {
