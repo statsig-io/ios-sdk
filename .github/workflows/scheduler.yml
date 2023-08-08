@@ -29,5 +29,5 @@ jobs:
             // Tests
             github.rest.actions.createWorkflowDispatch({
               ...args,
-              workflow_id: 'test.yml'
+              workflow_id: 'test.yaml'
             })
