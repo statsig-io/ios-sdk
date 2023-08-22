@@ -20,8 +20,43 @@ env:
   CODE_SIGN_IDENTITY: ""
 
 jobs:
-  build-and-test:
-    name: Build and Test
+  build:
+    name: Build
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          [
+            "platform=iOS Simulator,name=iPhone SE (2nd generation)",
+            "platform=macOS",
+            "platform=tvOS Simulator,name=Apple TV",
+          ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Install XCBeautify
+        run: brew install xcbeautify
+
+      - name: Configure cache
+        uses: actions/cache@v3
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData/*
+          key: ios-cache-
+          restore-keys: ios-cache-
+
+      - name: Run Build ${{ matrix.platform }}
+        run: |
+          cd .swiftpm/xcode
+          xcodebuild build \
+            -destination "${{ matrix.platform }}" \
+            -workspace package.xcworkspace \
+            -scheme Statsig \
+            | xcbeautify && exit ${PIPESTATUS[0]}
+
+  test:
+    name: Test
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -37,15 +72,8 @@ jobs:
           key: ios-cache-
           restore-keys: ios-cache-
 
-      - name: Run Build iOS
-        run: |
-          cd .swiftpm/xcode
-          xcodebuild build -destination "platform=iOS Simulator,name=iPhone SE (2nd generation)" -workspace package.xcworkspace -scheme Statsig | xcbeautify && exit ${PIPESTATUS[0]}
-
-      - name: Run Build macOS
-        run: |
-          cd .swiftpm/xcode
-          xcodebuild build -destination "platform=macOS" -workspace package.xcworkspace -scheme Statsig | xcbeautify && exit ${PIPESTATUS[0]}
+      - name: Lint Podspec
+        run: pod lib lint Statsig.podspec --skip-tests
 
       - name: Run Tests
         run: ./run_tests.sh
