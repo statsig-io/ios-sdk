@@ -302,7 +302,7 @@ extension URLResponse {
 
     fileprivate var statsigRegion: String? {
         get {
-            if #available(macOS 10.15, iOS 13.0, *) {
+            if #available(macOS 10.15, iOS 13.0, tvOS 13.0, *) {
                 return self.asHttpResponse?.value(forHTTPHeaderField: "x-statsig-region")
             }
 
