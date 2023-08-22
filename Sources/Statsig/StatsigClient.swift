@@ -291,6 +291,20 @@ internal class StatsigClient {
         )
     }
 
+    internal func openDebugView() {
+        let state: [String: Any?] = [
+            "user": self.currentUser.toDictionary(forLogging: false),
+            "gates": self.store.cache.gates,
+            "configs": self.store.cache.configs,
+            "layers": self.store.cache.layers,
+            "evalReason": "\(self.store.cache.reason)"
+        ]
+
+        DispatchQueue.main.async {
+            DebugViewController.show(self.sdkKey, state)
+        }
+    }
+
     private func fetchValuesFromNetwork(completion: completionBlock) {
         let currentUser = self.currentUser
         let shouldScheduleSync = statsigOptions.enableAutoValueUpdate

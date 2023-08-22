@@ -469,6 +469,12 @@ public class Statsig {
         return result
     }
 
+    public static func openDebugView() {
+        errorBoundary.capture("openDebugView") {
+            client?.openDebugView()
+        }
+    }
+
     //
     // MARK: - Private
     //

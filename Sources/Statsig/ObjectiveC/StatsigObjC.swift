@@ -253,4 +253,8 @@ public final class StatsigObjC: NSObject {
     @objc public static func getStableID() -> String? {
         return Statsig.getStableID()
     }
+
+    @objc public static func openDebugView() {
+        Statsig.openDebugView()
+    }
 }
