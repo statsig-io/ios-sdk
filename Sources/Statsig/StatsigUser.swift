@@ -127,11 +127,23 @@ public struct StatsigUser {
 
     func getFullUserHash() -> String? {
         let dict = toDictionary(forLogging: false)
-        guard JSONSerialization.isValidJSONObject(dict),
-              let data = try? JSONSerialization.data(withJSONObject: dict) else {
-            return nil
-        }
-
-        return String(data: data, encoding: .utf8)?.sha256()
+        let sorted = getSortedPairsString(dict)
+        return sorted.sha256()
     }
+}
+
+fileprivate func getSortedPairsString(_ dictionary: [String: Any?]) -> String {
+    let sortedPairs = dictionary.sorted { $0.key < $1.key }
+    var sortedResult = [String]()
+
+    for (key, value) in sortedPairs {
+        if let nestedDictionary = value as? [String: Any?] {
+            let sortedNested = getSortedPairsString(nestedDictionary)
+            sortedResult.append("\(key):\(sortedNested)")
+        } else {
+            sortedResult.append("\(key):\(value ?? "")")
+        }
+    }
+
+    return sortedResult.joined(separator: ",")
 }
