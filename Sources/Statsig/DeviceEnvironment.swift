@@ -6,7 +6,7 @@ struct DeviceEnvironment {
 
     var deviceOS: String = "iOS"
     var sdkType: String = "ios-client"
-    var sdkVersion: String = "1.25.0"
+    var sdkVersion: String = "1.26.0"
     var sessionID: String? { UUID().uuidString }
     var systemVersion: String { PlatformCompatibility.deviceInfo.systemVersion }
     var systemName: String { PlatformCompatibility.deviceInfo.systemName }
