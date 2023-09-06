@@ -22,12 +22,14 @@ struct StatsigValuesCache {
     var gates: [String: [String: Any]]? = nil
     var configs: [String: [String: Any]]? = nil
     var layers: [String: [String: Any]]? = nil
+    var hashUsed: String? = nil
 
     var userCache: [String: Any] {
         didSet {
             gates = userCache[InternalStore.gatesKey] as? [String: [String: Any]]
             configs = userCache[InternalStore.configsKey] as? [String: [String: Any]]
             layers = userCache[InternalStore.layerConfigsKey] as? [String: [String: Any]]
+            hashUsed = userCache[InternalStore.hashUsedKey] as? String
         }
     }
 
@@ -39,7 +41,7 @@ struct StatsigValuesCache {
         self.userCacheKey = "null"
         self.userLastUpdateTime = 0
 
-        self.setUserCacheKeyAndValues(user, withValues: initialValues)
+        self.setUserCacheKeyAndValues(user, withBootstrapValues: initialValues)
         self.migrateLegacyStickyExperimentValues(user)
     }
 
@@ -49,11 +51,12 @@ struct StatsigValuesCache {
             return FeatureGate(name: gateName, value: false, ruleID: "", evalDetails: getEvaluationDetails(valueExists: false))
         }
 
-        if let gateObj = (gates[gateName.sha256()] ?? gates[gateName]) {
+        if let gateObj = gates[gateName.hashSpecName(hashUsed)] ?? gates[gateName] {
             return FeatureGate(name: gateName, gateObj: gateObj, evalDetails: getEvaluationDetails(valueExists: true))
         }
 
         print("[Statsig]: The feature gate with name \(gateName) does not exist. Returning false as the default.")
+
         return FeatureGate(name: gateName, value: false, ruleID: "", evalDetails: getEvaluationDetails(valueExists: false))
     }
 
@@ -63,7 +66,7 @@ struct StatsigValuesCache {
             return DynamicConfig(configName: configName, evalDetails: getEvaluationDetails(valueExists: false))
         }
 
-        if let configObj = (configs[configName.sha256()] ?? configs[configName]) {
+        if let configObj = configs[configName.hashSpecName(hashUsed)] ?? configs[configName] {
             return DynamicConfig(configName: configName, configObj: configObj, evalDetails: getEvaluationDetails(valueExists: true))
         }
 
@@ -77,7 +80,7 @@ struct StatsigValuesCache {
             return Layer(client: client, name: layerName, evalDetails: getEvaluationDetails(valueExists: false))
         }
 
-        if let configObj = layers[layerName.sha256()] ?? layers[layerName] {
+        if let configObj = layers[layerName.hashSpecName(hashUsed)] ?? layers[layerName] {
             return Layer(client: client, name: layerName, configObj: configObj, evalDetails: getEvaluationDetails(valueExists: true))
         }
 
@@ -86,7 +89,7 @@ struct StatsigValuesCache {
     }
 
     func getStickyExperiment(_ expName: String) -> [String: Any]? {
-        let expNameHash = expName.sha256()
+        let expNameHash = expName.hashSpecName(hashUsed)
         if let stickyExps = userCache[InternalStore.stickyExpKey] as? [String: [String: Any]],
            let expObj = stickyExps[expNameHash] {
             return expObj
@@ -135,6 +138,7 @@ struct StatsigValuesCache {
             cache["time"] = values["time"] as? Double ?? 0
             cache[InternalStore.evalTimeKey] = NSDate().epochTimeInMs()
             cache[InternalStore.userHashKey] = userHash
+            cache[InternalStore.hashUsedKey] = values[InternalStore.hashUsedKey]
         }
 
         if (userCacheKey == cacheKey) {
@@ -148,7 +152,7 @@ struct StatsigValuesCache {
     }
 
     mutating func saveStickyExperimentIfNeeded(_ expName: String, _ latestValue: ConfigProtocol) {
-        let expNameHash = expName.sha256()
+        let expNameHash = expName.hashSpecName(hashUsed)
         // If is IN this ACTIVE experiment, then we save the value as sticky
         if latestValue.isExperimentActive, latestValue.isUserInExperiment {
             if latestValue.isDeviceBased {
@@ -161,7 +165,7 @@ struct StatsigValuesCache {
     }
 
     mutating func removeStickyExperiment(_ expName: String) {
-        let expNameHash = expName.sha256()
+        let expNameHash = expName.hashSpecName(hashUsed)
         stickyDeviceExperiments.removeValue(forKey: expNameHash)
         userCache[jsonDict: InternalStore.stickyExpKey]?.removeValue(forKey: expNameHash)
         saveToUserDefaults()
@@ -183,13 +187,16 @@ struct StatsigValuesCache {
         StatsigUserDefaults.defaults.setDictionarySafe(stickyDeviceExperiments, forKey: InternalStore.stickyDeviceExperimentsKey)
     }
 
-    private mutating func setUserCacheKeyAndValues(_ user: StatsigUser, withValues providedValues: [String: Any]? = nil) {
+    private mutating func setUserCacheKeyAndValues(
+        _ user: StatsigUser,
+        withBootstrapValues bootstrapValues: [String: Any]? = nil
+    ) {
         userCacheKey = user.getCacheKey()
 
-        if let providedValues = providedValues {
-            cacheByID[userCacheKey] = providedValues
-            userCache = providedValues
-            reason = BootstrapValidator.isValid(user, providedValues)
+        if let bootstrapValues = bootstrapValues {
+            cacheByID[userCacheKey] = bootstrapValues
+            userCache = bootstrapValues
+            reason = BootstrapValidator.isValid(user, bootstrapValues)
             ? .Bootstrap
             : .InvalidBootstrap
             return
@@ -260,6 +267,7 @@ class InternalStore {
     static let layerConfigsKey = "layer_configs"
     static let evalTimeKey = "evaluation_time"
     static let userHashKey = "user_hash"
+    static let hashUsedKey = "hash_used"
 
     var cache: StatsigValuesCache
     var localOverrides: [String: Any] = InternalStore.getEmptyOverrides()
@@ -478,6 +486,18 @@ class InternalStore {
 }
 
 extension String {
+    func hashSpecName(_ hashUsed: String?) -> String {
+        if hashUsed == "none" {
+            return self
+        }
+
+        if hashUsed == "djb2" {
+            return self.djb2()
+        }
+
+        return self.sha256()
+    }
+
     func sha256() -> String {
         let data = Data(utf8)
         var digest = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
@@ -485,6 +505,17 @@ extension String {
             _ = CC_SHA256($0.baseAddress, CC_LONG(data.count), &digest)
         }
         return Data(digest).base64EncodedString()
+    }
+
+    func djb2() -> String {
+        var hash: Int32 = 0
+        for c in self.utf16 {
+            hash = (hash << 5) &- hash &+ Int32(c)
+            hash = hash & hash
+        }
+
+        return String(format: "%u", UInt32(bitPattern: hash))
+
     }
 }
 

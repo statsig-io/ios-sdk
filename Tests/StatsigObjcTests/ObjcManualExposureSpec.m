@@ -32,7 +32,7 @@
              custom:nil
              privateAttributes:nil];
 
-    _options = [[StatsigOptions alloc] initWithInitTimeout:2];
+    _options = [[StatsigOptions alloc] initWithArgs:@{@"initTimeout": @2}];
     _completion = ^(NSString * _Nullable err) {};
 }
 

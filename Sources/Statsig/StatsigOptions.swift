@@ -41,6 +41,12 @@ public class StatsigOptions {
      */
     public var disableDiagnostics = false;
 
+    /**
+     When disabled, the SDK will not hash gate/config/experiment names, instead they will be readable as plain text.
+     Note: This requires special authorization from Statsig. Reach out to us if you are interested in this feature.
+     */
+    public var disableHashing = false;
+
     internal var overrideURL: URL?
     var environment: [String: String] = [:]
 
@@ -51,7 +57,8 @@ public class StatsigOptions {
                 overrideStableID: String? = nil,
                 enableCacheByFile: Bool? = false,
                 initializeValues: [String: Any]? = nil,
-                disableDiagnostics: Bool? = false)
+                disableDiagnostics: Bool? = false,
+                disableHashing: Bool? = false)
     {
         if let initTimeout = initTimeout, initTimeout >= 0 {
             self.initTimeout = initTimeout
@@ -79,6 +86,10 @@ public class StatsigOptions {
 
         if let disableDiagnostics = disableDiagnostics {
             self.disableDiagnostics = disableDiagnostics
+        }
+
+        if let disableHashing = disableHashing {
+            self.disableDiagnostics = disableHashing
         }
 
         self.overrideStableID = overrideStableID

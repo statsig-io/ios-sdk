@@ -83,7 +83,8 @@ class NetworkService {
         let (body, parseErr) = makeReqBody([
             "user": user.toDictionary(forLogging: false),
             "statsigMetadata": user.deviceEnvironment,
-            "sinceTime": sinceTime
+            "sinceTime": sinceTime,
+            "hash": statsigOptions.disableHashing ? "none" : "djb2"
         ])
 
         guard let body = body else {
