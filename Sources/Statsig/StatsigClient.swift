@@ -305,6 +305,28 @@ internal class StatsigClient {
         }
     }
 
+    internal func getInitializeResponseJson() -> ExternalInitializeResponse {
+        var values: String? = nil
+        let dict: [String: Any?] = [
+            "feature_gates": self.store.cache.gates,
+            "dynamic_configs": self.store.cache.configs,
+            "layer_configs": self.store.cache.layers,
+            "hash_used": self.store.cache.hashUsed,
+            "time": self.store.cache.userCache["time"]
+        ]
+
+        if JSONSerialization.isValidJSONObject(dict),
+           let data = try? JSONSerialization.data(withJSONObject: dict),
+           let json = String(data: data, encoding: .utf8) {
+            values = json
+        }
+
+        return ExternalInitializeResponse(
+            values: values,
+            evaluationDetails: self.store.cache.getEvaluationDetails(valueExists: values != nil)
+        )
+    }
+
     private func fetchValuesFromNetwork(completion: completionBlock) {
         let currentUser = self.currentUser
         let shouldScheduleSync = statsigOptions.enableAutoValueUpdate

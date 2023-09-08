@@ -475,6 +475,21 @@ public class Statsig {
         }
     }
 
+    /**
+    Returns the raw values that the SDK is using internally to provide gate/config/layer results
+     */
+    public static func getInitializeResponseJson() -> ExternalInitializeResponse {
+        var result = ExternalInitializeResponse.uninitialized()
+        errorBoundary.capture("getInitializeResponseJson") {
+            guard let client = client else {
+                print("[Statsig]: Must start Statsig first and wait for it to complete before calling getInitializeResponseJson.")
+                return
+            }
+            result = client.getInitializeResponseJson()
+        }
+        return result
+    }
+
     //
     // MARK: - Private
     //
