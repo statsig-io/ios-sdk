@@ -8,24 +8,6 @@ import OHHTTPStubsSwift
 
 @testable import Statsig
 
-class SpiedEventLogger: EventLogger {
-    var timerInstances: [Timer] = []
-    var timesCalled = 0
-
-    override func start(flushInterval: Double = 60) {
-        super.start(flushInterval: flushInterval)
-
-        DispatchQueue.main.async {
-            self.timerInstances.append(self.flushTimer!)
-        }
-    }
-
-    override func flush() {
-        super.flush()
-        timesCalled += 1
-    }
-}
-
 class LogFlushTimerSpec: BaseSpec {
     override func spec() {
         super.spec()
@@ -61,7 +43,7 @@ class LogFlushTimerSpec: BaseSpec {
                     logger.start(flushInterval: 0.001)
                 }
 
-                expect(logger.timesCalled).toEventually(beGreaterThanOrEqualTo(1))
+                expect(logger.timesFlushCalled).toEventually(beGreaterThanOrEqualTo(1))
             }
         }
     }

@@ -22,6 +22,10 @@ class BaseSpec: QuickSpec {
                 fatalError("Stubs not cleared")
             }
 
+            if (Statsig.client != nil) {
+                fatalError("Statsig.client not cleared")
+            }
+
             if (StatsigClient.autoValueUpdateTime != 10.0) {
                 fatalError("autoValueUpdate not reset")
             }

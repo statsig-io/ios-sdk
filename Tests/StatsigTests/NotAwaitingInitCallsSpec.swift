@@ -12,6 +12,7 @@ class NotAwaitingInitCallsSpec: BaseSpec {
     override func spec() {
         super.spec()
 
+        let options = StatsigOptions()
         let userA = StatsigUser(userID: "user-a", customIDs: ["workID": "employee-a"])
         let userB = StatsigUser(userID: "user-b", customIDs: ["workID": "employee-b"])
 
@@ -19,9 +20,11 @@ class NotAwaitingInitCallsSpec: BaseSpec {
         describe("Not Awaiting Init Calls") {
 
             beforeEach {
+                options.overrideURL = URL(string: "http://NotAwaitingInitCallsSpec")
+
                 TestUtils.clearStorage()
 
-                stub(condition: isHost("api.statsig.com")) { req in
+                stub(condition: isHost("NotAwaitingInitCallsSpec")) { req in
                     if ((req.url?.absoluteString.contains("/initialize") ?? false) == false) {
                         return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
                     }
@@ -42,14 +45,18 @@ class NotAwaitingInitCallsSpec: BaseSpec {
 
             it("gets the expected values") {
                 var isInitialized = false
-                Statsig.start(sdkKey: "client-key", user: userA) { err in
-                    isInitialized = true
+
+                expect(Statsig.client).toEventually(beNil(), timeout: .seconds(1000))
+
+                Statsig.start(sdkKey: "client-key", user: userA, options: options) { err in
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
+                        isInitialized = true
+                    }
                 }
 
                 expect(
                     Statsig.getConfig("a_config").getValue(forKey: "key", defaultValue: "fallback")
                 ).to(equal("fallback"))
-
 
                 expect(isInitialized).toEventually(beTrue())
 
@@ -65,7 +72,6 @@ class NotAwaitingInitCallsSpec: BaseSpec {
                 expect(
                     Statsig.getConfig("a_config").getValue(forKey: "key", defaultValue: "fallback")
                 ).to(equal("fallback"))
-
 
                 expect(isUpdated).toEventually(beTrue())
 

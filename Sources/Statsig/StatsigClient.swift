@@ -6,9 +6,10 @@ internal class StatsigClient {
     internal static var autoValueUpdateTime = 10.0
 
     internal var logger: EventLogger
+    internal var statsigOptions: StatsigOptions
+
     private var sdkKey: String
     private var currentUser: StatsigUser
-    private var statsigOptions: StatsigOptions
     private var store: InternalStore
     private var networkService: NetworkService
     private var syncTimer: Timer?
@@ -227,6 +228,10 @@ internal class StatsigClient {
         logger.stop()
         Diagnostics.shutdown()
         syncTimer?.invalidate()
+    }
+
+    internal func flush() {
+        logger.flush()
     }
 
     internal func getStableID() -> String? {

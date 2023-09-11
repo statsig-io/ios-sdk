@@ -31,7 +31,15 @@ extension StatsigClient {
 
     @objc private func appWillBackground() {
         DispatchQueue.global().async { [weak self] in
-            self?.logger.stop()
+            guard let self = self else {
+                return
+            }
+
+            if (self.statsigOptions.shutdownOnBackground) {
+                self.logger.stop()
+            } else {
+                self.logger.flush()
+            }
         }
     }
 

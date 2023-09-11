@@ -47,6 +47,12 @@ public class StatsigOptions {
      */
     public var disableHashing = false;
 
+    /**
+     The SDK automatically shuts down when an app is put into the background.
+     If you need to use the SDK while your app is backgrounded, set this to false.
+     */
+    public var shutdownOnBackground = true;
+
     internal var overrideURL: URL?
     var environment: [String: String] = [:]
 
@@ -58,7 +64,8 @@ public class StatsigOptions {
                 enableCacheByFile: Bool? = false,
                 initializeValues: [String: Any]? = nil,
                 disableDiagnostics: Bool? = false,
-                disableHashing: Bool? = false
+                disableHashing: Bool? = false,
+                shutdownOnBackground: Bool? = true
     )
     {
         if let initTimeout = initTimeout, initTimeout >= 0 {
@@ -91,6 +98,10 @@ public class StatsigOptions {
 
         if let disableHashing = disableHashing {
             self.disableHashing = disableHashing
+        }
+
+        if let shutdownOnBackground = shutdownOnBackground {
+            self.shutdownOnBackground = shutdownOnBackground
         }
 
         self.overrideStableID = overrideStableID

@@ -66,7 +66,7 @@ class TestUtils {
 
     static func startWithStatusAndWait(_ statusCode: Int32 = 200, _ key: String = "client-api-key", _ user: StatsigUser? = nil, options: StatsigOptions? = nil) -> URLRequest? {
         var result: URLRequest? = nil
-        stub(condition: isHost("api.statsig.com")) { req in
+        stub(condition: isHost(options?.overrideURL?.host ?? "api.statsig.com")) { req in
             result = req
             return HTTPStubsResponse(data: Data(), statusCode: statusCode, headers: nil)
         }
@@ -119,3 +119,4 @@ extension URLRequest {
             options: []) as? [String: Any]
     }
 }
+

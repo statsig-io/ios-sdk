@@ -134,7 +134,7 @@ public class Statsig {
     public static func manuallyLogGateExposure(_ gateName: String) {
         errorBoundary.capture("manuallyLogGateExposure") {
             guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling manuallyLogGateExposure.")
+                print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogGateExposure")).")
                 return
             }
 
@@ -177,7 +177,7 @@ public class Statsig {
     public static func manuallyLogExperimentExposure(_ experimentName: String, keepDeviceValue: Bool = false) {
         errorBoundary.capture("manuallyLogExperimentExposure") {
             guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling manuallyLogExperimentExposure.")
+                print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogExperimentExposure")).")
                 return
             }
 
@@ -218,7 +218,7 @@ public class Statsig {
     public static func manuallyLogConfigExposure(_ configName: String) {
         errorBoundary.capture("manuallyLogConfigExposure") {
             guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling manuallyLogConfigExposure.")
+                print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogConfigExposure")).")
                 return
             }
 
@@ -262,7 +262,7 @@ public class Statsig {
     public static func manuallyLogLayerParameterExposure(_ layerName: String, _ parameterName: String, keepDeviceValue: Bool = false) {
         errorBoundary.capture("manuallyLogLayerParameterExposure") {
             guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling manuallyLogLayerParameterExposure.")
+                print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogLayerParameterExposure")).")
                 return
             }
 
@@ -279,7 +279,7 @@ public class Statsig {
     public static func manuallyLogExposure(_ gate: FeatureGate) {
         errorBoundary.capture("manuallyLogExposure:gate") {
             guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling manuallyLogExposure.")
+                print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogExposure")).")
                 return
             }
 
@@ -296,7 +296,7 @@ public class Statsig {
     public static func manuallyLogExposure(_ config: DynamicConfig) {
         errorBoundary.capture("manuallyLogExposure:config") {
             guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling manuallyLogExposure.")
+                print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogExposure")).")
                 return
             }
 
@@ -314,7 +314,7 @@ public class Statsig {
     public static func manuallyLogExposure(_ layer: Layer, parameterName: String) {
         errorBoundary.capture("manuallyLogExposure:layer") {
             guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling manuallyLogExposure.")
+                print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogExposure")).")
                 return
             }
 
@@ -368,8 +368,8 @@ public class Statsig {
     public static func updateUser(_ user: StatsigUser, completion: completionBlock = nil) {
         errorBoundary.capture("updateUser") {
             guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling updateUser.")
-                completion?("Must start Statsig first and wait for it to complete before calling updateUser.")
+                print("[Statsig]: \(getUnstartedErrorMessage("updateUser")).")
+                completion?("\(getUnstartedErrorMessage("updateUser")).")
                 return
             }
 
@@ -384,6 +384,20 @@ public class Statsig {
         errorBoundary.capture("shutdown") {
             client?.shutdown()
             client = nil
+        }
+    }
+
+    /**
+     Manually triggers a flush of any queued events.
+     */
+    public static func flush() {
+        errorBoundary.capture("flush") {
+            guard let client = client else {
+                print("[Statsig]: \(getUnstartedErrorMessage()).")
+                return
+            }
+
+            client.flush()
         }
     }
 
@@ -482,7 +496,7 @@ public class Statsig {
         var result = ExternalInitializeResponse.uninitialized()
         errorBoundary.capture("getInitializeResponseJson") {
             guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling getInitializeResponseJson.")
+                print("[Statsig]: \(getUnstartedErrorMessage()).")
                 return
             }
             result = client.getInitializeResponseJson()
@@ -498,7 +512,7 @@ public class Statsig {
         var result: FeatureGate? = nil
         errorBoundary.capture(functionName) {
             guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling \(functionName). Returning false as the default.")
+                print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning false as the default.")
                 return
             }
 
@@ -513,7 +527,7 @@ public class Statsig {
         var result: DynamicConfig? = nil
         errorBoundary.capture(functionName) {
             guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling \(functionName). Returning a dummy DynamicConfig that will only return default values.")
+                print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning a dummy DynamicConfig that will only return default values.")
                 return
             }
 
@@ -528,7 +542,7 @@ public class Statsig {
         var result: DynamicConfig? = nil
         errorBoundary.capture(functionName) {
             guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling \(functionName). Returning a dummy DynamicConfig that will only return default values.")
+                print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning a dummy DynamicConfig that will only return default values.")
                 return
             }
 
@@ -543,7 +557,7 @@ public class Statsig {
         var result: Layer?
         errorBoundary.capture(functionName) {
             guard let client = client else {
-                print("[Statsig]: Must start Statsig first and wait for it to complete before calling \(functionName). Returning an empty Layer object")
+                print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning an empty Layer object")
                 return
             }
 
@@ -557,7 +571,7 @@ public class Statsig {
 
     private static func logEventImpl(_ withName: String, value: Any? = nil, metadata: [String: String]? = nil) {
         guard let client = client else {
-            print("[Statsig]: Must start Statsig first and wait for it to complete before calling logEvent.")
+            print("[Statsig]: \(getUnstartedErrorMessage("logEvent"))")
             return
         }
 
@@ -579,5 +593,9 @@ public class Statsig {
 
     private static func funcName(_ name: String = #function) -> String {
         return name.components(separatedBy: "(").first ?? name
+    }
+
+    private static func getUnstartedErrorMessage(_ functionName: String = #function) -> String {
+        return "Must start Statsig first and wait for it to complete before calling \(functionName)"
     }
 }
