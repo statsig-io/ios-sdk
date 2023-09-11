@@ -58,7 +58,8 @@ public class StatsigOptions {
                 enableCacheByFile: Bool? = false,
                 initializeValues: [String: Any]? = nil,
                 disableDiagnostics: Bool? = false,
-                disableHashing: Bool? = false)
+                disableHashing: Bool? = false
+    )
     {
         if let initTimeout = initTimeout, initTimeout >= 0 {
             self.initTimeout = initTimeout
@@ -89,7 +90,7 @@ public class StatsigOptions {
         }
 
         if let disableHashing = disableHashing {
-            self.disableDiagnostics = disableHashing
+            self.disableHashing = disableHashing
         }
 
         self.overrideStableID = overrideStableID
