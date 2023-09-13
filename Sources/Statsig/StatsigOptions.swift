@@ -1,5 +1,7 @@
 import Foundation
 
+internal let ApiHost = "api.statsig.com"
+
 /**
  Configuration options for the StatsigSDK.
  */
@@ -53,6 +55,11 @@ public class StatsigOptions {
      */
     public var shutdownOnBackground = true;
 
+    /**
+     The endpoint to use for all SDK network requests. You should not need to override this (unless you have another API that implements the Statsig API endpoints)
+     */
+    public var api = "https://\(ApiHost)";
+
     internal var overrideURL: URL?
     var environment: [String: String] = [:]
 
@@ -65,7 +72,8 @@ public class StatsigOptions {
                 initializeValues: [String: Any]? = nil,
                 disableDiagnostics: Bool? = false,
                 disableHashing: Bool? = false,
-                shutdownOnBackground: Bool? = true
+                shutdownOnBackground: Bool? = true,
+                api: String? = nil
     )
     {
         if let initTimeout = initTimeout, initTimeout >= 0 {
@@ -104,7 +112,12 @@ public class StatsigOptions {
             self.shutdownOnBackground = shutdownOnBackground
         }
 
+        if let api = api, let url = URL(string: api) {
+            self.overrideURL = url
+        } else {
+            self.overrideURL = nil
+        }
+
         self.overrideStableID = overrideStableID
-        self.overrideURL = nil
     }
 }

@@ -18,7 +18,6 @@ class NetworkService {
     let statsigOptions: StatsigOptions
     var store: InternalStore
 
-    private final let apiHost = "api.statsig.com"
     private final let networkRetryErrorCodes = [408, 500, 502, 503, 504, 522, 524, 599]
 
     init(sdkKey: String, options: StatsigOptions, store: InternalStore) {
@@ -209,7 +208,7 @@ class NetworkService {
     {
         var urlComponents = URLComponents()
         urlComponents.scheme = "https"
-        urlComponents.host = apiHost
+        urlComponents.host = ApiHost
         urlComponents.path = endpoint.rawValue
 
         if let override = self.statsigOptions.overrideURL {
