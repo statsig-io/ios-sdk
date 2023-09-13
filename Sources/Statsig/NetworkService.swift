@@ -225,7 +225,9 @@ class NetworkService {
         var request = URLRequest(url: requestURL)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(sdkKey, forHTTPHeaderField: "STATSIG-API-KEY")
-        request.setValue("\(NSDate().epochTimeInMs())", forHTTPHeaderField: "STATSIG-CLIENT-TIME")
+        request.setValue("\(Int(NSDate().epochTimeInMs()))", forHTTPHeaderField: "STATSIG-CLIENT-TIME")
+        request.setValue(DeviceEnvironment.sdkType, forHTTPHeaderField: "STATSIG-SDK-TYPE")
+        request.setValue(DeviceEnvironment.sdkVersion, forHTTPHeaderField: "STATSIG-SDK-VERSION")
         request.httpBody = body
         request.httpMethod = "POST"
 

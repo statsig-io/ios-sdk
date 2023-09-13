@@ -4,9 +4,10 @@ import Foundation
 struct DeviceEnvironment {
     private let stableIDKey = "com.Statsig.InternalStore.stableIDKey"
 
-    var deviceOS: String = "iOS"
-    var sdkType: String = "ios-client"
-    var sdkVersion: String = "1.28.0"
+    static internal let deviceOS: String = "iOS"
+    static internal let sdkType: String = "ios-client"
+    static internal let sdkVersion: String = "1.28.0"
+
     var sessionID: String? { UUID().uuidString }
     var systemVersion: String { PlatformCompatibility.deviceInfo.systemVersion }
     var systemName: String { PlatformCompatibility.deviceInfo.systemName }
@@ -39,11 +40,11 @@ struct DeviceEnvironment {
             "appIdentifier": appIdentifier,
             "appVersion": appVersion,
             "deviceModel": deviceModel,
-            "deviceOS": deviceOS,
+            "deviceOS": DeviceEnvironment.deviceOS,
             "language": language,
             "locale": locale,
-            "sdkType": sdkType,
-            "sdkVersion": sdkVersion,
+            "sdkType": DeviceEnvironment.sdkType,
+            "sdkVersion": DeviceEnvironment.sdkVersion,
             "sessionID": sessionID,
             "stableID": getStableID(overrideStableID),
             "systemVersion": systemVersion,

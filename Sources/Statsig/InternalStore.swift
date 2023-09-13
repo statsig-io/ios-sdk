@@ -533,6 +533,6 @@ extension Dictionary {
 
 extension NSDate {
     func epochTimeInMs() -> Double {
-        return NSDate().timeIntervalSince1970 * 1000
+        return (NSDate().timeIntervalSince1970 * 1000).rounded(.towardZero)
     }
 }
