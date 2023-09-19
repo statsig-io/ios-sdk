@@ -26,11 +26,12 @@ class NetworkService {
         self.store = store
     }
 
-    func fetchUpdatedValues(for user: StatsigUser, lastSyncTimeForUser: Double, completion: (() -> Void)?) {
+    func fetchUpdatedValues(for user: StatsigUser, lastSyncTimeForUser: Double, previousDerivedFields: [String: String], completion: (() -> Void)?) {
         let (body, _) = makeReqBody([
             "user": user.toDictionary(forLogging: false),
             "statsigMetadata": user.deviceEnvironment,
-            "lastSyncTimeForUser": lastSyncTimeForUser
+            "lastSyncTimeForUser": lastSyncTimeForUser,
+            "previousDerivedFields": previousDerivedFields,
         ])
 
         guard let body = body else {
@@ -55,7 +56,7 @@ class NetworkService {
         }
     }
 
-    func fetchInitialValues(for user: StatsigUser, sinceTime: Double, completion: completionBlock) {
+    func fetchInitialValues(for user: StatsigUser, sinceTime: Double, previousDerivedFields: [String: String], completion: completionBlock) {
         var task: URLSessionDataTask?
         var completed = false
         let lock = NSLock()
@@ -83,7 +84,8 @@ class NetworkService {
             "user": user.toDictionary(forLogging: false),
             "statsigMetadata": user.deviceEnvironment,
             "sinceTime": sinceTime,
-            "hash": statsigOptions.disableHashing ? "none" : "djb2"
+            "hash": statsigOptions.disableHashing ? "none" : "djb2",
+            "previousDerivedFields": previousDerivedFields
         ])
 
         guard let body = body else {

@@ -121,6 +121,14 @@ struct StatsigValuesCache {
         return 0
     }
 
+    func getPreviousDerivedFields(user: StatsigUser) -> [String: String] {
+        if (userCache[InternalStore.userHashKey] as? String == user.getFullUserHash()) {
+            return userCache[InternalStore.derivedFieldsKey] as? [String: String] ?? [:]
+        }
+
+        return [:]
+    }
+
     mutating func updateUser(_ newUser: StatsigUser) {
         // when updateUser is called, state will be uninitialized until updated values are fetched or local cache is retrieved
         reason = .Uninitialized
@@ -139,6 +147,7 @@ struct StatsigValuesCache {
             cache[InternalStore.evalTimeKey] = NSDate().epochTimeInMs()
             cache[InternalStore.userHashKey] = userHash
             cache[InternalStore.hashUsedKey] = values[InternalStore.hashUsedKey]
+            cache[InternalStore.derivedFieldsKey] = values[InternalStore.derivedFieldsKey]
         }
 
         if (userCacheKey == cacheKey) {
@@ -268,6 +277,7 @@ class InternalStore {
     static let evalTimeKey = "evaluation_time"
     static let userHashKey = "user_hash"
     static let hashUsedKey = "hash_used"
+    static let derivedFieldsKey = "derived_fields"
 
     var cache: StatsigValuesCache
     var localOverrides: [String: Any] = InternalStore.getEmptyOverrides()
@@ -282,6 +292,12 @@ class InternalStore {
     func getLastUpdateTime(user: StatsigUser) -> Double {
         storeQueue.sync {
             return cache.getLastUpdatedTime(user: user)
+        }
+    }
+
+    func getPreviousDerivedFields(user: StatsigUser) -> [String: String] {
+        storeQueue.sync {
+            return cache.getPreviousDerivedFields(user: user)
         }
     }
 
