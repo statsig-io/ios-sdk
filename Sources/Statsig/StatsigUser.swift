@@ -128,7 +128,7 @@ public struct StatsigUser {
     func getFullUserHash() -> String? {
         let dict = toDictionary(forLogging: false)
         let sorted = getSortedPairsString(dict)
-        return sorted.sha256()
+        return sorted.djb2()
     }
 }
 
