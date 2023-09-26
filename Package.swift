@@ -21,7 +21,13 @@ let package = Package(
             name: "Statsig",
             dependencies: [.target(name: "StatsigInternalObjC")],
             path: "Sources/Statsig"),
-        .target(name: "StatsigInternalObjC", path: "Sources/StatsigInternalObjC"),
+        .target(name: "StatsigInternalObjC",
+                     path: "Sources/StatsigInternalObjC",
+                     publicHeadersPath: "include",
+                     cSettings: [
+                         .headerSearchPath("."),
+                         .headerSearchPath("Private"),
+                     ]),
         .testTarget(
             name: "StatsigTests",
             dependencies: ["Statsig", "Quick", "Nimble", "OHHTTPStubs", .product(name: "OHHTTPStubsSwift", package: "OHHTTPStubs")]),
