@@ -349,6 +349,7 @@ class InternalStore {
                     name: layerName,
                     value: override,
                     ruleID: "override",
+                    groupName: nil,
                     evalDetails: EvaluationDetails(reason: .LocalOverride)
                 )
             }

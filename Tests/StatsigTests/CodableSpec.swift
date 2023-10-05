@@ -13,12 +13,12 @@ class CodableSpec: BaseSpec {
     override func spec() {
         super.spec()
 
+        let encoder = JSONEncoder()
+        let decoder = JSONDecoder()
+
         describe("Codable") {
             let opts = StatsigOptions(disableDiagnostics: true)
             opts.overrideURL = URL(string: "http://CodableSpec")
-
-            let encoder = JSONEncoder()
-            let decoder = JSONDecoder()
 
             beforeEach {
                 _ = TestUtils.startWithResponseAndWait([
@@ -87,6 +87,118 @@ class CodableSpec: BaseSpec {
                 expect(config.secondaryExposures).to(equal(decoded.secondaryExposures))
                 expect(config.evaluationDetails.reason).to(equal(decoded.evaluationDetails.reason))
                 expect(config.evaluationDetails.time).to(equal(decoded.evaluationDetails.time))
+            }
+        }
+
+        describe("Codable - Direct Instantiation") {
+            it("encodes/decodes DynamicConfig") {
+                [
+                    DynamicConfig(
+                        configName: "empty_config",
+                        evalDetails: EvaluationDetails(reason: .Uninitialized)
+                    ),
+                    DynamicConfig(
+                        configName: "parital_config",
+                        configObj: [
+                            "name": "partial_config",
+                            "value": ["foo":"bar"],
+                            "rule_id": "default"
+                        ],
+                        evalDetails: EvaluationDetails(reason: .Cache)
+                    ),
+                    DynamicConfig(
+                        configName: "full_config",
+                        configObj: [
+                            "name": "full_config",
+                            "value": ["foo":"bar"],
+                            "rule_id": "a_rule_id",
+                            "group": "default",
+                            "group_name": "A Group",
+                            "is_device_based": true,
+                            "id_type": "userID",
+                            "is_experiment_active": true,
+                            "is_user_in_experiment": true,
+                            "secondary_exposures": [
+                                [
+                                    "gate": "4XBVXe7WRiQd22ZhNLlqnm",
+                                    "gateValue": "false",
+                                    "ruleID": "default"
+                                ]
+                            ]
+                        ],
+                        evalDetails: EvaluationDetails(reason: .Cache)
+                    )
+                ].forEach { config in
+                    let encoded = try! encoder.encode(config)
+                    let decoded = try! decoder.decode(DynamicConfig.self, from: encoded)
+
+                    expect(config.name).to(equal(decoded.name))
+                    expect(config.ruleID).to(equal(decoded.ruleID))
+                    expect(config.secondaryExposures).to(equal(decoded.secondaryExposures))
+                    expect(config.evaluationDetails.reason).to(equal(decoded.evaluationDetails.reason))
+                    expect(config.evaluationDetails.time).to(equal(decoded.evaluationDetails.time))
+                }
+            }
+
+            it("encodes/decodes Layer") {
+                [
+                    Layer.init(
+                        client: nil,
+                        name: "empty_layer",
+                        evalDetails: EvaluationDetails(reason: .Uninitialized)
+                    ),
+                    Layer.init(
+                        client: nil,
+                        name: "partial_layer",
+                        configObj: [
+                            "name": "partial_config",
+                            "value": ["foo":"bar"],
+                            "rule_id": "default"
+                        ],
+                        evalDetails: EvaluationDetails(reason: .Uninitialized)
+                    ),
+                    Layer.init(
+                        client: StatsigClient(sdkKey: "client-key", user: nil, options: nil) { _ in },
+                        name: "full_layer",
+                        configObj: [
+                            "name": "full_layer",
+                            "value": ["foo":"bar"],
+                            "rule_id": "a_rule_id",
+                            "group": "default",
+                            "group_name": "A Group",
+                            "explicit_parameters": ["foo"],
+                            "allocated_experiment_name": "an_experiment",
+                            "is_device_based": true,
+                            "is_user_in_experiment": true,
+                            "is_experiment_active": true,
+                            "id_type": "userID",
+                            "secondary_exposures": [
+                                [
+                                    "gate": "4XBVXe7WRiQd22ZhNLlqnm",
+                                    "gateValue": "false",
+                                    "ruleID": "default"
+                                ]
+                            ],
+                            "undelegated_secondary_exposures": [
+                                [
+                                    "gate": "4XBVXe7WRiQd22ZhNLlqnm",
+                                    "gateValue": "false",
+                                    "ruleID": "default"
+                                ]
+                            ]
+                        ],
+                        evalDetails: EvaluationDetails(reason: .Uninitialized)
+                    )
+                ].forEach { config in
+                    let encoded = try! encoder.encode(config)
+                    let decoded = try! decoder.decode(Layer.self, from: encoded)
+
+                    expect(config.name).to(equal(decoded.name))
+                    expect(config.ruleID).to(equal(decoded.ruleID))
+                    expect(config.secondaryExposures).to(equal(decoded.secondaryExposures))
+                    expect(config.evaluationDetails.reason).to(equal(decoded.evaluationDetails.reason))
+                    expect(config.evaluationDetails.time).to(equal(decoded.evaluationDetails.time))
+                }
             }
         }
     }

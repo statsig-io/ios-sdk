@@ -216,7 +216,7 @@ class LayerConfigSpec: BaseSpec {
                     "mixedArray": [1, "2"],
                     "dict": ["key": "value"],
                     "mixedDict": ["keyStr": "string", "keyInt": 2, "keyArr": [1, 2], "keyDouble": 1.23, "keyDict": ["k": "v"]],
-                ], ruleID: "", evalDetails: EvaluationDetails(reason: .Cache))
+                ], ruleID: "", groupName: nil, evalDetails: EvaluationDetails(reason: .Cache))
                 expect(layer.getValue(forKey: "str", defaultValue: 1)) == 1
                 expect(layer.getValue(forKey: "str", defaultValue: true)) == true
 
@@ -239,7 +239,7 @@ class LayerConfigSpec: BaseSpec {
             }
 
             it("returns the default value for non-existent key") {
-                let layer = Layer(client: client, name: "a_layer", value: [:], ruleID: "", evalDetails: EvaluationDetails(reason: .Uninitialized))
+                let layer = Layer(client: client, name: "a_layer", value: [:], ruleID: "", groupName: nil, evalDetails: EvaluationDetails(reason: .Uninitialized))
                 expect(layer.getValue(forKey: "wrong_key", defaultValue: 1)) == 1
                 expect(layer.getValue(forKey: "wrong_key", defaultValue: true)) == true
                 expect(layer.getValue(forKey: "wrong_key", defaultValue: "false")) == "false"

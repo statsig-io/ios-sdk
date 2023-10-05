@@ -23,6 +23,11 @@ public struct DynamicConfig: ConfigProtocol {
      */
     public let ruleID: String
 
+    /**
+     The group name associated with this dynamic config.
+     */
+    public let groupName: String?
+
     let secondaryExposures: [[String: String]]
 
     /**
@@ -55,6 +60,7 @@ public struct DynamicConfig: ConfigProtocol {
     internal init(configName: String, configObj: [String: Any] = [:], evalDetails: EvaluationDetails) {
         self.name = configName
         self.ruleID = configObj["rule_id"] as? String ?? ""
+        self.groupName = configObj["group_name"] as? String
         self.value = configObj["value"] as? [String: Any] ?? [:]
         self.secondaryExposures = configObj["secondary_exposures"] as? [[String: String]] ?? []
         self.hashedName = configObj["name"] as? String ?? ""
@@ -71,6 +77,7 @@ public struct DynamicConfig: ConfigProtocol {
         self.name = configName
         self.value = value
         self.ruleID = ruleID
+        self.groupName = nil
         self.secondaryExposures = []
         self.hashedName = ""
 
@@ -106,8 +113,9 @@ extension DynamicConfig: Codable {
         case name
         case value
         case ruleID
-        case secondaryExposures
+        case groupName
         case evaluationDetails
+        case secondaryExposures
     }
 
     public init(from decoder: Decoder) throws {
@@ -120,6 +128,7 @@ extension DynamicConfig: Codable {
 
         self.value = dict ?? [:]
         self.ruleID = try container.decode(String.self, forKey: .ruleID)
+        self.groupName = try container.decodeIfPresent(String.self, forKey: .groupName)
         self.secondaryExposures = try container.decode([[String: String]].self, forKey: .secondaryExposures)
         self.evaluationDetails = try container.decode(EvaluationDetails.self, forKey: .evaluationDetails)
 
@@ -137,6 +146,7 @@ extension DynamicConfig: Codable {
         try container.encode(json, forKey: .value)
 
         try container.encode(ruleID, forKey: .ruleID)
+        try container.encodeIfPresent(groupName, forKey: .groupName)
         try container.encode(secondaryExposures, forKey: .secondaryExposures)
         try container.encode(evaluationDetails, forKey: .evaluationDetails)
     }

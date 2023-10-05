@@ -20,6 +20,11 @@ public struct Layer: ConfigProtocol {
     public let ruleID: String
 
     /**
+     (Experiments Only) Does this layer contain values controlled by an experiment, if so, this is the experiments group name.
+     */
+    public let groupName: String?
+
+    /**
      (Experiments Only) Does this layer contain parameters being controlled by an experiment that the current user is allocated to.
      */
     public let isUserInExperiment: Bool
@@ -53,10 +58,16 @@ public struct Layer: ConfigProtocol {
 
     private let value: [String: Any]
 
-    internal init(client: StatsigClient?, name: String, configObj: [String: Any] = [:], evalDetails: EvaluationDetails) {
+    internal init(
+        client: StatsigClient?,
+        name: String,
+        configObj: [String: Any] = [:],
+        evalDetails: EvaluationDetails
+    ) {
         self.client = client
         self.name = name
         self.ruleID = configObj["rule_id"] as? String ?? ""
+        self.groupName = configObj["group_name"] as? String
         self.value = configObj["value"] as? [String: Any] ?? [:]
         self.secondaryExposures = configObj["secondary_exposures"] as? [[String: String]] ?? []
         self.undelegatedSecondaryExposures = configObj["undelegated_secondary_exposures"] as? [[String: String]] ?? []
@@ -72,20 +83,28 @@ public struct Layer: ConfigProtocol {
         self.evaluationDetails = evalDetails
     }
 
-    internal init(client: StatsigClient?, name: String, value: [String: Any], ruleID: String, evalDetails: EvaluationDetails) {
+    internal init(
+        client: StatsigClient?,
+        name: String,
+        value: [String: Any],
+        ruleID: String,
+        groupName: String?,
+        evalDetails: EvaluationDetails
+    ) {
         self.client = client
         self.name = name
         self.value = value
         self.ruleID = ruleID
+        self.groupName = groupName
         self.secondaryExposures = []
         self.undelegatedSecondaryExposures = []
         self.explicitParameters = Set()
         self.hashedName = ""
-
+        
         self.isExperimentActive = false
         self.isUserInExperiment = false
         self.allocatedExperimentName = ""
-
+        
         self.evaluationDetails = evalDetails
     }
 
@@ -118,6 +137,7 @@ extension Layer: Codable {
         case name
         case value
         case ruleID
+        case groupName
         case secondaryExposures
         case undelegatedSecondaryExposures
         case evaluationDetails
@@ -135,6 +155,7 @@ extension Layer: Codable {
         self.name = try container.decode(String.self, forKey: .name)
         self.value = dict ?? [:]
         self.ruleID = try container.decode(String.self, forKey: .ruleID)
+        self.groupName = try container.decodeIfPresent(String.self, forKey: .groupName)
         self.allocatedExperimentName = try container.decode(String.self, forKey: .allocatedExperimentName)
         self.secondaryExposures = try container.decode([[String: String]].self, forKey: .secondaryExposures)
         self.undelegatedSecondaryExposures = try container.decode([[String: String]].self, forKey: .undelegatedSecondaryExposures)
@@ -155,6 +176,7 @@ extension Layer: Codable {
         try container.encode(name, forKey: .name)
         try container.encode(json, forKey: .value)
         try container.encode(ruleID, forKey: .ruleID)
+        try container.encodeIfPresent(groupName, forKey: .groupName)
         try container.encode(allocatedExperimentName, forKey: .allocatedExperimentName)
         try container.encode(secondaryExposures, forKey: .secondaryExposures)
         try container.encode(undelegatedSecondaryExposures, forKey: .undelegatedSecondaryExposures)
