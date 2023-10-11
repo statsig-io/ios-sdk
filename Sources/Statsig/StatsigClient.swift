@@ -51,7 +51,11 @@ internal class StatsigClient {
             self.lastInitializeError = error
             self.notifyOnInitializedListeners(error)
 
-            Diagnostics.mark?.overall.end(success: error == nil)
+            Diagnostics.mark?.overall.end(
+                success: error == nil,
+                details: self.store.cache.getGlobalEvaluationDetails(),
+                errorMessage: error
+            )
             Diagnostics.log(self.logger, user: capturedUser, context: .initialize)
 
             completion?(error)
@@ -322,13 +326,13 @@ internal class StatsigClient {
 
         if JSONSerialization.isValidJSONObject(dict),
            let data = try? JSONSerialization.data(withJSONObject: dict),
-           let json = String(data: data, encoding: .utf8) {
+           let json = data.text {
             values = json
         }
 
         return ExternalInitializeResponse(
             values: values,
-            evaluationDetails: self.store.cache.getEvaluationDetails(valueExists: values != nil)
+            evaluationDetails: self.store.cache.getGlobalEvaluationDetails()
         )
     }
 

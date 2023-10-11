@@ -59,7 +59,7 @@ class DebugViewController: UIViewController, WKNavigationDelegate {
 
         do {
             let data = try JSONSerialization.data(withJSONObject: self.state, options: [])
-            let json = String(data: data, encoding: .utf8) ?? "{}"
+            let json = data.text ?? "{}"
 
             let config = WKWebViewConfiguration()
             let script = WKUserScript(source: "window.__StatsigClientState = \(json)",

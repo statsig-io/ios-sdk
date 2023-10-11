@@ -63,7 +63,7 @@ struct DeviceInfo {
     init() {
         let service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"))
         if let data = IORegistryEntryCreateCFProperty(service, "model" as CFString, kCFAllocatorDefault, 0).takeRetainedValue() as? Data {
-            model = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .controlCharacters) ?? "Unknown"
+            model = data.text?.trimmingCharacters(in: .controlCharacters) ?? "Unknown"
         } else {
             model = "Unknown"
         }

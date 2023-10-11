@@ -7,9 +7,19 @@ class OverallMarker: MarkerBase {
         super.start([:])
     }
 
-    func end(success: Bool) {
-        super.end([
-            "success": success
-        ])
+    func end(success: Bool, details: EvaluationDetails, errorMessage: String?) {
+        var args: [String: Any] = [
+            "success": success,
+            "evaluationDetails": details.toDictionary()
+        ]
+
+        if let message = errorMessage {
+            args["error"] = [
+                "name": "Error",
+                "message": message
+            ]
+        }
+
+        super.end(args)
     }
 }

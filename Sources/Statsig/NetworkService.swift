@@ -44,9 +44,7 @@ class NetworkService {
 
         makeAndSendRequest(.initialize, body: body) { [weak self] data, _, _ in
             guard let self = self,
-                  let data = data,
-                  let json = try? JSONSerialization.jsonObject(with: data, options: []),
-                  let dict = json as? [String: Any],
+                  let dict = data?.json,
                   dict["has_updates"] as? Bool == true else {
                 completion?()
                 return
@@ -121,9 +119,8 @@ class NetworkService {
             var values: [String: Any]? = nil
             if statusCode == 204 {
                 values = ["has_updates": false]
-            } else if let data = data,
-                      let json = try? JSONSerialization.jsonObject(with: data, options: []) {
-                values = json as? [String: Any]
+            } else if let json = data?.json {
+                values = json
             }
 
             guard let values = values else {
@@ -253,14 +250,10 @@ class NetworkService {
             let currentAttempt = failedAttempts + 1
             marker?.start(attempt: currentAttempt)
 
-            let task = URLSession.shared.dataTask(with: request) { [weak self] responseData, response, error in
+            let task = URLSession.shared.dataTask(with: request) {
+                [weak self] responseData, response, error in
 
-                marker?.end(
-                    success: error == nil && response?.isOK == true,
-                    attempt: currentAttempt,
-                    status: response?.status,
-                    region: response?.statsigRegion
-                )
+                marker?.end(currentAttempt, responseData, response, error)
 
                 if failedAttempts < retryLimit,
                    let self = self,
@@ -286,38 +279,6 @@ class NetworkService {
 
             taskCapture?(task)
             task.resume()
-        }
-    }
-}
-
-
-extension URLResponse {
-    fileprivate var asHttpResponse: HTTPURLResponse? {
-        get {
-            return self as? HTTPURLResponse
-        }
-    }
-
-    fileprivate var status: Int? {
-        get {
-            return self.asHttpResponse?.statusCode
-        }
-    }
-
-    fileprivate var statsigRegion: String? {
-        get {
-            if #available(macOS 10.15, iOS 13.0, tvOS 13.0, *) {
-                return self.asHttpResponse?.value(forHTTPHeaderField: "x-statsig-region")
-            }
-
-            return nil
-        }
-    }
-
-    fileprivate var isOK: Bool {
-        get {
-            let code = self.status ?? 0
-            return code >= 200 && code < 300
         }
     }
 }

@@ -48,44 +48,44 @@ struct StatsigValuesCache {
     func getGate(_ gateName: String) -> FeatureGate {
         guard let gates = gates else {
             print("[Statsig]: Failed to get feature gate with name \(gateName). Returning false as the default.")
-            return FeatureGate(name: gateName, value: false, ruleID: "", evalDetails: getEvaluationDetails(valueExists: false))
+            return FeatureGate(name: gateName, value: false, ruleID: "", evalDetails: getEvaluationDetailsForConfig(wasFound: false))
         }
 
         if let gateObj = gates[gateName.hashSpecName(hashUsed)] ?? gates[gateName] {
-            return FeatureGate(name: gateName, gateObj: gateObj, evalDetails: getEvaluationDetails(valueExists: true))
+            return FeatureGate(name: gateName, gateObj: gateObj, evalDetails: getEvaluationDetailsForConfig(wasFound: true))
         }
 
         print("[Statsig]: The feature gate with name \(gateName) does not exist. Returning false as the default.")
 
-        return FeatureGate(name: gateName, value: false, ruleID: "", evalDetails: getEvaluationDetails(valueExists: false))
+        return FeatureGate(name: gateName, value: false, ruleID: "", evalDetails: getEvaluationDetailsForConfig(wasFound: false))
     }
 
     func getConfig(_ configName: String) -> DynamicConfig {
         guard let configs = configs else {
             print("[Statsig]: Failed to get config with name \(configName). Returning a dummy DynamicConfig that will only return default values.")
-            return DynamicConfig(configName: configName, evalDetails: getEvaluationDetails(valueExists: false))
+            return DynamicConfig(configName: configName, evalDetails: getEvaluationDetailsForConfig(wasFound: false))
         }
 
         if let configObj = configs[configName.hashSpecName(hashUsed)] ?? configs[configName] {
-            return DynamicConfig(configName: configName, configObj: configObj, evalDetails: getEvaluationDetails(valueExists: true))
+            return DynamicConfig(configName: configName, configObj: configObj, evalDetails: getEvaluationDetailsForConfig(wasFound: true))
         }
 
         print("[Statsig]: \(configName) does not exist. Returning a dummy DynamicConfig that will only return default values.")
-        return DynamicConfig(configName: configName, evalDetails: getEvaluationDetails(valueExists: false))
+        return DynamicConfig(configName: configName, evalDetails: getEvaluationDetailsForConfig(wasFound: false))
     }
 
     func getLayer(_ client: StatsigClient?, _ layerName: String) -> Layer {
         guard let layers = layers else {
             print("[Statsig]: Failed to get layer with name \(layerName). Returning an empty Layer.")
-            return Layer(client: client, name: layerName, evalDetails: getEvaluationDetails(valueExists: false))
+            return Layer(client: client, name: layerName, evalDetails: getEvaluationDetailsForConfig(wasFound: false))
         }
 
         if let configObj = layers[layerName.hashSpecName(hashUsed)] ?? layers[layerName] {
-            return Layer(client: client, name: layerName, configObj: configObj, evalDetails: getEvaluationDetails(valueExists: true))
+            return Layer(client: client, name: layerName, configObj: configObj, evalDetails: getEvaluationDetailsForConfig(wasFound: true))
         }
 
         print("[Statsig]: The layer with name \(layerName) does not exist. Returning an empty Layer.")
-        return Layer(client: client, name: layerName, evalDetails: getEvaluationDetails(valueExists: false))
+        return Layer(client: client, name: layerName, evalDetails: getEvaluationDetailsForConfig(wasFound: false))
     }
 
     func getStickyExperiment(_ expName: String) -> [String: Any]? {
@@ -99,18 +99,19 @@ struct StatsigValuesCache {
         return nil
     }
 
-    func getEvaluationDetails(valueExists: Bool) -> EvaluationDetails {
-        if valueExists {
-            return EvaluationDetails(
-                reason: reason,
-                time: userCache[InternalStore.evalTimeKey] as? Double ?? NSDate().epochTimeInMs()
-            )
-        } else {
-            return EvaluationDetails(
-                reason: reason == .Uninitialized ? .Uninitialized : .Unrecognized,
-                time: NSDate().epochTimeInMs()
-            )
+    func getGlobalEvaluationDetails() -> EvaluationDetails {
+        return EvaluationDetails(
+            reason: reason,
+            time: userCache[InternalStore.evalTimeKey] as? Double
+        )
+    }
+
+    func getEvaluationDetailsForConfig(wasFound: Bool) -> EvaluationDetails {
+        if !wasFound {
+            return EvaluationDetails(reason: reason == .Uninitialized ? .Uninitialized : .Unrecognized)
         }
+
+        return self.getGlobalEvaluationDetails()
     }
 
     func getLastUpdatedTime(user: StatsigUser) -> Double {
