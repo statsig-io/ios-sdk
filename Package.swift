@@ -12,8 +12,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/AliSoftware/OHHTTPStubs.git", .upToNextMajor(from: "9.1.0")),
-        .package(url: "https://github.com/Quick/Nimble.git", .upToNextMajor(from: "9.0.0")),
-        .package(url: "https://github.com/Quick/Quick.git", .upToNextMajor(from: "3.1.2")),
+        .package(url: "https://github.com/Quick/Nimble.git", .upToNextMajor(from: "10.0.0")),
+        .package(url: "https://github.com/Quick/Quick.git", .upToNextMajor(from: "5.0.0")),
         .package(url: "https://github.com/erikdoe/ocmock", .branch("master")),
     ],
     targets: [

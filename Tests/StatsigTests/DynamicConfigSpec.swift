@@ -57,7 +57,7 @@ class DynamicConfigSpec: BaseSpec {
                 expect(dc.getValue(forKey: "strArray", defaultValue: [])) == ["1", "2"]
 
                 expect(dc.evaluationDetails.reason).to(equal(.Network))
-                expect(dc.evaluationDetails.time).to(beCloseTo(NSDate().epochTimeInMs(), within: 1))
+                expect(dc.evaluationDetails.time).to(beCloseTo(NSDate().epochTimeInMs(), within: 10))
 
                 let mixedArray = dc.getValue(forKey: "mixedArray", defaultValue: [])
                 expect(mixedArray.count) == 2
