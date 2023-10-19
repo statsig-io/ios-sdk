@@ -1,6 +1,6 @@
 import Foundation
 
-internal class StatsigClient {
+public class StatsigClient {
     private static let exposureDedupeQueueLabel = "com.Statsig.exposureDedupeQueue"
 
     internal static var autoValueUpdateTime = 10.0
@@ -22,7 +22,24 @@ internal class StatsigClient {
 
     let maxEventNameLength = 64
 
-    internal init(sdkKey: String, user: StatsigUser?, options: StatsigOptions?, completion: completionBlock) {
+    /**
+     Initializes the Statsig SDK. Fetching latest values from Statsig.
+     Default values will be returned until initialization is compelete.
+
+     Parameters:
+     - sdkKey: The client SDK key copied from console.statsig.com
+     - user: The user to check values against
+     - options: Configuration options for the Statsig SDK
+     - completion: A callback function for when initialization completes. If an error occurred during initialization, a error message string will be passed to the callback.
+
+     SeeAlso: [Initialization Documentation](https://docs.statsig.com/client/iosClientSDK#step-3---initialize-the-sdk)
+     */
+    public init(
+        sdkKey: String,
+        user: StatsigUser? = nil,
+        options: StatsigOptions? = nil,
+        completion: completionBlock = nil
+    ) {
         Diagnostics.boot(options)
         Diagnostics.mark?.overall.start();
 
@@ -66,36 +83,200 @@ internal class StatsigClient {
         } else {
             fetchValuesFromNetwork(completion: _onComplete)
         }
-
     }
 
-    internal func isInitialized() -> Bool {
+    deinit {
+        unsubscribeFromApplicationLifecycle()
+    }
+
+    /**
+     Whether Statsig initialization has been completed.
+
+     SeeAlso [StatsigListening](https://docs.statsig.com/client/iosClientSDK#statsiglistening)
+     */
+    public func isInitialized() -> Bool {
         return hasInitialized
     }
 
-    internal func addListener(_ listener: StatsigListening) {
+    /**
+     Adds a delegate to be called during initializaiton and update user steps.
+
+     Parameters:
+     - listener: The class that implements the StatsigListening protocol
+
+     SeeAlso [StatsigListening](https://docs.statsig.com/client/iosClientSDK#statsiglistening)
+     */
+    public func addListener(_ listener: StatsigListening) {
         if (hasInitialized) {
             listener.onInitialized(lastInitializeError)
         }
         listeners.append({ [weak listener] in return listener })
     }
 
-    internal func checkGate(_ gateName: String) -> FeatureGate {
+    /**
+     Switches the user and pulls new values for that user from Statsig.
+     Default values will be returned until the update is complete.
+
+     Parameters:
+     - user: The new user
+     - completion: A callback block called when the new values have been received. May be called with an error message string if the fetch fails.
+     */
+    public func updateUser(_ user: StatsigUser, completion: completionBlock = nil) {
+        exposureDedupeQueue.async(flags: .barrier) { [weak self] in
+            self?.loggedExposures.removeAll()
+        }
+
+        self.updateUserImpl(user, completion: completion)
+    }
+
+    /**
+     Stops all Statsig activity and flushes any pending events.
+     */
+    public func shutdown() {
+        logger.stop()
+        Diagnostics.shutdown()
+        syncTimer?.invalidate()
+    }
+
+    /**
+     Manually triggers a flush of any queued events.
+     */
+    public func flush() {
+        logger.flush()
+    }
+
+    /**
+     The generated identifier that exists across users
+     */
+    public func getStableID() -> String? {
+        return currentUser.deviceEnvironment["stableID"] as? String
+    }
+
+    /**
+     Presents a view of the current internal state of the SDK.
+     */
+    public func openDebugView() {
+        let state: [String: Any?] = [
+            "user": self.currentUser.toDictionary(forLogging: false),
+            "gates": self.store.cache.gates,
+            "configs": self.store.cache.configs,
+            "layers": self.store.cache.layers,
+            "evalReason": "\(self.store.cache.reason)"
+        ]
+
+        DispatchQueue.main.async {
+            DebugViewController.show(self.sdkKey, state)
+        }
+    }
+
+    /**
+     Returns the raw values that the SDK is using internally to provide gate/config/layer results
+     */
+    public func getInitializeResponseJson() -> ExternalInitializeResponse {
+        var values: String? = nil
+        let dict: [String: Any?] = [
+            "feature_gates": self.store.cache.gates,
+            "dynamic_configs": self.store.cache.configs,
+            "layer_configs": self.store.cache.layers,
+            "hash_used": self.store.cache.hashUsed,
+            "time": self.store.cache.userCache["time"]
+        ]
+
+        if JSONSerialization.isValidJSONObject(dict),
+           let data = try? JSONSerialization.data(withJSONObject: dict),
+           let json = data.text {
+            values = json
+        }
+
+        return ExternalInitializeResponse(
+            values: values,
+            evaluationDetails: self.store.cache.getGlobalEvaluationDetails()
+        )
+    }
+}
+
+// MARK: Feature Gates
+extension StatsigClient {
+    /**
+     Gets the Bool value of a gate for the current user. An exposure event will automatically be logged for the given gate.
+
+     Parameters:
+     - gateName: The name of the feature gate setup on console.statsig.com
+
+     SeeAlso [Gate Documentation](https://docs.statsig.com/feature-gates/working-with)
+     */
+    public func checkGate(_ gateName: String) -> Bool {
+        return getFeatureGate(gateName).value
+    }
+
+    /**
+     Gets the FeatureGate result of a gate for the current user. An exposure event will automatically be logged for the given gate.
+
+     Parameters:
+     - gateName: The name of the feature gate setup on console.statsig.com
+
+     SeeAlso [Gate Documentation](https://docs.statsig.com/feature-gates/working-with)
+     */
+    public func getFeatureGate(_ gateName: String) -> FeatureGate {
         let gate = store.checkGate(forName: gateName)
 
-        logGateExposure(gateName, gate: gate)
+        logGateExposureForGate(gateName, gate: gate, isManualExposure: false)
 
         return gate
     }
 
-    internal func logGateExposure(_ gateName: String, gate: FeatureGate? = nil) {
+    /**
+     Gets the boolean result of a gate for the current user. No exposure events will be logged.
+
+     Parameters:
+     - gateName: The name of the feature gate setup on console.statsig.com
+
+     SeeAlso [Gate Documentation](https://docs.statsig.com/feature-gates/working-with)
+     */
+    public func checkGateWithExposureLoggingDisabled(_ gateName: String) -> Bool {
+        return getFeatureGateWithExposureLoggingDisabled(gateName).value
+    }
+
+    /**
+     Gets the FeatureGate result of a gate for the current user. No exposure events will be logged.
+
+     Parameters:
+     - gateName: The name of the feature gate setup on console.statsig.com
+
+     SeeAlso [Gate Documentation](https://docs.statsig.com/feature-gates/working-with)
+     */
+    public func getFeatureGateWithExposureLoggingDisabled(_ gateName: String) -> FeatureGate {
+        return store.checkGate(forName: gateName)
+    }
+
+    /**
+     Logs an exposure event for the given gate. Only required if a related checkGateWithExposureLoggingDisabled call has been made.
+
+     Parameters:
+     - gateName: The name of the feature gate setup on console.statsig.com
+     */
+    public func manuallyLogGateExposure(_ gateName: String) {
+        logGateExposure(gateName)
+    }
+
+    /**
+     Logs an exposure event for the given feature gate. Only required if a related getFeatureGateWithExposureLoggingDisabled call has been made.
+
+     Parameters:
+     - gate: The the feature gate class of a feature gate setup on console.statsig.com
+     */
+    public func manuallyLogExposure(_ gate: FeatureGate) {
+        logGateExposureForGate(gate.name, gate: gate, isManualExposure: true)
+    }
+
+    private func logGateExposure(_ gateName: String, gate: FeatureGate? = nil) {
         let isManualExposure = gate == nil
         let gate = gate ?? store.checkGate(forName: gateName)
 
         logGateExposureForGate(gateName, gate: gate, isManualExposure: isManualExposure)
     }
 
-    internal func logGateExposureForGate(_ gateName: String, gate: FeatureGate, isManualExposure: Bool) {
+    private func logGateExposureForGate(_ gateName: String, gate: FeatureGate, isManualExposure: Bool) {
         let gateValue = gate.value
         let ruleID = gate.ruleID
         let dedupeKey = gateName + (gateValue ? "true" : "false") + ruleID + gate.evaluationDetails.reason.rawValue
@@ -113,48 +294,66 @@ internal class StatsigClient {
                 .withManualExposureFlag(isManualExposure))
         }
     }
+}
 
-    internal func checkGateWithExposureLoggingDisabled(_ gateName: String) -> FeatureGate {
-        return store.checkGate(forName: gateName)
-    }
 
-    internal func getExperiment(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
-        let experiment = store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
+// MARK: Dynamic Configs
+extension StatsigClient {
+    /**
+     Get the values for the given dynamic config. An exposure event will automatically be logged for the given dynamic config.
 
-        logExperimentExposure(experimentName, keepDeviceValue: keepDeviceValue, experiment: experiment)
+     Parameters:
+     - configName: The name of the dynamic config setup on console.statsig.com
 
-        return experiment
-    }
-
-    internal func getExperimentWithExposureLoggingDisabled(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
-        return store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
-    }
-
-    internal func logExperimentExposure(_ experimentName: String, keepDeviceValue: Bool, experiment: DynamicConfig? = nil) {
-        let isManualExposure = experiment == nil
-        let experiment = experiment ?? store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
-        logConfigExposureForConfig(experimentName, config: experiment, isManualExposure: isManualExposure)
-    }
-
-    internal func getConfig(_ configName: String) -> DynamicConfig {
+     SeeAlso [Dynamic Config Documentation](https://docs.statsig.com/dynamic-config)
+     */
+    public func getConfig(_ configName: String) -> DynamicConfig {
         let config = store.getConfig(forName: configName)
 
-        logConfigExposure(configName, config: config)
+        logConfigExposureForConfig(configName, config: config, isManualExposure: false)
 
         return config
     }
 
-    internal func getConfigWithExposureLoggingDisabled(_ configName: String) -> DynamicConfig {
+    /**
+     Get the values for the given dynamic config. No exposure event will be logged.
+
+     Parameters:
+     - configName: The name of the dynamic config setup on console.statsig.com
+
+     SeeAlso [Dynamic Config Documentation](https://docs.statsig.com/dynamic-config)
+     */
+    public func getConfigWithExposureLoggingDisabled(_ configName: String) -> DynamicConfig {
         return store.getConfig(forName: configName)
     }
 
-    internal func logConfigExposure(_ configName: String, config: DynamicConfig? = nil) {
+    /**
+     Logs an exposure event for the given dynamic config. Only required if a related getConfigWithExposureLoggingDisabled call has been made.
+
+     Parameters:
+     - experimentName: The name of the experiment setup on console.statsig.com
+     */
+    public func manuallyLogConfigExposure(_ configName: String) {
+        logConfigExposure(configName)
+    }
+
+    /**
+     Logs an exposure event for the given dynamic config. Only required if a related getConfigWithExposureLoggingDisabled or getExperimentWithExposureLoggingDisabled call has been made.
+
+     Parameters:
+     - config: The dynamic config class of an experiment, autotune, or dynamic config setup on console.statsig.com
+     */
+    public func manuallyLogExposure(_ config: DynamicConfig) {
+        logConfigExposureForConfig(config.name, config: config, isManualExposure: true)
+    }
+
+    private func logConfigExposure(_ configName: String, config: DynamicConfig? = nil) {
         let isManualExposure = config == nil
         let config = config ?? store.getConfig(forName: configName)
         logConfigExposureForConfig(configName, config: config, isManualExposure: isManualExposure)
     }
 
-    internal func logConfigExposureForConfig(_ configName: String, config: DynamicConfig, isManualExposure: Bool) {
+    private func logConfigExposureForConfig(_ configName: String, config: DynamicConfig, isManualExposure: Bool) {
         let ruleID = config.ruleID
         let dedupeKey = configName + ruleID + config.evaluationDetails.reason.rawValue
 
@@ -170,17 +369,95 @@ internal class StatsigClient {
                 .withManualExposureFlag(isManualExposure))
         }
     }
+}
 
-    internal func getLayer(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
+
+// MARK: Experiments
+extension StatsigClient {
+    /**
+     Get the values for the given experiment or autotune. An exposure event will automatically be logged for the given experiment.
+
+     Parameters:
+     - experimentName: The name of the experiment setup on console.statsig.com
+     - keepDeviceValue: Locks experiment values to the first time they are received. If an experiment changes, but the user has already been exposed, the original values are returned. This is not common practice.
+
+     SeeAlso [Experiments Documentation](https://docs.statsig.com/experiments-plus)
+     */
+    public func getExperiment(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
+        let experiment = store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
+
+        logConfigExposureForConfig(experimentName, config: experiment, isManualExposure: false)
+
+        return experiment
+    }
+
+    /**
+     Get the values for the given experiment. No exposure events will be logged.
+
+     Parameters:
+     - experimentName: The name of the experiment setup on console.statsig.com
+     - keepDeviceValue: Locks experiment values to the first time they are received. If an experiment changes, but the user has already been exposed, the original values are returned. This is not common practice.
+
+     SeeAlso [Experiments Documentation](https://docs.statsig.com/experiments-plus)
+     */
+    public func getExperimentWithExposureLoggingDisabled(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
+        return store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
+    }
+
+    /**
+     Logs an exposure event for the given experiment. Only required if a related getExperimentWithExposureLoggingDisabled has been made.
+
+     Parameters:
+     - experimentName: The name of the experiment setup on console.statsig.com
+     */
+    public func manuallyLogExperimentExposure(_ experimentName: String, keepDeviceValue: Bool = false) {
+        logExperimentExposure(experimentName, keepDeviceValue: keepDeviceValue)
+    }
+
+    private func logExperimentExposure(_ experimentName: String, keepDeviceValue: Bool, experiment: DynamicConfig? = nil) {
+        let isManualExposure = experiment == nil
+        let experiment = experiment ?? store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
+        logConfigExposureForConfig(experimentName, config: experiment, isManualExposure: isManualExposure)
+    }
+}
+
+
+// MARK: Layers
+extension StatsigClient {
+    /**
+     Get the values for the given layer. Exposure events will be fired when getValue is called on the result Layer class.
+
+     Parameters:
+     - layerName: The name of the layer setup on console.statsig.com
+     - keepDeviceValue: Locks layer values to the first time they are received. If an layer values change, but the user has already been exposed, the original values are returned. This is not common practice.
+
+     SeeAlso [Layers Documentation](https://docs.statsig.com/layers)
+     */
+    public func getLayer(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
         return store.getLayer(client: self, forName: layerName, keepDeviceValue: keepDeviceValue)
     }
 
-    internal func getLayerWithExposureLoggingDisabled(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
+    /**
+     Get the values for the given layer. No exposure events will be fired.
+
+     Parameters:
+     - layerName: The name of the layer setup on console.statsig.com
+     - keepDeviceValue: Locks layer values to the first time they are received. If an layer values change, but the user has already been exposed, the original values are returned. This is not common practice.
+
+     SeeAlso [Layers Documentation](https://docs.statsig.com/layers)
+     */
+    public func getLayerWithExposureLoggingDisabled(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
         return store.getLayer(client: nil, forName: layerName, keepDeviceValue: keepDeviceValue)
     }
 
+    /**
+     Logs an exposure event for the given layer parameter. Only required if a related getLayerWithExposureLoggingDisabled call has been made.
 
-    internal func logLayerParameterExposure(_ layerName: String, parameterName: String, keepDeviceValue: Bool) {
+     Parameters:
+     - layerName: The name of the layer setup on console.statsig.com
+     - parameterName: The name of the parameter that was checked.
+     */
+    public func manuallyLogLayerParameterExposure(_ layerName: String, _ parameterName: String, keepDeviceValue: Bool = false) {
         let layer = getLayer(layerName, keepDeviceValue: keepDeviceValue)
         logLayerParameterExposureForLayer(layer, parameterName: parameterName, isManualExposure: true)
     }
@@ -219,54 +496,48 @@ internal class StatsigClient {
                 .withManualExposureFlag(isManualExposure))
         }
     }
+}
 
-    internal func updateUser(_ user: StatsigUser, completion: completionBlock = nil) {
-        exposureDedupeQueue.async(flags: .barrier) { [weak self] in
-            self?.loggedExposures.removeAll()
-        }
 
-        self.updateUserImpl(user, completion: completion)
+// MARK: Log Event
+extension StatsigClient {
+    /**
+     Logs an event to Statsig with the provided values.
+
+     Parameters:
+     - withName: The name of the event
+     - metadata: Any extra values to be logged with the event
+     */
+    public func logEvent(_ withName: String, metadata: [String: String]? = nil) {
+        logEventImpl(withName, value: nil, metadata: metadata)
     }
 
-    internal func shutdown() {
-        logger.stop()
-        Diagnostics.shutdown()
-        syncTimer?.invalidate()
+    /**
+     Logs an event to Statsig with the provided values.
+
+     Parameters:
+     - withName: The name of the event
+     - value: A top level value for the event
+     - metadata: Any extra values to be logged with the event
+     */
+    public func logEvent(_ withName: String, value: String, metadata: [String: String]? = nil) {
+        logEventImpl(withName, value: value, metadata: metadata)
     }
 
-    internal func flush() {
-        logger.flush()
+    /**
+     Logs an event to Statsig with the provided values.
+
+     Parameters:
+     - withName: The name of the event
+     - value: A top level value for the event
+     - metadata: Any extra key/value pairs to be logged with the event
+     */
+    public func logEvent(_ withName: String, value: Double, metadata: [String: String]? = nil) {
+        logEventImpl(withName, value: value, metadata: metadata)
     }
 
-    internal func getStableID() -> String? {
-        return currentUser.deviceEnvironment["stableID"] as? String
-    }
 
-    internal func overrideGate(_ gateName: String, value: Bool) {
-        store.overrideGate(gateName, value)
-    }
-
-    internal func overrideConfig(_ configName: String, value: [String: Any]) {
-        store.overrideConfig(configName, value)
-    }
-
-    internal func overrideLayer(_ layerName: String, value: [String: Any]) {
-        store.overrideLayer(layerName, value)
-    }
-
-    internal func removeOverride(_ name: String) {
-        store.removeOverride(name)
-    }
-
-    internal func removeAllOverrides() {
-        store.removeAllOverrides()
-    }
-
-    internal func getAllOverrides() -> StatsigOverrides {
-        return store.getAllOverrides()
-    }
-
-    internal func logEvent(_ withName: String, value: Any? = nil, metadata: [String: String]? = nil) {
+    private func logEventImpl(_ withName: String, value: Any? = nil, metadata: [String: String]? = nil) {
         var eventName = withName
 
         if eventName.isEmpty {
@@ -299,43 +570,71 @@ internal class StatsigClient {
                 disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging)
         )
     }
+}
 
-    internal func openDebugView() {
-        let state: [String: Any?] = [
-            "user": self.currentUser.toDictionary(forLogging: false),
-            "gates": self.store.cache.gates,
-            "configs": self.store.cache.configs,
-            "layers": self.store.cache.layers,
-            "evalReason": "\(self.store.cache.reason)"
-        ]
+// MARK: Local Overrides
+extension StatsigClient {
+    /**
+     Sets a value to be returned for the given gate instead of the actual evaluated value.
 
-        DispatchQueue.main.async {
-            DebugViewController.show(self.sdkKey, state)
-        }
+     Parameters:
+     - gateName: The name of the gate to be overridden
+     - value: The value that will be returned
+     */
+    public func overrideGate(_ gateName: String, value: Bool) {
+        store.overrideGate(gateName, value)
     }
 
-    internal func getInitializeResponseJson() -> ExternalInitializeResponse {
-        var values: String? = nil
-        let dict: [String: Any?] = [
-            "feature_gates": self.store.cache.gates,
-            "dynamic_configs": self.store.cache.configs,
-            "layer_configs": self.store.cache.layers,
-            "hash_used": self.store.cache.hashUsed,
-            "time": self.store.cache.userCache["time"]
-        ]
+    /**
+     Sets a value to be returned for the given dynamic config/experiment instead of the actual evaluated value.
 
-        if JSONSerialization.isValidJSONObject(dict),
-           let data = try? JSONSerialization.data(withJSONObject: dict),
-           let json = data.text {
-            values = json
-        }
-
-        return ExternalInitializeResponse(
-            values: values,
-            evaluationDetails: self.store.cache.getGlobalEvaluationDetails()
-        )
+     Parameters:
+     - configName: The name of the config or experiment to be overridden
+     - value: The value that the resulting DynamicConfig will contain
+     */
+    public func overrideConfig(_ configName: String, value: [String: Any]) {
+        store.overrideConfig(configName, value)
     }
 
+    /**
+     Sets a value to be returned for the given layer instead of the actual evaluated value.
+
+     Parameters:
+     - layerName: The name of the layer to be overridden
+     - value: The value that the resulting Layer will contain
+     */
+    public func overrideLayer(_ layerName: String, value: [String: Any]) {
+        store.overrideLayer(layerName, value)
+    }
+
+    /**
+     Clears any overridden value for the given gate/dynamic config/experiment.
+
+     Parameters:
+     - name: The name of the gate/dynamic config/experiment to clear
+     */
+    public func removeOverride(_ name: String) {
+        store.removeOverride(name)
+    }
+
+    /**
+     Clears all overriden values.
+     */
+    public func removeAllOverrides() {
+        store.removeAllOverrides()
+    }
+
+    /**
+     Returns all values that are currently overriden.
+     */
+    public func getAllOverrides() -> StatsigOverrides {
+        return store.getAllOverrides()
+    }
+}
+
+
+// MARK: Misc Private
+extension StatsigClient {
     private func fetchValuesFromNetwork(completion: completionBlock) {
         let currentUser = self.currentUser
         let shouldScheduleSync = statsigOptions.enableAutoValueUpdate
@@ -432,9 +731,5 @@ internal class StatsigClient {
         for listener in listeners {
             listener()?.onUserUpdated(error)
         }
-    }
-
-    deinit {
-        unsubscribeFromApplicationLifecycle()
     }
 }

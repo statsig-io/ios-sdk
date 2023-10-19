@@ -14,19 +14,11 @@ class LogFlushTimerSpec: BaseSpec {
 
         let user = StatsigUser(userID: "jkw")
 
-        var requests: [URLRequest] = []
         var logger: SpiedEventLogger!
 
         describe("LogFlushTimer") {
             beforeEach {
-                stub(condition: isPath("/v1/log_event")) { request in
-                    requests.append(request)
-                    return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
-                }
-
-                requests = []
-
-                let key = "client-key"
+                   let key = "client-key"
                 let opts = StatsigOptions()
                 let store = InternalStore(key, user, options: opts)
                 let network = NetworkService(sdkKey: key, options: opts, store: store)

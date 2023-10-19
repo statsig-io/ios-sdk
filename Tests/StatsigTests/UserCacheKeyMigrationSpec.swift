@@ -10,16 +10,6 @@ import OHHTTPStubsSwift
 
 @testable import Statsig
 
-extension MockDefaults {
-    fileprivate func getUserCaches() -> NSDictionary {
-        if let data = dict[InternalStore.localStorageKey] as? NSDictionary {
-            return data
-        }
-
-        return [:]
-    }
-}
-
 class UserCacheKeyMigrationSpec: BaseSpec {
 
     override func spec() {

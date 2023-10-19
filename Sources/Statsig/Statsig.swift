@@ -138,7 +138,7 @@ public class Statsig {
                 return
             }
 
-            client.logGateExposure(gateName)
+            client.manuallyLogGateExposure(gateName)
         }
     }
 
@@ -181,7 +181,7 @@ public class Statsig {
                 return
             }
 
-            client.logExperimentExposure(experimentName, keepDeviceValue: keepDeviceValue)
+            client.manuallyLogExperimentExposure(experimentName, keepDeviceValue: keepDeviceValue)
         }
     }
 
@@ -222,7 +222,7 @@ public class Statsig {
                 return
             }
 
-            client.logConfigExposure(configName)
+            client.manuallyLogConfigExposure(configName)
         }
     }
 
@@ -266,7 +266,7 @@ public class Statsig {
                 return
             }
 
-            client.logLayerParameterExposure(layerName, parameterName: parameterName, keepDeviceValue: keepDeviceValue)
+            client.manuallyLogLayerParameterExposure(layerName, parameterName, keepDeviceValue: keepDeviceValue)
         }
     }
 
@@ -283,7 +283,7 @@ public class Statsig {
                 return
             }
 
-            client.logGateExposureForGate(gate.name, gate: gate, isManualExposure: true)
+            client.manuallyLogExposure(gate)
         }
     }
 
@@ -300,7 +300,7 @@ public class Statsig {
                 return
             }
 
-            client.logConfigExposureForConfig(config.name, config: config, isManualExposure: true)
+            client.manuallyLogExposure(config)
         }
     }
 
@@ -330,7 +330,9 @@ public class Statsig {
      - metadata: Any extra values to be logged with the event
      */
     public static func logEvent(_ withName: String, metadata: [String: String]? = nil) {
-        logEventImpl(withName, value: nil, metadata: metadata)
+        errorBoundary.capture("") {
+            client?.logEvent(withName, metadata: metadata)
+        }
     }
 
     /**
@@ -342,7 +344,9 @@ public class Statsig {
      - metadata: Any extra values to be logged with the event
      */
     public static func logEvent(_ withName: String, value: String, metadata: [String: String]? = nil) {
-        logEventImpl(withName, value: value, metadata: metadata)
+        errorBoundary.capture("") {
+            client?.logEvent(withName, value: value, metadata: metadata)
+        }
     }
 
     /**
@@ -354,7 +358,9 @@ public class Statsig {
      - metadata: Any extra key/value pairs to be logged with the event
      */
     public static func logEvent(_ withName: String, value: Double, metadata: [String: String]? = nil) {
-        logEventImpl(withName, value: value, metadata: metadata)
+        errorBoundary.capture("") {
+            client?.logEvent(withName, value: value, metadata: metadata)
+        }
     }
 
     /**
@@ -483,6 +489,9 @@ public class Statsig {
         return result
     }
 
+    /**
+     Presents a view of the current internal state of the SDK.
+     */
     public static func openDebugView() {
         errorBoundary.capture("openDebugView") {
             client?.openDebugView()
@@ -490,7 +499,7 @@ public class Statsig {
     }
 
     /**
-    Returns the raw values that the SDK is using internally to provide gate/config/layer results
+     Returns the raw values that the SDK is using internally to provide gate/config/layer results
      */
     public static func getInitializeResponseJson() -> ExternalInitializeResponse {
         var result = ExternalInitializeResponse.uninitialized()
@@ -517,8 +526,8 @@ public class Statsig {
             }
 
             result = withExposures
-            ? client.checkGate(gateName)
-            : client.checkGateWithExposureLoggingDisabled(gateName)
+            ? client.getFeatureGate(gateName)
+            : client.getFeatureGateWithExposureLoggingDisabled(gateName)
         }
         return result ?? FeatureGate(name: gateName, value: false, ruleID: "", evalDetails: EvaluationDetails(reason: .Uninitialized))
     }
@@ -567,17 +576,6 @@ public class Statsig {
         }
 
         return result ?? Layer(client: nil, name: layerName, evalDetails: EvaluationDetails(reason: .Uninitialized))
-    }
-
-    private static func logEventImpl(_ withName: String, value: Any? = nil, metadata: [String: String]? = nil) {
-        guard let client = client else {
-            print("[Statsig]: \(getUnstartedErrorMessage("logEvent"))")
-            return
-        }
-
-        errorBoundary.capture("logEventImpl") {
-            client.logEvent(withName, value: value, metadata: metadata)
-        }
     }
 
     private static func getEmptyConfig(_ name: String) -> DynamicConfig {
