@@ -39,7 +39,7 @@ class NetworkService {
             return
         }
 
-        let cacheKey = user.getCacheKey()
+        let cacheKey = UserCacheKey.from(user: user, sdkKey: self.sdkKey)
         let fullUserHash = user.getFullUserHash()
 
         makeAndSendRequest(.initialize, body: body) { [weak self] data, _, _ in
@@ -91,7 +91,7 @@ class NetworkService {
             return
         }
 
-        let cacheKey = user.getCacheKey()
+        let cacheKey = UserCacheKey.from(user: user, sdkKey: self.sdkKey)
         let fullUserHash = user.getFullUserHash()
 
         makeAndSendRequest(

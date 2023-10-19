@@ -26,7 +26,10 @@ class LogFlushTimerSpec: BaseSpec {
 
                 requests = []
 
-                let network = NetworkService(sdkKey: "client-key", options: StatsigOptions(), store: InternalStore(user))
+                let key = "client-key"
+                let opts = StatsigOptions()
+                let store = InternalStore(key, user, options: opts)
+                let network = NetworkService(sdkKey: key, options: opts, store: store)
                 logger = SpiedEventLogger(user: user, networkService: network, userDefaults: MockDefaults())
             }
 

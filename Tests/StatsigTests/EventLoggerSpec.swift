@@ -17,7 +17,9 @@ class EventLoggerSpec: BaseSpec {
         
         describe("using EventLogger") {
             let sdkKey = "client-api-key"
-            let ns = NetworkService(sdkKey: sdkKey, options: StatsigOptions(), store: InternalStore(StatsigUser(userID: "jkw")))
+            let opts = StatsigOptions()
+            let store = InternalStore(sdkKey, StatsigUser(userID: "jkw"), options: opts)
+            let ns = NetworkService(sdkKey: sdkKey, options: opts, store: store)
             let user = StatsigUser(userID: "jkw")
             let event1 = Event(user: user, name: "test_event1", value: 1, disableCurrentVCLogging: false)
             let event2 = Event(user: user, name: "test_event2", value: 2, disableCurrentVCLogging: false)

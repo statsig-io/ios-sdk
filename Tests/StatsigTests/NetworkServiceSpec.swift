@@ -16,6 +16,9 @@ class NetworkServiceSpec: BaseSpec {
         
         describe("using NetworkService to make network requests to Statsig API endpoints") {
             let sdkKey = "client-api-key"
+            let opts = StatsigOptions()
+
+
             afterEach {
                 HTTPStubs.removeAllStubs()
                 TestUtils.clearStorage()
@@ -32,7 +35,9 @@ class NetworkServiceSpec: BaseSpec {
                     return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
                 }
 
-                let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(StatsigUser(userID: "jkw")))
+                let store = InternalStore(sdkKey, StatsigUser(userID: "jkw"), options: opts)
+                let ns = NetworkService(sdkKey: sdkKey, options: opts, store: store)
+
                 ns.fetchInitialValues(for:
                     StatsigUser(
                         userID: "jkw",
@@ -62,7 +67,9 @@ class NetworkServiceSpec: BaseSpec {
                     return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
                 }
 
-                let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(StatsigUser(userID: "jkw")))
+
+                let store = InternalStore(sdkKey, StatsigUser(userID: "jkw"), options: opts)
+                let ns = NetworkService(sdkKey: sdkKey, options: opts, store: store)
                 let now = NSDate().epochTimeInMs()
                 waitUntil { done in
                     ns.fetchUpdatedValues(for: StatsigUser(userID: "jkw"), lastSyncTimeForUser: now, previousDerivedFields: [:]) {
@@ -92,7 +99,8 @@ class NetworkServiceSpec: BaseSpec {
                     return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 403))
                 }
 
-                let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(StatsigUser(userID: "jkw")))
+                let store = InternalStore(sdkKey, StatsigUser(userID: "jkw"), options: opts)
+                let ns = NetworkService(sdkKey: sdkKey, options: opts, store: store)
                 let user = StatsigUser(userID: "jkw", privateAttributes: ["email": "something@somethingelse.com"])
                 waitUntil { done in
                     ns.sendEvents(forUser: user, events: [Event(user: user, name: "test_event", value: 9.99, disableCurrentVCLogging: false)])
@@ -129,8 +137,10 @@ class NetworkServiceSpec: BaseSpec {
                     return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 403))
                 }
 
-                let ns = NetworkService(sdkKey: "client-api-key", options: StatsigOptions(), store: InternalStore(StatsigUser(userID: "jkw")))
                 let user = StatsigUser(userID: "jkw")
+                let store = InternalStore(sdkKey, user, options: opts)
+                let ns = NetworkService(sdkKey: sdkKey, options: opts, store: store)
+
                 var data = [Data]()
                 for index in 1...10 {
                     let params: [String: Any] = [
@@ -170,7 +180,7 @@ class NetworkServiceSpec: BaseSpec {
 
                 let user = StatsigUser()
                 let opts = StatsigOptions(initTimeout: 0.01)
-                let store = InternalStore(user)
+                let store = InternalStore("client-key", user, options: opts)
                 let ns = NetworkService(sdkKey: "client-key", options: opts, store: store)
 
                 var expected = -1

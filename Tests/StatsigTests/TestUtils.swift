@@ -52,7 +52,7 @@ class TestUtils {
     static func startWithResponseAndWait(_ response: [String: Any], _ key: String = "client-api-key", _ user: StatsigUser? = nil, _ statusCode: Int32 = 200, options: StatsigOptions? = nil) -> URLRequest? {
         var result: URLRequest? = nil
         let host = options?.overrideURL?.host ?? "api.statsig.com"
-        stub(condition: isHost(host)) { req in
+        let handle = stub(condition: isHost(host)) { req in
             result = req
             return HTTPStubsResponse(jsonObject: response, statusCode: statusCode, headers: nil)
         }
@@ -60,6 +60,8 @@ class TestUtils {
         let opts = options ?? StatsigOptions(disableDiagnostics: true)
 
         TestUtils.startStatsigAndWait(key: key, user, opts)
+
+        HTTPStubs.removeStub(handle)
 
         return result
     }

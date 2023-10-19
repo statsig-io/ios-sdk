@@ -19,7 +19,7 @@ class BaseSpec: QuickSpec {
 
             let stubs = HTTPStubs.allStubs()
             if !stubs.isEmpty {
-                fatalError("Stubs not cleared")
+                fatalError("Stubs not cleared. This likely means a previous test was not cleaned up (Possibly because it failed)")
             }
 
             if (Statsig.client != nil) {

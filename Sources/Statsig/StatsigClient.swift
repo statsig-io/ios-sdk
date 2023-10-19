@@ -29,7 +29,7 @@ internal class StatsigClient {
         self.sdkKey = sdkKey
         self.currentUser = StatsigClient.normalizeUser(user, options: options)
         self.statsigOptions = options ?? StatsigOptions()
-        self.store = InternalStore(self.currentUser, options: statsigOptions)
+        self.store = InternalStore(sdkKey, self.currentUser, options: statsigOptions)
         self.networkService = NetworkService(sdkKey: sdkKey, options: statsigOptions, store: store)
         self.logger = EventLogger(user: currentUser, networkService: networkService)
         self.logger.start()

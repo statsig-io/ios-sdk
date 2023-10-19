@@ -58,7 +58,6 @@ class InitializeSinceTimeSpec: BaseSpec {
                 expect(data["sinceTime"] as? Double).to(equal(123.0 as Double))
             }
 
-            
             it("uses cached value when 204 is returned") {
                 _ = TestUtils.startWithResponseAndWait(self.response)
                 self.shutdownStatsig()
@@ -71,7 +70,7 @@ class InitializeSinceTimeSpec: BaseSpec {
                 _ = TestUtils.startWithResponseAndWait(self.response)
                 self.shutdownStatsig()
 
-                _ = TestUtils.startWithResponseAndWait(["has_updates": false], "client-key", nil, 204)
+                _ = TestUtils.startWithResponseAndWait(["has_updates": false], "client-api-key", nil, 204)
                 expect(Statsig.checkGate("a_gate")).to(beTrue())
             }
 
@@ -79,7 +78,7 @@ class InitializeSinceTimeSpec: BaseSpec {
                 _ = TestUtils.startWithResponseAndWait(self.response)
                 self.shutdownStatsig()
 
-                _ = TestUtils.startWithResponseAndWait(["has_updates": false], "client-key", nil, 200)
+                _ = TestUtils.startWithResponseAndWait(["has_updates": false], "client-api-key", nil, 200)
                 expect(Statsig.checkGate("a_gate")).to(beTrue())
             }
 
@@ -97,11 +96,11 @@ class InitializeSinceTimeSpec: BaseSpec {
 
             it("invalidates the cache key when a user object changes") {
                 let firstUser = StatsigUser(userID: "a-user", email: "a-user@gmail.com")
-                let firstRequest = TestUtils.startWithResponseAndWait(self.response, "client-key", firstUser)
+                let firstRequest = TestUtils.startWithResponseAndWait(self.response, "client-api-key", firstUser)
                 let firstBody = firstRequest?.statsig_body as! [String: AnyHashable]
 
                 let secondUser = StatsigUser(userID: "a-user", email: "a-user@live.com")
-                let secondRequest = TestUtils.startWithResponseAndWait(self.response, "client-key", secondUser)
+                let secondRequest = TestUtils.startWithResponseAndWait(self.response, "client-api-key", secondUser)
                 let secondBody = secondRequest?.statsig_body as! [String: AnyHashable]
 
                 expect(firstBody["sinceTime"]).to(equal(0))
@@ -113,7 +112,7 @@ class InitializeSinceTimeSpec: BaseSpec {
                 _ = TestUtils.startWithResponseAndWait(self.response)
                 self.shutdownStatsig()
 
-                _ = TestUtils.startWithResponseAndWait(["has_updates": false], "client-key", nil, 200)
+                _ = TestUtils.startWithResponseAndWait(["has_updates": false], "client-api-key", nil, 200)
 
                 let config = Statsig.getConfig("a_config")
                 expect(config.evaluationDetails.reason).to(equal(.NetworkNotModified))

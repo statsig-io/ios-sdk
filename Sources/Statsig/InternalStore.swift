@@ -14,7 +14,7 @@ public struct StatsigOverrides {
 
 struct StatsigValuesCache {
     var cacheByID: [String: [String: Any]]
-    var userCacheKey: String
+    var userCacheKey: UserCacheKey
     var userLastUpdateTime: Double
     var stickyDeviceExperiments: [String: [String: Any]]
     var reason: EvaluationReason = .Uninitialized
@@ -23,6 +23,7 @@ struct StatsigValuesCache {
     var configs: [String: [String: Any]]? = nil
     var layers: [String: [String: Any]]? = nil
     var hashUsed: String? = nil
+    var sdkKey: String
 
     var userCache: [String: Any] {
         didSet {
@@ -33,12 +34,13 @@ struct StatsigValuesCache {
         }
     }
 
-    init(_ user: StatsigUser, initialValues: [String: Any]?) {
+    init(_ sdkKey: String, _ user: StatsigUser, initialValues: [String: Any]?) {
+        self.sdkKey = sdkKey
         self.cacheByID = StatsigValuesCache.loadDictMigratingIfRequired(forKey: InternalStore.localStorageKey)
         self.stickyDeviceExperiments = StatsigValuesCache.loadDictMigratingIfRequired(forKey: InternalStore.stickyDeviceExperimentsKey)
 
         self.userCache = [:]
-        self.userCacheKey = "null"
+        self.userCacheKey = UserCacheKey(v1: "null", v2: "null")
         self.userLastUpdateTime = 0
 
         self.setUserCacheKeyAndValues(user, withBootstrapValues: initialValues)
@@ -136,8 +138,8 @@ struct StatsigValuesCache {
         setUserCacheKeyAndValues(newUser)
     }
 
-    mutating func saveValues(_ values: [String: Any], _ cacheKey: String, _ userHash: String?) {
-        var cache = cacheKey == userCacheKey ? userCache : getCacheValues(forCacheKey: cacheKey)
+    mutating func saveValues(_ values: [String: Any], _ cacheKey: UserCacheKey, _ userHash: String?) {
+        var cache = cacheKey.v2 == userCacheKey.v2 ? userCache : getCacheValues(forCacheKey: cacheKey)
 
         let hasUpdates = values["has_updates"] as? Bool == true
         if hasUpdates {
@@ -151,13 +153,13 @@ struct StatsigValuesCache {
             cache[InternalStore.derivedFieldsKey] = values[InternalStore.derivedFieldsKey]
         }
 
-        if (userCacheKey == cacheKey) {
+        if (userCacheKey.v2 == cacheKey.v2) {
             // Now the values we serve came from network request
             reason = hasUpdates ? .Network : .NetworkNotModified
             userCache = cache
         }
 
-        cacheByID[cacheKey] = cache
+        cacheByID[cacheKey.v2] = cache
         StatsigUserDefaults.defaults.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
     }
 
@@ -181,8 +183,8 @@ struct StatsigValuesCache {
         saveToUserDefaults()
     }
 
-    private func getCacheValues(forCacheKey key: String) -> [String: Any] {
-        return cacheByID[key] ?? [
+    private func getCacheValues(forCacheKey key: UserCacheKey) -> [String: Any] {
+        return cacheByID[key.v2] ?? [
             InternalStore.gatesKey: [:],
             InternalStore.configsKey: [:],
             InternalStore.stickyExpKey: [:],
@@ -192,7 +194,7 @@ struct StatsigValuesCache {
     }
 
     private mutating func saveToUserDefaults() {
-        cacheByID[userCacheKey] = userCache
+        cacheByID[userCacheKey.v2] = userCache
         StatsigUserDefaults.defaults.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
         StatsigUserDefaults.defaults.setDictionarySafe(stickyDeviceExperiments, forKey: InternalStore.stickyDeviceExperimentsKey)
     }
@@ -201,10 +203,12 @@ struct StatsigValuesCache {
         _ user: StatsigUser,
         withBootstrapValues bootstrapValues: [String: Any]? = nil
     ) {
-        userCacheKey = user.getCacheKey()
+        userCacheKey = UserCacheKey.from(user: user, sdkKey: self.sdkKey)
+
+        migrateOldUserCacheKey()
 
         if let bootstrapValues = bootstrapValues {
-            cacheByID[userCacheKey] = bootstrapValues
+            cacheByID[userCacheKey.v2] = bootstrapValues
             userCache = bootstrapValues
             reason = BootstrapValidator.isValid(user, bootstrapValues)
             ? .Bootstrap
@@ -213,8 +217,8 @@ struct StatsigValuesCache {
         }
 
         let cachedValues = getCacheValues(forCacheKey: userCacheKey)
-        if cacheByID[userCacheKey] == nil {
-            cacheByID[userCacheKey] = cachedValues
+        if cacheByID[userCacheKey.v2] == nil {
+            cacheByID[userCacheKey.v2] = cachedValues
         } else {
             // The values we serve now is from the local cache
             reason = .Cache
@@ -233,6 +237,7 @@ struct StatsigValuesCache {
             StatsigUserDefaults.defaults.setDictionarySafe(dict, forKey: key)
             return dict
         }
+
 
         return [:]
     }
@@ -257,6 +262,19 @@ struct StatsigValuesCache {
         StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.DEPRECATED_localStorageKey)
         StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)
         StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.DEPRECATED_stickyUserIDKey)
+    }
+
+    private mutating func migrateOldUserCacheKey() {
+        let oldCache = cacheByID[userCacheKey.v1]
+        let currCache = cacheByID[userCacheKey.v2]
+
+        if oldCache != nil {
+            cacheByID.removeValue(forKey: userCacheKey.v1)
+        }
+
+        if (currCache == nil && oldCache != nil) {
+            cacheByID[userCacheKey.v2] = oldCache
+        }
     }
 }
 
@@ -284,8 +302,8 @@ class InternalStore {
     var localOverrides: [String: Any] = InternalStore.getEmptyOverrides()
     let storeQueue = DispatchQueue(label: storeQueueLabel, qos: .userInitiated, attributes: .concurrent)
 
-    init(_ user: StatsigUser, options: StatsigOptions) {
-        cache = StatsigValuesCache(user, initialValues: options.initializeValues)
+    init(_ sdkKey: String, _ user: StatsigUser, options: StatsigOptions) {
+        cache = StatsigValuesCache(sdkKey, user, initialValues: options.initializeValues)
         localOverrides = StatsigUserDefaults.defaults.dictionarySafe(forKey: InternalStore.localOverridesKey)
         ?? InternalStore.getEmptyOverrides()
     }
@@ -366,7 +384,7 @@ class InternalStore {
             })
     }
 
-    func saveValues(_ values: [String: Any], _ cacheKey: String, _ userHash: String?, _ completion: (() -> Void)? = nil) {
+    func saveValues(_ values: [String: Any], _ cacheKey: UserCacheKey, _ userHash: String?, _ completion: (() -> Void)? = nil) {
         storeQueue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             self.cache.saveValues(values, cacheKey, userHash)

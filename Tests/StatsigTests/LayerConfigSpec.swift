@@ -111,10 +111,11 @@ class LayerConfigSpec: BaseSpec {
                     }
                 }
 
-                store = InternalStore(StatsigUser(userID: "dloomb"))
-
                 let user = StatsigUser(userID: "dloomb")
-                store.cache.saveValues(Data.CacheValues, user.getCacheKey(), user.getFullUserHash())
+                store = InternalStore("", user, options: StatsigOptions())
+
+                let cacheKey = UserCacheKey.from(user: user, sdkKey: "")
+                store.cache.saveValues(Data.CacheValues, cacheKey, user.getFullUserHash())
             }
 
             it("returns the experiment values") {
@@ -133,7 +134,7 @@ class LayerConfigSpec: BaseSpec {
                 updatedValues[jsonDict: "dynamic_configs"]?[jsonDict: Data.HashConfigKey]?["is_user_in_experiment"] = false
 
                 let user = StatsigUser(userID: "dloomb")
-                store = InternalStore(user) // reload the cache, and user is no longer in the experiment, but value should stick because experiment is active
+                store = InternalStore("", user, options: StatsigOptions()) // reload the cache, and user is no longer in the experiment, but value should stick because experiment is active
 
                 waitUntil { done in
                     store.saveValues(updatedValues, store.cache.userCacheKey, user.getFullUserHash()) {
@@ -155,7 +156,8 @@ class LayerConfigSpec: BaseSpec {
 
                 // reload the cache, and user is allocated to a different experiment,
                 // but should still get same value because previous experiment is still active
-                store = InternalStore(user)
+                store = InternalStore("", user, options: StatsigOptions())
+
 
                 waitUntil { done in
                     store.saveValues(updatedValues, store.cache.userCacheKey, user.getFullUserHash()) {
@@ -168,7 +170,7 @@ class LayerConfigSpec: BaseSpec {
 
                 updatedValues[jsonDict: "dynamic_configs"]?[jsonDict: Data.HashConfigKey]?["is_experiment_active"] = false
                 // reload the cache, and previous experiment is no longer active, so should get new value
-                store = InternalStore(StatsigUser(userID: "dloomb"))
+                store = InternalStore("", StatsigUser(userID: "dloomb"), options: StatsigOptions())
 
                 waitUntil { done in
                     store.saveValues(updatedValues, store.cache.userCacheKey, user.getFullUserHash()) {
@@ -195,7 +197,7 @@ class LayerConfigSpec: BaseSpec {
                 ]
 
                 let user = StatsigUser(userID: "dloomb")
-                store = InternalStore(user)
+                store = InternalStore("", user, options: StatsigOptions())
                 waitUntil { done in
                     store.saveValues(updatedValues, store.cache.userCacheKey, user.getFullUserHash()) {
                         done()

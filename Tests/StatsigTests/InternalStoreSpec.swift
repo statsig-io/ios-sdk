@@ -33,27 +33,30 @@ class InternalStoreSpec: BaseSpec {
     }
 
     // Called by children
-    func specImpl() {        
+    func specImpl() {
+        let sdkKey = "client-api-key"
         describe("using internal store to save and retrieve values") {
             beforeEach {
                 TestUtils.clearStorage()
             }
 
             it("is empty initially") {
-                let store = InternalStore(StatsigUser())
+                let store = InternalStore(sdkKey, StatsigUser(), options: StatsigOptions())
                 expect(self.cacheIsEmpty(store.cache.userCache)).to(beTrue())
             }
 
             it("sets value in UserDefaults correctly and persists between initialization") {
                 let user = StatsigUser()
-                let store = InternalStore(user)
+                let store = InternalStore(sdkKey, user, options: StatsigOptions())
+                let cacheKey = UserCacheKey.from(user: user, sdkKey: sdkKey)
+
                 waitUntil(timeout: .seconds(1)) { done in
-                    store.saveValues(StatsigSpec.mockUserValues, user.getCacheKey(), user.getFullUserHash()) {
+                    store.saveValues(StatsigSpec.mockUserValues, cacheKey, user.getFullUserHash()) {
                         done()
                     }
                 }
 
-                let store2 = InternalStore(StatsigUser())
+                let store2 = InternalStore(sdkKey, StatsigUser(), options: StatsigOptions())
                 let cache = store2.cache.userCache
                 expect(cache).toNot(beNil())
                 expect((cache["feature_gates"] as! [String: [String: Any]]).count).to(equal(2))
@@ -66,7 +69,8 @@ class InternalStoreSpec: BaseSpec {
                 expect(store.getConfig(forName: "config").getValue(forKey: "str", defaultValue: "wrong")).to(equal("string"))
 
                 TestUtils.clearStorage()
-                expect(self.cacheIsEmpty(InternalStore(StatsigUser()).cache.userCache)).to(beTrue())
+                let store3 = InternalStore(sdkKey, StatsigUser(), options: StatsigOptions())
+                expect(self.cacheIsEmpty(store3.cache.userCache)).to(beTrue())
             }
 
             it("migrates old values to new cache") {
@@ -75,7 +79,6 @@ class InternalStoreSpec: BaseSpec {
                 let gateKey = "gate"
                 let hashConfigKey = configKey.sha256()
                 let hashGateKey = gateKey.sha256()
-
                 let values: [String: Any] = [
                     "dynamic_configs": [
                         hashConfigKey: [
@@ -101,7 +104,7 @@ class InternalStoreSpec: BaseSpec {
                 StatsigUserDefaults.defaults.setValue(stickyValues, forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)
 
                 let user = StatsigUser(userID: "jkw")
-                let store = InternalStore(user)
+                let store = InternalStore("", user, options: StatsigOptions())
                 var gate = store.checkGate(forName: gateKey)
                 expect(gate.value).to(beTrue())
 
@@ -132,7 +135,8 @@ class InternalStoreSpec: BaseSpec {
                     "has_updates": true,
                     "time": 12345
                 ]
-                store.saveValues(newValues, user.getCacheKey(), user.getFullUserHash())
+                let userCacheKey = UserCacheKey.from(user: user, sdkKey: "")
+                store.saveValues(newValues, userCacheKey, user.getFullUserHash())
                 gate = store.checkGate(forName: gateKey)
                 expect(gate.value).to(beFalse())
 
@@ -176,14 +180,14 @@ class InternalStoreSpec: BaseSpec {
                 StatsigUserDefaults.defaults.setValue("jkw", forKey: InternalStore.DEPRECATED_stickyUserIDKey)
                 StatsigUserDefaults.defaults.setValue(stickyValues, forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)
 
-                let store = InternalStore(StatsigUser(userID: "not_jkw"))
+                let store = InternalStore("", StatsigUser(userID: "not_jkw"), options: StatsigOptions())
                 let exp = store.getExperiment(forName: configKey, keepDeviceValue: true)
                 expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("value"))
             }
 
             it("sets sticky experiment values correctly") {
                 let user = StatsigUser()
-                let store = InternalStore(user)
+                let store = InternalStore("", user, options: StatsigOptions())
                 let configKey = "config"
                 let hashConfigKey = configKey.sha256()
 
@@ -225,7 +229,9 @@ class InternalStoreSpec: BaseSpec {
                     ],
                     "has_updates": true
                 ]
-                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
+
+                var userCacheKey = UserCacheKey.from(user: user, sdkKey: "")
+                store.saveValues(values, userCacheKey, user.getFullUserHash())
 
                 var exp = store.getExperiment(forName: expKey, keepDeviceValue: false)
                 var deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: false)
@@ -238,7 +244,9 @@ class InternalStoreSpec: BaseSpec {
                 values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v1"])
                 values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v1"])
                 values.replaceAtPath("dynamic_configs.\(hashedNonStickyExpKey).value", ["label": "non_stick_v1"])
-                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
+
+                userCacheKey = UserCacheKey.from(user: user, sdkKey: "")
+                store.saveValues(values, userCacheKey, user.getFullUserHash())
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
@@ -251,7 +259,9 @@ class InternalStoreSpec: BaseSpec {
                 values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v2"])
                 values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v2"])
                 values.replaceAtPath("dynamic_configs.\(hashedNonStickyExpKey).value", ["label": "non_stick_v2"])
-                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
+
+                userCacheKey = UserCacheKey.from(user: user, sdkKey: "")
+                store.saveValues(values, userCacheKey, user.getFullUserHash())
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
@@ -268,7 +278,9 @@ class InternalStoreSpec: BaseSpec {
                 values.replaceAtPath("dynamic_configs.\(hashedExpKey).is_user_in_experiment", false)
                 values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).is_user_in_experiment", false)
                 values.replaceAtPath("dynamic_configs.\(hashedNonStickyExpKey).is_user_in_experiment", false)
-                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
+
+                userCacheKey = UserCacheKey.from(user: user, sdkKey: "")
+                store.saveValues(values, userCacheKey, user.getFullUserHash())
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
@@ -285,7 +297,9 @@ class InternalStoreSpec: BaseSpec {
                 values.replaceAtPath("dynamic_configs.\(hashedExpKey).is_experiment_active", false)
                 values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).is_experiment_active", false)
                 values.replaceAtPath("dynamic_configs.\(hashedNonStickyExpKey).is_experiment_active", false)
-                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
+
+                userCacheKey = UserCacheKey.from(user: user, sdkKey: "")
+                store.saveValues(values, userCacheKey, user.getFullUserHash())
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
@@ -299,7 +313,7 @@ class InternalStoreSpec: BaseSpec {
 
             it("it deletes user level sticky values but not device level sticky values when requested") {
                 var user = StatsigUser(userID: "jkw")
-                let store = InternalStore(user)
+                let store = InternalStore("", user, options: StatsigOptions())
                 let expKey = "exp"
                 let hashedExpKey = expKey.sha256()
 
@@ -325,7 +339,9 @@ class InternalStoreSpec: BaseSpec {
                     ],
                     "has_updates": true
                 ]
-                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
+
+                var userCacheKey = UserCacheKey.from(user: user, sdkKey: "")
+                store.saveValues(values, userCacheKey, user.getFullUserHash())
 
                 var exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 var deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
@@ -338,7 +354,9 @@ class InternalStoreSpec: BaseSpec {
 
                 values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v1"])
                 values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v1"])
-                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
+
+                userCacheKey = UserCacheKey.from(user: user, sdkKey: "")
+                store.saveValues(values, userCacheKey, user.getFullUserHash())
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
@@ -349,7 +367,8 @@ class InternalStoreSpec: BaseSpec {
                 values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v2"])
                 values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v2"])
 
-                store.saveValues(values, user.getCacheKey(), user.getFullUserHash())
+                userCacheKey = UserCacheKey.from(user: user, sdkKey: "")
+                store.saveValues(values, userCacheKey, user.getFullUserHash())
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: false)
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: false)
@@ -360,7 +379,7 @@ class InternalStoreSpec: BaseSpec {
             }
 
             it("changing userID in between sessions should invalidate sticky values") {
-                var store = InternalStore(StatsigUser(userID: "jkw"))
+                var store = InternalStore("", StatsigUser(userID: "jkw"), options: StatsigOptions())
                 let expKey = "exp"
                 let hashedExpKey = expKey.sha256()
 
@@ -390,7 +409,8 @@ class InternalStoreSpec: BaseSpec {
 
                 waitUntil { done in
                     let user = StatsigUser(userID: "jkw")
-                    store.saveValues(values, user.getCacheKey(), user.getFullUserHash()) {
+                    let userCacheKey = UserCacheKey.from(user: user, sdkKey: "")
+                    store.saveValues(values, userCacheKey, user.getFullUserHash()) {
                         done()
                     }
                 }
@@ -401,13 +421,14 @@ class InternalStoreSpec: BaseSpec {
                 expect(deviceExp.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v0"))
 
                 // Reinitialize, same user ID, should keep sticky values
-                store = InternalStore(StatsigUser(userID: "jkw"))
+                store = InternalStore("", StatsigUser(userID: "jkw"), options: StatsigOptions())
                 values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v1"]) // this value changed, but old value should be sticky
                 values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v1"])
 
                 waitUntil { done in
                     let user = StatsigUser(userID: "jkw")
-                    store.saveValues(values, user.getCacheKey(), user.getFullUserHash()) {
+                    let userCacheKey = UserCacheKey.from(user: user, sdkKey: "")
+                    store.saveValues(values, userCacheKey, user.getFullUserHash()) {
                         done()
                     }
                 }
@@ -417,13 +438,14 @@ class InternalStoreSpec: BaseSpec {
                 expect(deviceExp.getValue(forKey: "label", defaultValue: "")).to(equal("device_exp_v0"))
 
                 // Re-initialize store with a different ID, change the latest values, now user should get updated values but device value stays the same
-                store = InternalStore(StatsigUser(userID: "tore"))
+                store = InternalStore("", StatsigUser(userID: "tore"), options: StatsigOptions())
                 values.replaceAtPath("dynamic_configs.\(hashedExpKey).value", ["label": "exp_v1"])
                 values.replaceAtPath("dynamic_configs.\(hashedDeviceExpKey).value", ["label": "device_exp_v1"])
 
                 waitUntil { done in
                     let user = StatsigUser(userID: "tore")
-                    store.saveValues(values, user.getCacheKey(), user.getFullUserHash()) {
+                    let userCacheKey = UserCacheKey.from(user: user, sdkKey: "")
+                    store.saveValues(values, userCacheKey, user.getFullUserHash()) {
                         done()
                     }
                 }
@@ -439,7 +461,8 @@ class InternalStoreSpec: BaseSpec {
 
                 waitUntil { done in
                     let user = StatsigUser(userID: "tore")
-                    store.saveValues(values, user.getCacheKey(), user.getFullUserHash()) {
+                    let userCacheKey = UserCacheKey.from(user: user, sdkKey: "")
+                    store.saveValues(values, userCacheKey, user.getFullUserHash()) {
                         done()
                     }
                 }
@@ -515,7 +538,7 @@ class InternalStoreSpec: BaseSpec {
                 StatsigUserDefaults.defaults.setValue(stickyDeviceExperiments, forKey: InternalStore.stickyDeviceExperimentsKey)
                 _ = StatsigUserDefaults.defaults.synchronize()
 
-                let store = InternalStore(StatsigUser(userID: "jkw"))
+                let store = InternalStore("", StatsigUser(userID: "jkw"), options: StatsigOptions())
                 let config = store.getConfig(forName:expKey)
                 let val = config.getValue(forKey: "label", defaultValue: "invalid")
                 expect(val).to(equal("exp_v0"))

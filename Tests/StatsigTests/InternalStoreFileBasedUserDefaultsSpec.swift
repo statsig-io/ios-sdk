@@ -16,7 +16,7 @@ class InternalStoreFileBasedUserDefaultsSpec: InternalStoreSpec {
         beforeSuite {
             StatsigUserDefaults.defaults = FileBasedUserDefaults()
         }
-        
+
         self.specImpl()
     }
 }
