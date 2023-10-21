@@ -28,7 +28,7 @@ struct UserCacheKey {
         
         return [
             "uid:\(user.userID ?? "")",
-            "cids:\(cids.joined(separator: ","))",
+            "cids:\(cids.sorted().joined(separator: ","))",
             "k:\(sdkKey)"
         ].joined(separator: "|")
             .djb2()

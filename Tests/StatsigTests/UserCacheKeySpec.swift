@@ -64,6 +64,20 @@ class UserCacheKeySpec: BaseSpec {
                 expect(firstKey.v1).to(equal(secondKey.v1))
                 expect(firstKey.v2).to(equal(secondKey.v2))
             }
+
+            it("gets the same cache key regardless of custom id order") {
+                let firstUser = StatsigUser(customIDs: ["a": "1", "b": "2"])
+                let secondUser = StatsigUser(customIDs: ["b": "2", "a": "1"])
+
+                let firstKey = UserCacheKey
+                    .from(user: firstUser, sdkKey: "some-key")
+                let secondKey = UserCacheKey
+                    .from(user: secondUser, sdkKey: "some-key")
+
+                // its a known bug that v1 didn't handle this case
+                
+                expect(firstKey.v2).to(equal(secondKey.v2))
+            }
         }
     }
 }
