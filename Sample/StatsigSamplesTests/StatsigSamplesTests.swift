@@ -6,10 +6,10 @@ final class StatsigSamplesTests: XCTestCase {
 
     func testExampleViewControllersCompile() throws {
         let controllers: [UIViewController] = [
-            BasicOnDeviceEvaluationsViewController(),
-            SynchronousInitViewController(),
-            BasicOnDeviceEvaluationsViewControllerObjC(),
-            PerfOnDeviceEvaluationsViewControllerObjC()
+            BasicViewController(),
+            BasicViewControllerObjC(),
+            PerfViewControllerObjC(),
+            ManyGatesSwiftUIViewController()
         ]
 
         XCTAssertNotNil(controllers)

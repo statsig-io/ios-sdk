@@ -7,13 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5C10DDA92AD4FB60003C4CE1 /* BasicOnDeviceEvaluationsViewControllerObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = 5C10DDA82AD4FB60003C4CE1 /* BasicOnDeviceEvaluationsViewControllerObjC.m */; };
+		5C10DDA92AD4FB60003C4CE1 /* BasicViewControllerObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = 5C10DDA82AD4FB60003C4CE1 /* BasicViewControllerObjC.m */; };
 		5C68BE032AF9A3B9006FD9B5 /* Statsig in Frameworks */ = {isa = PBXBuildFile; productRef = 5C68BE022AF9A3B9006FD9B5 /* Statsig */; };
+		5C68BE052AF9A66C006FD9B5 /* Statsig in Frameworks */ = {isa = PBXBuildFile; productRef = 5C68BE042AF9A66C006FD9B5 /* Statsig */; };
+		5C68BE072AF9A6DC006FD9B5 /* ManyGatesSwiftUIViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C68BE062AF9A6DC006FD9B5 /* ManyGatesSwiftUIViewController.swift */; };
+		5C68BFBA2AFAA68B006FD9B5 /* ExampleDirectoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C68BFB92AFAA68B006FD9B5 /* ExampleDirectoryViewController.swift */; };
 		5C8094602ADF17F2001AF600 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C80945F2ADF17F2001AF600 /* Constants.swift */; };
-		5CAFD04F2ADAEEDD00ACAF79 /* PerfOnDeviceEvaluationsViewControllerObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = 5CAFD04E2ADAEEDD00ACAF79 /* PerfOnDeviceEvaluationsViewControllerObjC.m */; };
+		5CAFD04F2ADAEEDD00ACAF79 /* PerfViewControllerObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = 5CAFD04E2ADAEEDD00ACAF79 /* PerfViewControllerObjC.m */; };
 		5CD93AB02AF953C2009A5898 /* StatsigSamplesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CD93AAF2AF953C2009A5898 /* StatsigSamplesTests.swift */; };
 		5CDBFC9A2AD4EFE0002E6E60 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CDBFC992AD4EFE0002E6E60 /* AppDelegate.swift */; };
-		5CDBFC9E2AD4EFE0002E6E60 /* BasicOnDeviceEvaluationsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CDBFC9D2AD4EFE0002E6E60 /* BasicOnDeviceEvaluationsViewController.swift */; };
+		5CDBFC9E2AD4EFE0002E6E60 /* BasicViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CDBFC9D2AD4EFE0002E6E60 /* BasicViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,17 +31,19 @@
 
 /* Begin PBXFileReference section */
 		5C10DDA62AD4FB60003C4CE1 /* StatsigSamples-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "StatsigSamples-Bridging-Header.h"; sourceTree = "<group>"; };
-		5C10DDA72AD4FB60003C4CE1 /* BasicOnDeviceEvaluationsViewControllerObjC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BasicOnDeviceEvaluationsViewControllerObjC.h; sourceTree = "<group>"; };
-		5C10DDA82AD4FB60003C4CE1 /* BasicOnDeviceEvaluationsViewControllerObjC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BasicOnDeviceEvaluationsViewControllerObjC.m; sourceTree = "<group>"; };
+		5C10DDA72AD4FB60003C4CE1 /* BasicViewControllerObjC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BasicViewControllerObjC.h; sourceTree = "<group>"; };
+		5C10DDA82AD4FB60003C4CE1 /* BasicViewControllerObjC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BasicViewControllerObjC.m; sourceTree = "<group>"; };
 		5C52DCB52AEA234F00807F7D /* sdk */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = sdk; path = ..; sourceTree = "<group>"; };
+		5C68BE062AF9A6DC006FD9B5 /* ManyGatesSwiftUIViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManyGatesSwiftUIViewController.swift; sourceTree = "<group>"; };
+		5C68BFB92AFAA68B006FD9B5 /* ExampleDirectoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleDirectoryViewController.swift; sourceTree = "<group>"; };
 		5C80945F2ADF17F2001AF600 /* Constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
-		5CAFD04D2ADAEEDD00ACAF79 /* PerfOnDeviceEvaluationsViewControllerObjC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PerfOnDeviceEvaluationsViewControllerObjC.h; sourceTree = "<group>"; };
-		5CAFD04E2ADAEEDD00ACAF79 /* PerfOnDeviceEvaluationsViewControllerObjC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PerfOnDeviceEvaluationsViewControllerObjC.m; sourceTree = "<group>"; };
+		5CAFD04D2ADAEEDD00ACAF79 /* PerfViewControllerObjC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PerfViewControllerObjC.h; sourceTree = "<group>"; };
+		5CAFD04E2ADAEEDD00ACAF79 /* PerfViewControllerObjC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PerfViewControllerObjC.m; sourceTree = "<group>"; };
 		5CD93AAD2AF953C2009A5898 /* StatsigSamplesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StatsigSamplesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5CD93AAF2AF953C2009A5898 /* StatsigSamplesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsigSamplesTests.swift; sourceTree = "<group>"; };
 		5CDBFC962AD4EFE0002E6E60 /* StatsigSamples.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StatsigSamples.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5CDBFC992AD4EFE0002E6E60 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		5CDBFC9D2AD4EFE0002E6E60 /* BasicOnDeviceEvaluationsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicOnDeviceEvaluationsViewController.swift; sourceTree = "<group>"; };
+		5CDBFC9D2AD4EFE0002E6E60 /* BasicViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicViewController.swift; sourceTree = "<group>"; };
 		5CDBFCA72AD4EFE1002E6E60 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -47,6 +52,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5C68BE052AF9A66C006FD9B5 /* Statsig in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,21 +78,15 @@
 		5C8094622ADF19D1001AF600 /* Examples */ = {
 			isa = PBXGroup;
 			children = (
-				5C8094632ADF19DA001AF600 /* OnDeviceEvaluations */,
+				5C68BFB92AFAA68B006FD9B5 /* ExampleDirectoryViewController.swift */,
+				5C10DDA72AD4FB60003C4CE1 /* BasicViewControllerObjC.h */,
+				5C10DDA82AD4FB60003C4CE1 /* BasicViewControllerObjC.m */,
+				5CAFD04D2ADAEEDD00ACAF79 /* PerfViewControllerObjC.h */,
+				5CAFD04E2ADAEEDD00ACAF79 /* PerfViewControllerObjC.m */,
+				5CDBFC9D2AD4EFE0002E6E60 /* BasicViewController.swift */,
+				5C68BE062AF9A6DC006FD9B5 /* ManyGatesSwiftUIViewController.swift */,
 			);
 			path = Examples;
-			sourceTree = "<group>";
-		};
-		5C8094632ADF19DA001AF600 /* OnDeviceEvaluations */ = {
-			isa = PBXGroup;
-			children = (
-				5C10DDA72AD4FB60003C4CE1 /* BasicOnDeviceEvaluationsViewControllerObjC.h */,
-				5C10DDA82AD4FB60003C4CE1 /* BasicOnDeviceEvaluationsViewControllerObjC.m */,
-				5CAFD04D2ADAEEDD00ACAF79 /* PerfOnDeviceEvaluationsViewControllerObjC.h */,
-				5CAFD04E2ADAEEDD00ACAF79 /* PerfOnDeviceEvaluationsViewControllerObjC.m */,
-				5CDBFC9D2AD4EFE0002E6E60 /* BasicOnDeviceEvaluationsViewController.swift */,
-			);
-			path = OnDeviceEvaluations;
 			sourceTree = "<group>";
 		};
 		5CA3D09E2AEA24DE000F335F /* Frameworks */ = {
@@ -153,6 +153,9 @@
 				5CD93AB22AF953C2009A5898 /* PBXTargetDependency */,
 			);
 			name = StatsigSamplesTests;
+			packageProductDependencies = (
+				5C68BE042AF9A66C006FD9B5 /* Statsig */,
+			);
 			productName = StatsigSamplesTests;
 			productReference = 5CD93AAD2AF953C2009A5898 /* StatsigSamplesTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -246,10 +249,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5C10DDA92AD4FB60003C4CE1 /* BasicOnDeviceEvaluationsViewControllerObjC.m in Sources */,
-				5CAFD04F2ADAEEDD00ACAF79 /* PerfOnDeviceEvaluationsViewControllerObjC.m in Sources */,
-				5CDBFC9E2AD4EFE0002E6E60 /* BasicOnDeviceEvaluationsViewController.swift in Sources */,
+				5C10DDA92AD4FB60003C4CE1 /* BasicViewControllerObjC.m in Sources */,
+				5C68BE072AF9A6DC006FD9B5 /* ManyGatesSwiftUIViewController.swift in Sources */,
+				5CAFD04F2ADAEEDD00ACAF79 /* PerfViewControllerObjC.m in Sources */,
+				5CDBFC9E2AD4EFE0002E6E60 /* BasicViewController.swift in Sources */,
 				5CDBFC9A2AD4EFE0002E6E60 /* AppDelegate.swift in Sources */,
+				5C68BFBA2AFAA68B006FD9B5 /* ExampleDirectoryViewController.swift in Sources */,
 				5C8094602ADF17F2001AF600 /* Constants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -506,6 +511,10 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		5C68BE022AF9A3B9006FD9B5 /* Statsig */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Statsig;
+		};
+		5C68BE042AF9A66C006FD9B5 /* Statsig */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Statsig;
 		};

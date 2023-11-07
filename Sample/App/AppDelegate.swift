@@ -1,13 +1,5 @@
 import UIKit
 
-enum DemoType {
-    case swiftBasic
-//    case swiftSyncInit
-
-    case objcBasic
-    case objcPerf
-}
-
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -19,27 +11,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     ) -> Bool {
 
         window = UIWindow()
-        window?.rootViewController = getViewController(.objcPerf)
+
+        let navigation = UINavigationController()
+        navigation.viewControllers = [ExampleDirectoryViewController()]
+        window?.rootViewController = navigation
         window?.makeKeyAndVisible()
 
         return true
-    }
-
-    private func getViewController(_ type: DemoType) -> UIViewController {
-        switch type {
-        case .swiftBasic:
-            return BasicOnDeviceEvaluationsViewController()
-
-//        case .swiftSyncInit:
-//            return SynchronousInitViewController()
-
-        case .objcBasic:
-            return BasicOnDeviceEvaluationsViewControllerObjC()
-
-        case .objcPerf:
-            return PerfOnDeviceEvaluationsViewControllerObjC()
-        }
-
     }
 }
 
