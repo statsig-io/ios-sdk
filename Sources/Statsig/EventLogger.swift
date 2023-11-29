@@ -36,9 +36,9 @@ class EventLogger {
         userDefaults.removeObject(forKey: EventLogger.loggingRequestUserDefaultsKey)
 
         networkService.sendRequestsWithData(failedRequestQueue) { [weak self] failedRequestsData in
-            guard let failedRequestsData = failedRequestsData, let self = self else { return }
-            DispatchQueue.main.async {
-                self.addFailedLogRequest(failedRequestsData)
+            guard let failedRequestsData = failedRequestsData else { return }
+            DispatchQueue.main.async { [weak self] in
+                self?.addFailedLogRequest(failedRequestsData)
             }
         }
     }
@@ -75,8 +75,8 @@ class EventLogger {
     }
 
     func flush() {
-        logQueue.async {
-            self.flushInternal(shutdown: false)
+        logQueue.async { [weak self] in
+            self?.flushInternal(shutdown: false)
         }
     }
 

@@ -246,9 +246,10 @@ class NetworkService {
         completion: @escaping NetworkCompletionHandler,
         taskCapture: TaskCaptureHandler
     ) {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
             let currentAttempt = failedAttempts + 1
             marker?.start(attempt: currentAttempt)
+
 
             let task = URLSession.shared.dataTask(with: request) {
                 [weak self] responseData, response, error in

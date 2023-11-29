@@ -48,7 +48,7 @@ public class Statsig {
         }
 
         if options?.enableCacheByFile == true {
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { 
                 StatsigUserDefaults.defaults = FileBasedUserDefaults()
                 _initialize()
             }

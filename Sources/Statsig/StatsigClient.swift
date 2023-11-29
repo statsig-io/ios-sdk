@@ -164,8 +164,10 @@ public class StatsigClient {
             "evalReason": "\(self.store.cache.reason)"
         ]
 
-        DispatchQueue.main.async {
-            DebugViewController.show(self.sdkKey, state)
+        DispatchQueue.main.async { [weak self] in
+            if let self = self {
+                DebugViewController.show(self.sdkKey, state)
+            }
         }
     }
 
@@ -705,7 +707,7 @@ extension StatsigClient {
         store.updateUser(currentUser)
         logger.user = currentUser
 
-        DispatchQueue.main.async { [weak self, completion] in
+        DispatchQueue.main.async { [weak self] in
             self?.fetchValuesFromNetwork { [weak self, completion] error in
                 guard let self = self else {
                     return

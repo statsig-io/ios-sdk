@@ -389,11 +389,12 @@ class InternalStore {
 
     func saveValues(_ values: [String: Any], _ cacheKey: UserCacheKey, _ userHash: String?, _ completion: (() -> Void)? = nil) {
         storeQueue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
-            self.cache.saveValues(values, cacheKey, userHash)
-            DispatchQueue.global().async {
-                self.cache.writeToStorage()
+            self?.cache.saveValues(values, cacheKey, userHash)
+
+            DispatchQueue.global().async { [weak self] in
+                self?.cache.writeToStorage()
             }
+
             DispatchQueue.main.async {
                 completion?()
             }

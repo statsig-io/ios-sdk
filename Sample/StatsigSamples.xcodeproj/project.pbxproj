@@ -13,6 +13,7 @@
 		5C68BE072AF9A6DC006FD9B5 /* ManyGatesSwiftUIViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C68BE062AF9A6DC006FD9B5 /* ManyGatesSwiftUIViewController.swift */; };
 		5C68BFBA2AFAA68B006FD9B5 /* ExampleDirectoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C68BFB92AFAA68B006FD9B5 /* ExampleDirectoryViewController.swift */; };
 		5C8094602ADF17F2001AF600 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C80945F2ADF17F2001AF600 /* Constants.swift */; };
+		5C9C31A02B17970900FA7212 /* ManyUpdatesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9C319F2B17970900FA7212 /* ManyUpdatesViewController.swift */; };
 		5CAFD04F2ADAEEDD00ACAF79 /* PerfViewControllerObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = 5CAFD04E2ADAEEDD00ACAF79 /* PerfViewControllerObjC.m */; };
 		5CD93AB02AF953C2009A5898 /* StatsigSamplesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CD93AAF2AF953C2009A5898 /* StatsigSamplesTests.swift */; };
 		5CDBFC9A2AD4EFE0002E6E60 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CDBFC992AD4EFE0002E6E60 /* AppDelegate.swift */; };
@@ -37,6 +38,7 @@
 		5C68BE062AF9A6DC006FD9B5 /* ManyGatesSwiftUIViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManyGatesSwiftUIViewController.swift; sourceTree = "<group>"; };
 		5C68BFB92AFAA68B006FD9B5 /* ExampleDirectoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleDirectoryViewController.swift; sourceTree = "<group>"; };
 		5C80945F2ADF17F2001AF600 /* Constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		5C9C319F2B17970900FA7212 /* ManyUpdatesViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ManyUpdatesViewController.swift; sourceTree = "<group>"; };
 		5CAFD04D2ADAEEDD00ACAF79 /* PerfViewControllerObjC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PerfViewControllerObjC.h; sourceTree = "<group>"; };
 		5CAFD04E2ADAEEDD00ACAF79 /* PerfViewControllerObjC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PerfViewControllerObjC.m; sourceTree = "<group>"; };
 		5CD93AAD2AF953C2009A5898 /* StatsigSamplesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StatsigSamplesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -83,6 +85,7 @@
 				5C10DDA82AD4FB60003C4CE1 /* BasicViewControllerObjC.m */,
 				5CAFD04D2ADAEEDD00ACAF79 /* PerfViewControllerObjC.h */,
 				5CAFD04E2ADAEEDD00ACAF79 /* PerfViewControllerObjC.m */,
+				5C9C319F2B17970900FA7212 /* ManyUpdatesViewController.swift */,
 				5CDBFC9D2AD4EFE0002E6E60 /* BasicViewController.swift */,
 				5C68BE062AF9A6DC006FD9B5 /* ManyGatesSwiftUIViewController.swift */,
 			);
@@ -253,6 +256,7 @@
 				5C68BE072AF9A6DC006FD9B5 /* ManyGatesSwiftUIViewController.swift in Sources */,
 				5CAFD04F2ADAEEDD00ACAF79 /* PerfViewControllerObjC.m in Sources */,
 				5CDBFC9E2AD4EFE0002E6E60 /* BasicViewController.swift in Sources */,
+				5C9C31A02B17970900FA7212 /* ManyUpdatesViewController.swift in Sources */,
 				5CDBFC9A2AD4EFE0002E6E60 /* AppDelegate.swift in Sources */,
 				5C68BFBA2AFAA68B006FD9B5 /* ExampleDirectoryViewController.swift in Sources */,
 				5C8094602ADF17F2001AF600 /* Constants.swift in Sources */,

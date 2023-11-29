@@ -9,6 +9,8 @@ let Examples: [(String, UIViewController)] = [
     ( "Basic (ObjC)", BasicViewControllerObjC() ),
     ( "Perf (ObjC)", PerfViewControllerObjC() ),
     ( "Many Gates (SwiftUI)", ManyGatesSwiftUIViewController() ),
+    ( "Many Updates (Swift)", ManyUpdatesViewController() ),
+
 ]
 
 
