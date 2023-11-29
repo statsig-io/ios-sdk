@@ -11,6 +11,7 @@ env:
   test_api_key: ${{ secrets.KONG_SERVER_SDK_KEY }}
   test_client_key: ${{ secrets. KONG_CLIENT_SDK_KEY }}
   repo_pat: ${{ secrets.KONG_FINE_GRAINED_REPO_PAT }}
+  KONG_AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.KONG_AZURE_STORAGE_CONNECTION_STRING }}
   FORCE_COLOR: true
 
 jobs:
@@ -22,10 +23,15 @@ jobs:
         run: git clone https://oauth2:$repo_pat@github.com/statsig-io/kong.git .
 
       - name: Install Deps
-        run: npm install
+        run: |
+          npm install
+          brew install coreutils
 
       - name: Setup iOS SDK
         run: npm run kong -- setup ios -v
+
+      - name: Pull Cached BridgeApps
+        run: npm run kong -- cache_apple_bridges ios -v -d down 
 
       - name: Run Tests
         run: npm run kong -- test ios -v -r
