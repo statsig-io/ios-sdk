@@ -26,10 +26,6 @@ class BaseSpec: QuickSpec {
                 fatalError("Statsig.client not cleared")
             }
 
-            if (StatsigClient.autoValueUpdateTime != 10.0) {
-                fatalError("autoValueUpdate not reset")
-            }
-
             waitUntil { done in
                 while (Statsig.client != nil) {}
                 done()

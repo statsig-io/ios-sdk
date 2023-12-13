@@ -42,7 +42,6 @@ class SDKKeySpec: BaseSpec {
         describe("SDK Keys") {
             beforeEach {
                 TestUtils.clearStorage()
-                StatsigClient.autoValueUpdateTime = 10
             }
 
             afterEach {

@@ -42,7 +42,6 @@ class StatsigSpec: BaseSpec {
         describe("starting Statsig") {
             beforeEach {
                 TestUtils.clearStorage()
-                StatsigClient.autoValueUpdateTime = 10
             }
 
             afterEach {
@@ -80,7 +79,6 @@ class StatsigSpec: BaseSpec {
                 var requestCount = 0
                 var lastSyncTime: Double = 0
                 let now = NSDate().timeIntervalSince1970
-                StatsigClient.autoValueUpdateTime = 0.1
 
                 stub(condition: isHost("api.statsig.enableAutoValueUpdateTest")) { request in
                     requestCount += 1
@@ -93,7 +91,11 @@ class StatsigSpec: BaseSpec {
                     return HTTPStubsResponse(jsonObject: ["time": now * 1000], statusCode: 200, headers: nil)
                 }
 
-                let opts = StatsigOptions(disableDiagnostics: true)
+                let opts = StatsigOptions(
+                    enableAutoValueUpdate: false,
+                    autoValueUpdateIntervalSec: 0.1,
+                    disableDiagnostics: true
+                )
                 opts.overrideURL = URL(string: "http://api.statsig.enableAutoValueUpdateTest")
                 Statsig.start(sdkKey: "client-api-key", options: opts)
 
@@ -106,9 +108,12 @@ class StatsigSpec: BaseSpec {
                 var requestCount = 0
                 var lastSyncTime: Double = 0
                 let now = NSDate().timeIntervalSince1970
-                StatsigClient.autoValueUpdateTime = 0.1
 
-                let opts = StatsigOptions(enableAutoValueUpdate: true, disableDiagnostics: true)
+                let opts = StatsigOptions(
+                    enableAutoValueUpdate: true,
+                    autoValueUpdateIntervalSec: 0.1,
+                    disableDiagnostics: true
+                )
                 opts.overrideURL = URL(string: "http://StatsigSpec.enableAutoValueUpdateEQtrue")
 
                 var requestExpectation = self.expectation(description: "Request Made Once")

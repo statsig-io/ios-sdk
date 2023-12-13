@@ -35,7 +35,6 @@ class NullInitializeSpec: BaseSpec {
         describe("Nil and Statsig") {
             beforeEach {
                 TestUtils.clearStorage()
-                StatsigClient.autoValueUpdateTime = 10
 
                 stub(condition: isHost("api.statsig.com")) { _ in
                     HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)

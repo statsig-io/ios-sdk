@@ -26,7 +26,11 @@ class NetworkService {
         self.store = store
     }
 
-    func fetchUpdatedValues(for user: StatsigUser, lastSyncTimeForUser: Double, previousDerivedFields: [String: String], completion: (() -> Void)?) {
+    func fetchUpdatedValues(
+        for user: StatsigUser,
+        lastSyncTimeForUser: Double,
+        previousDerivedFields: [String: String], completion: (() -> Void)?
+    ) {
         let (body, _) = makeReqBody([
             "user": user.toDictionary(forLogging: false),
             "statsigMetadata": user.deviceEnvironment,

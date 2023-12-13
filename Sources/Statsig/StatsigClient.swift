@@ -3,8 +3,6 @@ import Foundation
 public class StatsigClient {
     private static let exposureDedupeQueueLabel = "com.Statsig.exposureDedupeQueue"
 
-    internal static var autoValueUpdateTime = 10.0
-
     internal var logger: EventLogger
     internal var statsigOptions: StatsigOptions
 
@@ -639,7 +637,6 @@ extension StatsigClient {
 extension StatsigClient {
     private func fetchValuesFromNetwork(completion: completionBlock) {
         let currentUser = self.currentUser
-        let shouldScheduleSync = statsigOptions.enableAutoValueUpdate
         let sinceTime = self.store.getLastUpdateTime(user: currentUser)
         let previousDerivedFields = self.store.getPreviousDerivedFields(user: currentUser)
 
@@ -652,9 +649,6 @@ extension StatsigClient {
                         value: nil,
                         metadata: ["error": errorMessage]))
                 }
-                if shouldScheduleSync {
-                    self.scheduleRepeatingSync()
-                }
             }
 
             completion?(errorMessage)
@@ -664,18 +658,26 @@ extension StatsigClient {
     private func scheduleRepeatingSync() {
         syncTimer?.invalidate()
 
-        let currentUser = self.currentUser
-        syncTimer = Timer.scheduledTimer(withTimeInterval: StatsigClient.autoValueUpdateTime, repeats: false) { [weak self] _ in
-            guard let self = self else { return }
+        let timer = Timer(
+            timeInterval: self.statsigOptions.autoValueUpdateIntervalSec,
+            repeats: true,
+            block: { [weak self] _ in
+            self?.syncValuesForCurrentUser()
+        })
+        syncTimer = timer
+        RunLoop.current.add(timer, forMode: .common)
+    }
 
-            let sinceTime = self.store.getLastUpdateTime(user: currentUser)
-            let previousDerivedFields = self.store.getPreviousDerivedFields(user: currentUser)
+    private func syncValuesForCurrentUser() {
+        let sinceTime = self.store.getLastUpdateTime(user: currentUser)
+        let previousDerivedFields = self.store.getPreviousDerivedFields(user: currentUser)
 
-            self.networkService.fetchUpdatedValues(for: currentUser, lastSyncTimeForUser: sinceTime, previousDerivedFields: previousDerivedFields)
-            { [weak self] in
-                self?.scheduleRepeatingSync()
-            }
-        }
+        self.networkService.fetchUpdatedValues(
+            for: currentUser,
+            lastSyncTimeForUser: sinceTime,
+            previousDerivedFields: previousDerivedFields,
+            completion: nil
+        )
     }
 
     private static func normalizeUser(_ user: StatsigUser?, options: StatsigOptions?) -> StatsigUser {

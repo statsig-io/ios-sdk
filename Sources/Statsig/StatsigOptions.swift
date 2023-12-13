@@ -23,6 +23,11 @@ public class StatsigOptions {
     public var enableAutoValueUpdate = false
 
     /**
+     Only applies if StatsigOptions.enableAutoValueUpdate is true. Controls how fequently calls to refresh the current users values are made. Time is in Secibds and defaults to 60 seconds.
+     */
+    public var autoValueUpdateIntervalSec = 60.0
+
+    /**
      Overrides the auto generated StableID that is set for the device.
      */
     public var overrideStableID: String?
@@ -67,6 +72,7 @@ public class StatsigOptions {
                 disableCurrentVCLogging: Bool? = false,
                 environment: StatsigEnvironment? = nil,
                 enableAutoValueUpdate: Bool? = false,
+                autoValueUpdateIntervalSec: Double? = nil,
                 overrideStableID: String? = nil,
                 enableCacheByFile: Bool? = false,
                 initializeValues: [String: Any]? = nil,
@@ -110,6 +116,10 @@ public class StatsigOptions {
 
         if let shutdownOnBackground = shutdownOnBackground {
             self.shutdownOnBackground = shutdownOnBackground
+        }
+
+        if let internval = autoValueUpdateIntervalSec {
+            self.autoValueUpdateIntervalSec = internval
         }
 
         if let api = api, let url = URL(string: api) {
