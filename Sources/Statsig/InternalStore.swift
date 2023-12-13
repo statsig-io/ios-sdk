@@ -160,9 +160,6 @@ struct StatsigValuesCache {
         }
 
         cacheByID[cacheKey.v2] = cache
-    }
-
-    func writeToStorage() {
         StatsigUserDefaults.defaults.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
     }
 
@@ -390,10 +387,6 @@ class InternalStore {
     func saveValues(_ values: [String: Any], _ cacheKey: UserCacheKey, _ userHash: String?, _ completion: (() -> Void)? = nil) {
         storeQueue.async(flags: .barrier) { [weak self] in
             self?.cache.saveValues(values, cacheKey, userHash)
-
-            DispatchQueue.global().async { [weak self] in
-                self?.cache.writeToStorage()
-            }
 
             DispatchQueue.main.async {
                 completion?()
