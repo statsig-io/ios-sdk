@@ -18,11 +18,12 @@ on:
 env:
   CODE_SIGNING_REQUIRED: NO
   CODE_SIGN_IDENTITY: ""
+  FORCE_COLOR: true
 
 jobs:
   build:
     name: Build
-    runs-on: macos-latest
+    runs-on: self-hosted
     strategy:
       fail-fast: false
       matrix:
@@ -36,16 +37,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@main
 
-      - name: Install XCBeautify
-        run: brew install xcbeautify
-
-      - name: Configure cache
-        uses: actions/cache@v3
-        with:
-          path: ~/Library/Developer/Xcode/DerivedData/*
-          key: ios-cache-
-          restore-keys: ios-cache-
-
       - name: Run Build ${{ matrix.platform }}
         run: |
           cd .swiftpm/xcode
@@ -57,20 +48,10 @@ jobs:
 
   test:
     name: Test
-    runs-on: macos-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@main
-
-      - name: Install XCBeautify
-        run: brew install xcbeautify
-
-      - name: Configure cache
-        uses: actions/cache@v3
-        with:
-          path: ~/Library/Developer/Xcode/DerivedData/*
-          key: ios-cache-
-          restore-keys: ios-cache-
 
       - name: Lint Podspec
         run: pod lib lint Statsig.podspec --skip-tests
