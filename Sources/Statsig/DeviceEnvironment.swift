@@ -6,7 +6,7 @@ struct DeviceEnvironment {
 
     static internal let deviceOS: String = "iOS"
     static internal let sdkType: String = "ios-client"
-    static internal let sdkVersion: String = "1.28.0"
+    static internal let sdkVersion: String = "1.34.0"
 
     var sessionID: String? { UUID().uuidString }
     var systemVersion: String { PlatformCompatibility.deviceInfo.systemVersion }
