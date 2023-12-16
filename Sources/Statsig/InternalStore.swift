@@ -160,7 +160,6 @@ struct StatsigValuesCache {
         }
 
         cacheByID[cacheKey.v2] = cache
-        StatsigUserDefaults.defaults.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
     }
 
     mutating func saveStickyExperimentIfNeeded(_ expName: String, _ latestValue: ConfigProtocol) {
@@ -237,7 +236,6 @@ struct StatsigValuesCache {
             StatsigUserDefaults.defaults.setDictionarySafe(dict, forKey: key)
             return dict
         }
-
 
         return [:]
     }
@@ -386,11 +384,16 @@ class InternalStore {
 
     func saveValues(_ values: [String: Any], _ cacheKey: UserCacheKey, _ userHash: String?, _ completion: (() -> Void)? = nil) {
         storeQueue.async(flags: .barrier) { [weak self] in
-            self?.cache.saveValues(values, cacheKey, userHash)
+            guard let self = self else { return }
 
-            DispatchQueue.main.async {
-                completion?()
+            self.cache.saveValues(values, cacheKey, userHash)
+            let cacheByID = self.cache.cacheByID
+
+            DispatchQueue.global().async(flags: .barrier) {
+                StatsigUserDefaults.defaults.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
             }
+
+            DispatchQueue.main.async { completion?() }
         }
     }
 

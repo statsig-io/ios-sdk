@@ -89,11 +89,11 @@ public struct StatsigUser {
             }
             self.privateAttributes = nil
         }
-        self.deviceEnvironment = DeviceEnvironment().get()
+        self.deviceEnvironment = DeviceEnvironment.get()
     }
 
     mutating func setStableID(_ overrideStableID: String) {
-        self.deviceEnvironment = DeviceEnvironment().get(overrideStableID)
+        self.deviceEnvironment = DeviceEnvironment.get(overrideStableID)
     }
 
     func toDictionary(forLogging: Bool) -> [String: Any?] {

@@ -38,7 +38,7 @@ public class Statsig {
 
         func _initialize() {
             errorBoundary = ErrorBoundary(
-                key: sdkKey, deviceEnvironment: DeviceEnvironment().explicitGet()
+                key: sdkKey, deviceEnvironment: DeviceEnvironment.explicitGet()
             )
 
             errorBoundary.capture("initialize") {
@@ -372,7 +372,7 @@ public class Statsig {
      - completion: A callback block called when the new values have been received. May be called with an error message string if the fetch fails.
      */
     public static func updateUser(_ user: StatsigUser, completion: completionBlock = nil) {
-        errorBoundary.capture("updateUser") {
+        errorBoundary.capture("updateUser") { [weak client] in
             guard let client = client else {
                 print("[Statsig]: \(getUnstartedErrorMessage("updateUser")).")
                 completion?("\(getUnstartedErrorMessage("updateUser")).")

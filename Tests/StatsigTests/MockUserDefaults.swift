@@ -3,15 +3,14 @@ import Foundation
 @testable import Statsig
 
 class MockDefaults {
-    var data: [String: Any] = [:]
-    var dict: NSDictionary { get {data as NSDictionary} }
-    
+    var data: AtomicDictionary<Any>
+
     func reset() {
-        data = [:]
+        data.reset()
     }
     
     init(data: [String : Any] = [:]) {
-        self.data = data
+        self.data = AtomicDictionary<Any>(data, label: "MockDefaults")
     }
 }
 
@@ -49,7 +48,7 @@ extension MockDefaults: DefaultsLike {
     }
     
     func keys() -> [String] {
-        return Array(data.keys)
+        return data.nsDictionary()?.allKeys as? [String] ?? []
     }
     
     func setDictionarySafe(_ dict: [String: Any], forKey key: String) {
@@ -67,7 +66,7 @@ extension MockDefaults: DefaultsLike {
 
 extension MockDefaults {
     func getUserCaches() -> NSDictionary {
-        if let data = dict[InternalStore.localStorageKey] as? NSDictionary {
+        if let data = data[InternalStore.localStorageKey] as? NSDictionary {
             return data
         }
         

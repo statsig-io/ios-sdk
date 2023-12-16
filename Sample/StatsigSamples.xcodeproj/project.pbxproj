@@ -31,6 +31,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5C05B7082B2BDB1400A89D26 /* sdk */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = sdk; path = ..; sourceTree = "<group>"; };
 		5C10DDA62AD4FB60003C4CE1 /* StatsigSamples-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "StatsigSamples-Bridging-Header.h"; sourceTree = "<group>"; };
 		5C10DDA72AD4FB60003C4CE1 /* BasicViewControllerObjC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BasicViewControllerObjC.h; sourceTree = "<group>"; };
 		5C10DDA82AD4FB60003C4CE1 /* BasicViewControllerObjC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BasicViewControllerObjC.m; sourceTree = "<group>"; };
@@ -73,6 +74,7 @@
 			isa = PBXGroup;
 			children = (
 				5C52DCB52AEA234F00807F7D /* sdk */,
+				5C05B7082B2BDB1400A89D26 /* sdk */,
 			);
 			name = Packages;
 			sourceTree = "<group>";

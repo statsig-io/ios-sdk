@@ -14,7 +14,7 @@ class AtomicDictionary<T>
         self.init([:], label: label)
     }
 
-    private init(_ initialValues: [String: T] = [:], label: String) {
+    internal init(_ initialValues: [String: T] = [:], label: String) {
         queue = DispatchQueue(label: label, attributes: .concurrent)
         internalDictionary = initialValues
     }
@@ -61,6 +61,24 @@ class AtomicDictionary<T>
                 let data = NSKeyedArchiver.archivedData(withRootObject: dict)
                 return data
             }
+        }
+    }
+
+    internal func reset(_ values: [String: T] = [:]) {
+        self.queue.async(flags: .barrier) {
+            self.internalDictionary = values
+        }
+    }
+
+    internal func nsDictionary() -> NSDictionary? {
+        guard let raw = toData() else {
+            return nil
+        }
+
+        do {
+            return try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(raw) as? NSDictionary
+        } catch {
+            return nil
         }
     }
 }

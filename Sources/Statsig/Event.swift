@@ -6,7 +6,7 @@ class Event {
     let value: Any?
     let metadata: [String: String]?
     let time: TimeInterval
-    let user: StatsigUser
+    let user: [String: Any?]
     let secondaryExposures: [[String: String]]?
     var statsigMetadata: [String: String]?
     var allocatedExperimentHash: String?
@@ -27,7 +27,7 @@ class Event {
         disableCurrentVCLogging: Bool
     ) {
         self.time = NSDate().epochTimeInMs()
-        self.user = user
+        self.user = user.toDictionary(forLogging: true)
         self.name = name
         self.value = value
         self.metadata = metadata
@@ -151,7 +151,7 @@ class Event {
 
         return [
             "eventName": name,
-            "user": user.toDictionary(forLogging: true),
+            "user": user,
             "time": time,
             "value": value,
             "metadata": metadataForLogging,

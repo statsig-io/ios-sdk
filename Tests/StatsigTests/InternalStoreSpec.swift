@@ -35,9 +35,12 @@ class InternalStoreSpec: BaseSpec {
     // Called by children
     func specImpl() {
         let sdkKey = "client-api-key"
+        var defaults: MockDefaults!
+
         describe("using internal store to save and retrieve values") {
             beforeEach {
-                TestUtils.clearStorage()
+                defaults = MockDefaults(data: [:])
+                StatsigUserDefaults.defaults = defaults
             }
 
             it("is empty initially") {
