@@ -96,7 +96,7 @@ class StatsigSpec: BaseSpec {
                     autoValueUpdateIntervalSec: 0.1,
                     disableDiagnostics: true
                 )
-                opts.overrideURL = URL(string: "http://api.statsig.enableAutoValueUpdateTest")
+                opts.mainApiUrl = URL(string: "http://api.statsig.enableAutoValueUpdateTest")
                 Statsig.start(sdkKey: "client-api-key", options: opts)
 
                 // first request, "lastSyncTimeForUser" field should not be present in the request body
@@ -114,7 +114,7 @@ class StatsigSpec: BaseSpec {
                     autoValueUpdateIntervalSec: 0.1,
                     disableDiagnostics: true
                 )
-                opts.overrideURL = URL(string: "http://StatsigSpec.enableAutoValueUpdateEQtrue")
+                opts.mainApiUrl = URL(string: "http://StatsigSpec.enableAutoValueUpdateEQtrue")
 
                 var requestExpectation = self.expectation(description: "Request Made Once")
                 stub(condition: isHost("StatsigSpec.enableAutoValueUpdateEQtrue")) { request in

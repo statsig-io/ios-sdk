@@ -18,7 +18,7 @@ class CodableSpec: BaseSpec {
 
         describe("Codable") {
             let opts = StatsigOptions(disableDiagnostics: true)
-            opts.overrideURL = URL(string: "http://CodableSpec")
+            opts.mainApiUrl = URL(string: "http://CodableSpec")
 
             beforeEach {
                 _ = TestUtils.startWithResponseAndWait([

@@ -18,7 +18,7 @@ final class AppLifecycleSpec: BaseSpec {
 
         func startAndLog(shutdownOnBackground: Bool, tag: String) {
             let opts = StatsigOptions(shutdownOnBackground: shutdownOnBackground)
-            opts.overrideURL = URL(string: "http://AppLifecycleSpec::\(tag)")
+            opts.mainApiUrl = URL(string: "http://AppLifecycleSpec::\(tag)")
 
             _ = TestUtils.startWithStatusAndWait(options: opts)
 

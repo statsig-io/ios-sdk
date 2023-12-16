@@ -17,7 +17,7 @@ final class ManualFlushSpec: BaseSpec {
     
         it("flushes the logger") {
             let opts = StatsigOptions()
-            opts.overrideURL = URL(string: "http://ManualFlushSpec")
+            opts.mainApiUrl = URL(string: "http://ManualFlushSpec")
 
             _ = TestUtils.startWithResponseAndWait([:], options: opts)
             Statsig.logEvent("my_event")

@@ -214,10 +214,12 @@ class NetworkService {
         urlComponents.host = ApiHost
         urlComponents.path = endpoint.rawValue
 
-        if let override = self.statsigOptions.overrideURL {
-            urlComponents.scheme = override.scheme
-            urlComponents.host = override.host
-            urlComponents.port = override.port
+        if let override = self.statsigOptions.mainApiUrl {
+            urlComponents.applyOverride(override)
+        }
+
+        if endpoint == .logEvent, let loggingApiOverride = self.statsigOptions.logEventApiUrl {
+            urlComponents.applyOverride(loggingApiOverride)
         }
 
         guard let requestURL = urlComponents.url else {
@@ -285,5 +287,13 @@ class NetworkService {
             taskCapture?(task)
             task.resume()
         }
+    }
+}
+
+extension URLComponents {
+    mutating func applyOverride(_ url: URL) {
+        scheme = url.scheme
+        host = url.host
+        port = url.port
     }
 }

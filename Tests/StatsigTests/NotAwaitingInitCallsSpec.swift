@@ -20,7 +20,7 @@ class NotAwaitingInitCallsSpec: BaseSpec {
         describe("Not Awaiting Init Calls") {
 
             beforeEach {
-                options.overrideURL = URL(string: "http://NotAwaitingInitCallsSpec")
+                options.mainApiUrl = URL(string: "http://NotAwaitingInitCallsSpec")
 
                 TestUtils.clearStorage()
 

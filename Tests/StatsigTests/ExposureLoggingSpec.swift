@@ -15,7 +15,7 @@ class ExposureLoggingSpec: BaseSpec {
         
         describe("ExposureLogging") {
             let opts = StatsigOptions(disableDiagnostics: true)
-            opts.overrideURL = URL(string: "http://ExposureLoggingSpec")
+            opts.mainApiUrl = URL(string: "http://ExposureLoggingSpec")
 
             var logs: [[String: Any]] = []
             beforeEach {

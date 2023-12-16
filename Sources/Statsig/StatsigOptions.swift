@@ -61,11 +61,25 @@ public class StatsigOptions {
     public var shutdownOnBackground = true;
 
     /**
-     The endpoint to use for all SDK network requests. You should not need to override this (unless you have another API that implements the Statsig API endpoints)
+     The API to use for all SDK network requests. You should not need to override this (unless you have another API that implements the Statsig API endpoints)
      */
-    public var api = "https://\(ApiHost)";
+    public var api = "https://\(ApiHost)" {
+        didSet {
+            mainApiUrl = URL(string: api) ?? mainApiUrl
+        }
+    }
 
-    internal var overrideURL: URL?
+    /**
+     The API to use for log_event network requests. You should not need to override this (unless you have another API that implements the Statsig /v1/log_event endpoint)
+     */
+    public var eventLoggingApi = "https://\(ApiHost)" {
+        didSet {
+            logEventApiUrl = URL(string: eventLoggingApi) ?? logEventApiUrl
+        }
+    }
+
+    internal var mainApiUrl: URL?
+    internal var logEventApiUrl: URL?
     var environment: [String: String] = [:]
 
     public init(initTimeout: Double? = 3.0,
@@ -79,7 +93,8 @@ public class StatsigOptions {
                 disableDiagnostics: Bool? = false,
                 disableHashing: Bool? = false,
                 shutdownOnBackground: Bool? = true,
-                api: String? = nil
+                api: String? = nil,
+                eventLoggingApi: String? = nil
     )
     {
         if let initTimeout = initTimeout, initTimeout >= 0 {
@@ -122,10 +137,15 @@ public class StatsigOptions {
             self.autoValueUpdateIntervalSec = internval
         }
 
-        if let api = api, let url = URL(string: api) {
-            self.overrideURL = url
-        } else {
-            self.overrideURL = nil
+
+        if let api = api {
+            self.api = api
+            self.mainApiUrl = URL(string: api)
+        }
+
+        if let eventLoggingApi = eventLoggingApi {
+            self.eventLoggingApi = eventLoggingApi
+            self.logEventApiUrl = URL(string: eventLoggingApi)
         }
 
         self.overrideStableID = overrideStableID
