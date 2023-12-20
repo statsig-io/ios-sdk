@@ -58,7 +58,7 @@ extension MockDefaults: DefaultsLike {
     func dictionarySafe(forKey key: String) -> [String: Any]? {
         return dictionary(forKey: key)
     }
-    
+
     private func getValue(forKey key: String) -> Any? {
         return data[key]
     }

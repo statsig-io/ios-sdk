@@ -2,6 +2,8 @@ import Foundation
 
 import CommonCrypto
 
+fileprivate let MaxCachedUsers = 10
+
 public struct StatsigOverrides {
     public var gates: [String: Bool]
     public var configs: [String: [String: Any]]
@@ -13,6 +15,8 @@ public struct StatsigOverrides {
 }
 
 struct StatsigValuesCache {
+
+
     var cacheByID: [String: [String: Any]]
     var userCacheKey: UserCacheKey
     var userLastUpdateTime: Double
@@ -160,6 +164,30 @@ struct StatsigValuesCache {
         }
 
         cacheByID[cacheKey.v2] = cache
+        runCacheEviction()
+    }
+
+    mutating func runCacheEviction() {
+        if (cacheByID.count <= MaxCachedUsers) {
+            return
+        }
+
+        var oldestTime = Double.infinity
+        var oldestEntryKey: String? = nil
+        for (key, value) in cacheByID {
+            guard let evalTime = value[InternalStore.evalTimeKey] as? Double else {
+                continue
+            }
+
+            if evalTime < oldestTime {
+                oldestTime = evalTime
+                oldestEntryKey = key
+            }
+        }
+
+        if let key = oldestEntryKey {
+            cacheByID.removeValue(forKey: key)
+        }
     }
 
     mutating func saveStickyExperimentIfNeeded(_ expName: String, _ latestValue: ConfigProtocol) {

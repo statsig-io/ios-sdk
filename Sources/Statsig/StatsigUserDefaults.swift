@@ -50,7 +50,6 @@ extension UserDefaults: DefaultsLike {
 private let FileBasedUserDefaultsQueue = "com.Statsig.FileBasedUserDefaults"
 
 class FileBasedUserDefaults: DefaultsLike {
-
     private let cacheUrl = FileManager
         .default.urls(for: .cachesDirectory, in: .userDomainMask)
         .first?.appendingPathComponent("statsig-cache-data")
