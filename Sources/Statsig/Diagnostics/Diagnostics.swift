@@ -8,6 +8,7 @@ typealias MarkerAtomicDict = AtomicDictionary<[[String: Any]]>
 class Diagnostics {
     private static var instance: DiagnosticsImpl?
     internal static var sampling = Int.random(in: 1...10000)
+    private static var disableCoreAPI = false
 
     static var mark: MarkersContainer? {
         get { return instance }
@@ -15,11 +16,7 @@ class Diagnostics {
 
     static func boot(_ options: StatsigOptions?) {
         if options?.disableDiagnostics == true {
-            return
-        }
-
-        if (sampling != 1) {
-            return
+            disableCoreAPI = true
         }
 
         instance = DiagnosticsImpl()
@@ -37,6 +34,11 @@ class Diagnostics {
         else {
             return
         }
+
+        if disableCoreAPI && context == MarkerContext.apiCall {
+            return
+        }
+        
 
         instance.clearMarkers(forContext: context)
 
