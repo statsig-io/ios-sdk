@@ -7,7 +7,7 @@ fileprivate enum Endpoint: String {
 
 fileprivate let RetryLimits: [Endpoint: Int] = [
     .initialize: 3,
-    .logEvent: 0
+    .logEvent: 3
 ]
 
 fileprivate typealias NetworkCompletionHandler = (Data?, URLResponse?, Error?) -> Void

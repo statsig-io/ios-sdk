@@ -62,7 +62,7 @@ class EventLoggerSpec: BaseSpec {
 
             it("should add events to internal queue and send once it passes max batch size") {
                 let logger = EventLogger(user: user, networkService: ns, userDefaults: MockDefaults())
-                logger.flushBatchSize = 3
+                logger.maxEventQueueSize = 3
                 logger.log(event1)
                 logger.log(event2)
                 logger.log(event3)
@@ -91,7 +91,7 @@ class EventLoggerSpec: BaseSpec {
                 logger.log(event1)
                 logger.log(event2)
                 logger.log(event3)
-                logger.flushBatchSize = 10
+                logger.maxEventQueueSize = 10
                 logger.flush()
 
                 var actualRequest: URLRequest?
@@ -125,13 +125,13 @@ class EventLoggerSpec: BaseSpec {
                 logger.log(event1)
                 logger.log(event2)
                 logger.log(event3)
-                logger.flushBatchSize = 10
+                logger.maxEventQueueSize = 10
                 logger.stop()
 
                 expect(isPendingRequest).toEventually(beFalse())
                 isPendingRequest = true
 
-                let savedData = userDefaults.data[EventLogger.loggingRequestUserDefaultsKey] as? [Data]
+                let savedData = userDefaults.data[EventLogger.failedLogsKey] as? [Data]
                 var resendData: [Data] = []
 
                 stub(condition: isHost("api.statsig.com")) { request in
@@ -164,8 +164,8 @@ class EventLoggerSpec: BaseSpec {
                 logger.stop()
 
                 // Fail to save because event is too big
-                expect(userDefaults.data[EventLogger.loggingRequestUserDefaultsKey] as? [Data]).toEventuallyNot(beNil())
-                expect((userDefaults.data[EventLogger.loggingRequestUserDefaultsKey] as! [Data]).count).to(equal(0))
+                expect(userDefaults.data[EventLogger.failedLogsKey] as? [Data]).toEventuallyNot(beNil())
+                expect((userDefaults.data[EventLogger.failedLogsKey] as! [Data]).count).to(equal(0))
 
                 userDefaults.reset()
 
@@ -175,8 +175,8 @@ class EventLoggerSpec: BaseSpec {
                 logger.stop()
 
                 // Successfully save event
-                expect(userDefaults.data[EventLogger.loggingRequestUserDefaultsKey] as? [Data]).toEventuallyNot(beNil())
-                expect((userDefaults.data[EventLogger.loggingRequestUserDefaultsKey] as! [Data]).count).to(equal(1))
+                expect(userDefaults.data[EventLogger.failedLogsKey] as? [Data]).toEventuallyNot(beNil())
+                expect((userDefaults.data[EventLogger.failedLogsKey] as! [Data]).count).to(equal(1))
             }
         }
     }

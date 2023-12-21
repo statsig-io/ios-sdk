@@ -1,11 +1,10 @@
 import Foundation
 
 class EventLogger {
-    internal static let loggingRequestUserDefaultsKey = "com.Statsig.EventLogger.loggingRequestUserDefaultsKey"
+    internal static let failedLogsKey = "com.Statsig.EventLogger.loggingRequestUserDefaultsKey"
     private static let eventQueueLabel = "com.Statsig.eventQueue"
-    var flushBatchSize: Int = 50
-    let maxEventQueueSize: Int = 1000
 
+    var maxEventQueueSize: Int = 50
     var events: [Event]
     var failedRequestQueue: [Data]
     var loggedErrorMessage: Set<String>
@@ -30,10 +29,10 @@ class EventLogger {
         self.loggedErrorMessage = Set<String>()
         self.userDefaults = userDefaults
 
-        if let localCache = userDefaults.array(forKey: EventLogger.loggingRequestUserDefaultsKey) as? [Data] {
+        if let localCache = userDefaults.array(forKey: EventLogger.failedLogsKey) as? [Data] {
             self.failedRequestQueue = localCache
         }
-        userDefaults.removeObject(forKey: EventLogger.loggingRequestUserDefaultsKey)
+        userDefaults.removeObject(forKey: EventLogger.failedLogsKey)
 
         networkService.sendRequestsWithData(failedRequestQueue) { [weak self] failedRequestsData in
             guard let failedRequestsData = failedRequestsData else { return }
@@ -44,15 +43,12 @@ class EventLogger {
     }
 
     func log(_ event: Event) {
-        logQueue.sync { [weak self] in
+        logQueue.async { [weak self] in
             guard let self = self else { return }
-            if (self.events.count > self.maxEventQueueSize) {
-                self.events = Array(self.events.prefix(self.maxEventQueueSize))
-            } else {
-                self.events.append(event)
-            }
 
-            if (self.events.count >= self.flushBatchSize) {
+            self.events.append(event)
+
+            if (self.events.count >= self.maxEventQueueSize) {
                 self.flush()
             }
         }
@@ -70,17 +66,17 @@ class EventLogger {
     func stop() {
         flushTimer?.invalidate()
         logQueue.sync {
-            self.flushInternal(shutdown: true)
+            self.flushInternal(isShuttingDown: true)
         }
     }
 
     func flush() {
         logQueue.async { [weak self] in
-            self?.flushInternal(shutdown: false)
+            self?.flushInternal()
         }
     }
 
-    private func flushInternal(shutdown: Bool = false) {
+    private func flushInternal(isShuttingDown: Bool = false) {
         if events.isEmpty {
             return
         }
@@ -88,32 +84,17 @@ class EventLogger {
         let oldEvents = events
         events = []
 
-        let capturedSelf = shutdown ? self : nil
-        networkService.sendEvents(forUser: user, events: oldEvents) { [weak self, capturedSelf] errorMessage, requestData in
+        let capturedSelf = isShuttingDown ? self : nil
+        networkService.sendEvents(forUser: user, events: oldEvents) {
+            [weak self, capturedSelf] errorMessage, requestData in
             guard let self = self ?? capturedSelf else { return }
 
             if errorMessage == nil {
                 return
             }
 
-            // when shutting down, save request data locally to be sent next time instead of adding it back to event queue
-            if shutdown {
-                if !Thread.isMainThread {
-                    DispatchQueue.main.sync { [self] in
-                        self.addFailedLogRequest(requestData)
-                        self.userDefaults.setValue(self.failedRequestQueue, forKey: EventLogger.loggingRequestUserDefaultsKey)
-                    }
-                } else {
-                    self.addFailedLogRequest(requestData)
-                    self.userDefaults.setValue(self.failedRequestQueue, forKey: EventLogger.loggingRequestUserDefaultsKey)
-                }
-                return
-            }
-
-            self.logQueue.sync {
-                self.events = oldEvents + self.events // add old events back to the queue if request fails
-                self.flushBatchSize = min(self.events.count * 2, self.maxEventQueueSize)
-            }
+            self.addFailedLogRequest(requestData)
+            self.saveFailedLogRequestsToDisk()
 
             if let errorMessage = errorMessage, !self.loggedErrorMessage.contains(errorMessage) {
                 self.loggedErrorMessage.insert(errorMessage)
@@ -130,15 +111,27 @@ class EventLogger {
     }
 
     private func addFailedLogRequest(_ requestData: [Data]) {
-        self.failedRequestQueue += requestData
+        failedRequestQueue += requestData
 
-        while (self.failedRequestQueue.count > 0
-               && self.failedRequestQueue.reduce(0,{ $0 + $1.count }) > MAX_SAVED_LOG_REQUEST_SIZE) {
-            self.failedRequestQueue.removeFirst()
+        while (failedRequestQueue.count > 0
+               && failedRequestQueue.reduce(0,{ $0 + $1.count }) > MAX_SAVED_LOG_REQUEST_SIZE) {
+            failedRequestQueue.removeFirst()
         }
     }
 
+    private func saveFailedLogRequestsToDisk() {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.sync { saveFailedLogRequestsToDisk() }
+            return
+        }
+
+        userDefaults.setValue(
+            failedRequestQueue,
+            forKey: EventLogger.failedLogsKey
+        )
+    }
+
     static func deleteLocalStorage() {
-        StatsigUserDefaults.defaults.removeObject(forKey: EventLogger.loggingRequestUserDefaultsKey)
+        StatsigUserDefaults.defaults.removeObject(forKey: EventLogger.failedLogsKey)
     }
 }

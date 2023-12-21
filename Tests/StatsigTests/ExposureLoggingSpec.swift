@@ -41,7 +41,7 @@ class ExposureLoggingSpec: BaseSpec {
                     "time": 321,
                     "has_updates": true
                 ], options: opts)
-                Statsig.client?.logger.flushBatchSize = 1
+                Statsig.client?.logger.maxEventQueueSize = 1
 
                 logs = []
                 TestUtils.captureLogs(host: "ExposureLoggingSpec") { captured in
