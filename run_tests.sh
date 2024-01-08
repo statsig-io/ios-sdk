@@ -8,4 +8,4 @@ xcodebuild test \
     -workspace package.xcworkspace \
     -test-iterations 3 \
     -retry-tests-on-failure \
-    | xcbeautify
+    | xcbeautify && exit ${PIPESTATUS[0]}

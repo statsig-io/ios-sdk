@@ -553,7 +553,9 @@ class StatsigSpec: BaseSpec {
                     let actualRequestHttpBody = try! JSONSerialization.jsonObject(
                         with: request.ohhttpStubs_httpBody!,
                         options: []) as! [String: Any]
-                    events = actualRequestHttpBody["events"] as! [[String: Any]]
+                    events = (actualRequestHttpBody["events"] as! [[String: Any]]).filter({ item in
+                        return item["eventName"] as? String != "statsig::diagnostics"
+                    })
                     statsigMetadata = actualRequestHttpBody["statsigMetadata"] as! [String: String?]
                     return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
                 }

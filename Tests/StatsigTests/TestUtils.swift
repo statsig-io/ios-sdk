@@ -79,9 +79,16 @@ class TestUtils {
         return result
     }
 
-    static func captureLogs(host: String = "api.statsig.com", onLog: @escaping ([String: Any]) -> Void) {
+    static func captureLogs(host: String = "api.statsig.com",
+                            removeDiagnostics: Bool = true,
+                            onLog: @escaping ([String: Any]) -> Void) {
         stub(condition: isHost(host) && isPath("/v1/rgstr")) { request in
-            let data = try! JSONSerialization.jsonObject(with: request.ohhttpStubs_httpBody!, options: []) as! [String: Any]
+            var data = try! JSONSerialization.jsonObject(with: request.ohhttpStubs_httpBody!, options: []) as! [String: Any]
+            if removeDiagnostics, let events = data["events"] as? [[String: Any]] {
+                data["events"] = events.filter({ item in
+                    return item["eventName"] as? String != "statsig::diagnostics"
+                })
+            }
             onLog(data)
             return HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
         }

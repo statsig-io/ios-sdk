@@ -112,7 +112,6 @@ class LayerExposureSpec: BaseSpec {
 
                 expect(logs).toEventuallyNot(beNil())
 
-
                 let events = logs[a: "events"]
                 expect(events?.count).to(equal(2))
 
