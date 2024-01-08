@@ -4,16 +4,18 @@ class EventLogger {
     internal static let failedLogsKey = "com.Statsig.EventLogger.loggingRequestUserDefaultsKey"
     private static let eventQueueLabel = "com.Statsig.eventQueue"
 
+    let networkService: NetworkService
+    let userDefaults: DefaultsLike
+
+    let logQueue = DispatchQueue(label: eventQueueLabel, qos: .userInitiated)
+    let failedRequestLock = NSLock()
+
     var maxEventQueueSize: Int = 50
     var events: [Event]
     var failedRequestQueue: [Data]
     var loggedErrorMessage: Set<String>
     var flushTimer: Timer?
     var user: StatsigUser
-    let networkService: NetworkService
-    let userDefaults: DefaultsLike
-
-    let logQueue = DispatchQueue(label: eventQueueLabel, qos: .userInitiated)
 
     #if os(tvOS)
         let MAX_SAVED_LOG_REQUEST_SIZE = 100_000 //100 KB
@@ -32,6 +34,7 @@ class EventLogger {
         if let localCache = userDefaults.array(forKey: EventLogger.failedLogsKey) as? [Data] {
             self.failedRequestQueue = localCache
         }
+
         userDefaults.removeObject(forKey: EventLogger.failedLogsKey)
 
         networkService.sendRequestsWithData(failedRequestQueue) { [weak self] failedRequestsData in
@@ -93,7 +96,7 @@ class EventLogger {
                 return
             }
 
-            self.addFailedLogRequest(requestData)
+            self.addSingleFailedLogRequest(requestData)
             self.saveFailedLogRequestsToDisk()
 
             if let errorMessage = errorMessage, !self.loggedErrorMessage.contains(errorMessage) {
@@ -104,13 +107,16 @@ class EventLogger {
         }
     }
 
-    private func addFailedLogRequest(_ requestData: Data?) {
+    private func addSingleFailedLogRequest(_ requestData: Data?) {
         guard let data = requestData else { return }
 
         addFailedLogRequest([data])
     }
 
     private func addFailedLogRequest(_ requestData: [Data]) {
+        failedRequestLock.lock()
+        defer { failedRequestLock.unlock() }
+
         failedRequestQueue += requestData
 
         while (failedRequestQueue.count > 0
