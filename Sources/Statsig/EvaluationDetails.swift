@@ -6,7 +6,7 @@ public struct EvaluationDetails: Codable {
 
     init(reason: EvaluationReason, time: Double? = nil) {
         self.reason = reason
-        self.time = time ?? NSDate().epochTimeInMs()
+        self.time = time ?? Date().epochTimeInMs()
     }
 
     func toDictionary() -> [String: Any] {

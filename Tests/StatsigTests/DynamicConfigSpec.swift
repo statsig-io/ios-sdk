@@ -35,7 +35,7 @@ class DynamicConfigSpec: BaseSpec {
                 expect(dc.getValue(forKey: "strArray", defaultValue: ["1", "2"])) == ["1", "2"]
                 expect(dc.getValue(forKey: "dict", defaultValue: ["key": "value"])) == ["key": "value"]
                 expect(dc.evaluationDetails.reason).to(equal(.Uninitialized))
-                expect(Int(dc.evaluationDetails.time / 1000)) == Int(NSDate().timeIntervalSince1970)
+                expect(Int(dc.evaluationDetails.time / 1000)) == Int(Date().timeIntervalSince1970)
             }
         }
 
@@ -57,7 +57,7 @@ class DynamicConfigSpec: BaseSpec {
                 expect(dc.getValue(forKey: "strArray", defaultValue: [])) == ["1", "2"]
 
                 expect(dc.evaluationDetails.reason).to(equal(.Network))
-                expect(dc.evaluationDetails.time).to(beCloseTo(NSDate().epochTimeInMs(), within: 10))
+                expect(dc.evaluationDetails.time).to(beCloseTo(Date().epochTimeInMs(), within: 10))
 
                 let mixedArray = dc.getValue(forKey: "mixedArray", defaultValue: [])
                 expect(mixedArray.count) == 2

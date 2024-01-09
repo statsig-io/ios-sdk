@@ -43,7 +43,7 @@ class NetworkServiceSpec: BaseSpec {
                         userID: "jkw",
                         privateAttributes: ["email": "something@somethingelse.com"],
                         customIDs: ["randomID": "ABCDE"]), sinceTime: 0, previousDerivedFields: [:], completion: nil)
-                let now = NSDate().timeIntervalSince1970
+                let now = Date().timeIntervalSince1970
 
                 expect(actualRequestHttpBody?.keys).toEventually(contain("user", "statsigMetadata"))
                 // make sure when fetching values we still use private attributes
@@ -70,7 +70,7 @@ class NetworkServiceSpec: BaseSpec {
 
                 let store = InternalStore(sdkKey, StatsigUser(userID: "jkw"), options: opts)
                 let ns = NetworkService(sdkKey: sdkKey, options: opts, store: store)
-                let now = NSDate().epochTimeInMs()
+                let now = Date().epochTimeInMs()
                 waitUntil { done in
                     ns.fetchUpdatedValues(for: StatsigUser(userID: "jkw"), lastSyncTimeForUser: now, previousDerivedFields: [:]) {
                         done()

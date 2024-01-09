@@ -147,7 +147,7 @@ struct StatsigValuesCache {
             cache[InternalStore.configsKey] = values[InternalStore.configsKey]
             cache[InternalStore.layerConfigsKey] = values[InternalStore.layerConfigsKey]
             cache["time"] = values["time"] as? Double ?? 0
-            cache[InternalStore.evalTimeKey] = NSDate().epochTimeInMs()
+            cache[InternalStore.evalTimeKey] = Date().epochTimeInMs()
             cache[InternalStore.userHashKey] = userHash
             cache[InternalStore.hashUsedKey] = values[InternalStore.hashUsedKey]
             cache[InternalStore.derivedFieldsKey] = values[InternalStore.derivedFieldsKey]
@@ -570,8 +570,8 @@ extension Dictionary {
     }
 }
 
-extension NSDate {
+extension Date {
     func epochTimeInMs() -> Double {
-        return (NSDate().timeIntervalSince1970 * 1000).rounded(.towardZero)
+        return (self.timeIntervalSince1970 * 1000).rounded(.towardZero)
     }
 }

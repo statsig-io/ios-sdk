@@ -26,7 +26,7 @@ class Event {
         secondaryExposures: [[String: String]]? = nil,
         disableCurrentVCLogging: Bool
     ) {
-        self.time = NSDate().epochTimeInMs()
+        self.time = Date().epochTimeInMs()
         self.user = user.toDictionary(forLogging: true)
         self.name = name
         self.value = value
