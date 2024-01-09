@@ -43,7 +43,7 @@ class NetworkServiceSpec: BaseSpec {
                         userID: "jkw",
                         privateAttributes: ["email": "something@somethingelse.com"],
                         customIDs: ["randomID": "ABCDE"]), sinceTime: 0, previousDerivedFields: [:], completion: nil)
-                let now = NSDate().timeIntervalSince1970
+                let now = Date().timeIntervalSince1970
 
                 expect(actualRequestHttpBody?.keys).toEventually(contain("user", "statsigMetadata"))
                 // make sure when fetching values we still use private attributes

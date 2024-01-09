@@ -693,7 +693,7 @@ extension StatsigClient {
 
     private func shouldLogExposure(key: String) -> Bool {
         return exposureDedupeQueue.sync { () -> Bool in
-            let now = NSDate().timeIntervalSince1970
+            let now = Date().timeIntervalSince1970
             if let lastTime = loggedExposures[key], lastTime >= now - 600 {
                 // if the last time the exposure was logged was less than 10 mins ago, do not log exposure
                 return false

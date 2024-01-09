@@ -1,12 +1,11 @@
 import Foundation
 
-
 struct DeviceEnvironment {
     private static let instance = DeviceEnvironment()
 
     private let stableIDKey = "com.Statsig.InternalStore.stableIDKey"
 
-    static internal let deviceOS: String = "iOS"
+    static internal let deviceOS = PlatformCompatibility.deviceInfo.os
     static internal let sdkType: String = "ios-client"
     static internal let sdkVersion: String = "1.35.0"
 

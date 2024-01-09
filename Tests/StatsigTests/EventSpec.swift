@@ -14,7 +14,7 @@ class EventSpec: BaseSpec {
                 expect(event.name) == "purchase"
                 expect(event.value).to(beNil())
                 expect(event.metadata).to(beNil())
-                expect(Int(event.time / 1000)) == Int(NSDate().timeIntervalSince1970)
+                expect(Int(event.time / 1000)) == Int(Date().timeIntervalSince1970)
             }
 
             it("creates events with value and metadata as expected") {
@@ -23,7 +23,7 @@ class EventSpec: BaseSpec {
                 expect(event.name) == "purchase"
                 expect(event.value as? Double).to(equal(1.23))
                 expect(event.metadata) == ["item_name": "no_ads"]
-                expect(Int(event.time / 1000)) == Int(NSDate().timeIntervalSince1970)
+                expect(Int(event.time / 1000)) == Int(Date().timeIntervalSince1970)
             }
 
             it("has helper functions that create gate exposure events correctly") {
@@ -40,7 +40,7 @@ class EventSpec: BaseSpec {
                 expect(gateExposure.value).to(beNil())
                 expect(gateExposure.metadata) == ["gate": "show_coupon", "gateValue": String(true), "ruleID": "default", "reason": "Network:Recognized", "lcut": "123456789", "receivedAt": "43"]
                 expect(gateExposure.secondaryExposures![0]).to(equal(["gate": "employee", "gateValue": "true", "ruleID": "rule_id_employee"]))
-                expect(Int(gateExposure.time / 1000)) == Int(NSDate().timeIntervalSince1970)
+                expect(Int(gateExposure.time / 1000)) == Int(Date().timeIntervalSince1970)
             }
 
             it("has helper functions that create config exposure events correctly") {
@@ -56,7 +56,7 @@ class EventSpec: BaseSpec {
                 expect(configExposure.value).to(beNil())
                 expect(configExposure.metadata) == ["config": "my_config", "ruleID": "default", "reason": "Network:Recognized", "lcut": "123456789", "receivedAt": "12"]
                 expect(configExposure.secondaryExposures).to(equal([]))
-                expect(Int(configExposure.time / 1000)) == Int(NSDate().timeIntervalSince1970)
+                expect(Int(configExposure.time / 1000)) == Int(Date().timeIntervalSince1970)
             }
 
             it("has helper functions that create internal events correctly") {
@@ -70,7 +70,7 @@ class EventSpec: BaseSpec {
                 expect(internalEvent.name) == "statsig::network_failure"
                 expect(internalEvent.value as? Int).to(equal(10))
                 expect(internalEvent.metadata).to(beNil())
-                expect(Int(internalEvent.time / 1000)) == Int(NSDate().timeIntervalSince1970)
+                expect(Int(internalEvent.time / 1000)) == Int(Date().timeIntervalSince1970)
             }
         }
     }

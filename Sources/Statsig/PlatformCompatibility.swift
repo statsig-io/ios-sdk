@@ -7,6 +7,7 @@ struct DeviceInfo {
     let systemVersion = "test.system.version"
     let systemName = "test_system"
     let model = "test_model"
+    let os = "testOS"
 }
 
 class PlatformCompatibility
@@ -22,6 +23,33 @@ class PlatformCompatibility
     }
 }
 
+#elseif canImport(WatchKit)
+
+import WatchKit
+import UIKit
+
+struct DeviceInfo {
+    let systemVersion = WKInterfaceDevice.current().systemVersion
+    let systemName = WKInterfaceDevice.current().systemName
+    let model = WKInterfaceDevice.current().model
+    let os = "watchOS"
+}
+
+class PlatformCompatibility
+{
+    static let willResignActiveNotification = WKApplication.willResignActiveNotification
+    static let willTerminateNotification = NSNotification.Name(rawValue: "willTerminateNotification")
+    static let willEnterForegroundNotification = WKApplication.willEnterForegroundNotification
+
+    static let deviceInfo = DeviceInfo()
+
+    static func getRootViewControllerClassName(_ callback: @escaping (_ name: String?) -> Void) {
+        DispatchQueue.main.async { [callback] in
+            callback(nil)
+        }
+    }
+}
+
 #elseif canImport(UIKit)
 
 import UIKit
@@ -30,6 +58,7 @@ struct DeviceInfo {
     let systemVersion = UIDevice.current.systemVersion
     let systemName = UIDevice.current.systemName
     let model = UIDevice.current.model
+    let os = "iOS"
 }
 
 class PlatformCompatibility
@@ -59,6 +88,7 @@ struct DeviceInfo {
     let systemVersion: String
     let systemName = "macOS"
     let model: String
+    let os = "macOS"
 
     init() {
         let service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"))

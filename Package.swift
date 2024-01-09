@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "Statsig",
-    platforms: [.iOS(.v10), .tvOS(.v10), .macOS(.v10_13)],
+    platforms: [.watchOS(.v7), .iOS(.v10), .tvOS(.v10), .macOS(.v10_13)],
     products: [
         .library(
             name: "Statsig",

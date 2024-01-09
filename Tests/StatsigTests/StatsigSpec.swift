@@ -78,7 +78,7 @@ class StatsigSpec: BaseSpec {
             it("make only 1 network request in 0.1 seconds when enableAutoValueUpdate is FALSE") {
                 var requestCount = 0
                 var lastSyncTime: Double = 0
-                let now = NSDate().timeIntervalSince1970
+                let now = Date().timeIntervalSince1970
 
                 stub(condition: isHost("api.statsig.enableAutoValueUpdateTest")) { request in
                     requestCount += 1
