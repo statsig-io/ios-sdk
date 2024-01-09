@@ -22,6 +22,32 @@ class PlatformCompatibility
     }
 }
 
+#elseif canImport(WatchKit)
+
+import WatchKit
+import UIKit
+
+struct DeviceInfo {
+    let systemVersion = WKInterfaceDevice.current().systemVersion
+    let systemName = WKInterfaceDevice.current().systemName
+    let model = WKInterfaceDevice.current().model
+}
+
+class PlatformCompatibility
+{
+    static let willResignActiveNotification = WKApplication.willResignActiveNotification
+    static let willTerminateNotification = NSNotification.Name(rawValue: "willTerminateNotification")
+    static let willEnterForegroundNotification = WKApplication.willEnterForegroundNotification
+
+    static let deviceInfo = DeviceInfo()
+
+    static func getRootViewControllerClassName(_ callback: @escaping (_ name: String?) -> Void) {
+        DispatchQueue.main.async { [callback] in
+            callback(nil)
+        }
+    }
+}
+
 #elseif canImport(UIKit)
 
 import UIKit
