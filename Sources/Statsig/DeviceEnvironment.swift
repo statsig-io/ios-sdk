@@ -1,12 +1,17 @@
 import Foundation
 
+#if canImport(WatchKit)
+let clientType = "watchOS"
+#else
+let clientType = "iOS"
+#endif
 
 struct DeviceEnvironment {
     private static let instance = DeviceEnvironment()
 
     private let stableIDKey = "com.Statsig.InternalStore.stableIDKey"
 
-    static internal let deviceOS: String = "iOS"
+    static internal let deviceOS: String = clientType
     static internal let sdkType: String = "ios-client"
     static internal let sdkVersion: String = "1.35.0"
 
