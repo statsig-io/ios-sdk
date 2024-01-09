@@ -60,7 +60,8 @@ class CodableSpec: BaseSpec {
                 expect(gate.secondaryExposures).to(equal(decoded.secondaryExposures))
 
                 expect(gate.evaluationDetails.reason).to(equal(decoded.evaluationDetails.reason))
-                expect(gate.evaluationDetails.time).to(equal(decoded.evaluationDetails.time))
+                expect(gate.evaluationDetails.lcut).to(equal(decoded.evaluationDetails.lcut))
+                expect(gate.evaluationDetails.receivedAt).to(equal(decoded.evaluationDetails.receivedAt))
             }
 
             it("encodes/decodes DynamicConfig") {
@@ -73,7 +74,8 @@ class CodableSpec: BaseSpec {
                 expect(config.ruleID).to(equal(decoded.ruleID))
                 expect(config.secondaryExposures).to(equal(decoded.secondaryExposures))
                 expect(config.evaluationDetails.reason).to(equal(decoded.evaluationDetails.reason))
-                expect(config.evaluationDetails.time).to(equal(decoded.evaluationDetails.time))
+                expect(config.evaluationDetails.lcut).to(equal(decoded.evaluationDetails.lcut))
+                expect(config.evaluationDetails.receivedAt).to(equal(decoded.evaluationDetails.receivedAt))
             }
 
             it("encodes/decodes Layer") {
@@ -86,7 +88,20 @@ class CodableSpec: BaseSpec {
                 expect(config.ruleID).to(equal(decoded.ruleID))
                 expect(config.secondaryExposures).to(equal(decoded.secondaryExposures))
                 expect(config.evaluationDetails.reason).to(equal(decoded.evaluationDetails.reason))
-                expect(config.evaluationDetails.time).to(equal(decoded.evaluationDetails.time))
+                expect(config.evaluationDetails.lcut).to(equal(decoded.evaluationDetails.lcut))
+                expect(config.evaluationDetails.receivedAt).to(equal(decoded.evaluationDetails.receivedAt))
+            }
+
+            it("encodes/decodes EvaluationDetails") {
+                let details = EvaluationDetails(source: .Network, reason: .Recognized, lcut: 1, receivedAt: 2)
+
+                let encoded = try! encoder.encode(details)
+                let decoded = try! decoder.decode(EvaluationDetails.self, from: encoded)
+
+                expect(details.source).to(equal(decoded.source))
+                expect(details.reason).to(equal(decoded.reason))
+                expect(details.lcut).to(equal(decoded.lcut))
+                expect(details.receivedAt).to(equal(decoded.receivedAt))
             }
         }
 
@@ -95,7 +110,7 @@ class CodableSpec: BaseSpec {
                 [
                     DynamicConfig(
                         configName: "empty_config",
-                        evalDetails: EvaluationDetails(reason: .Uninitialized)
+                        evalDetails: .uninitialized()
                     ),
                     DynamicConfig(
                         configName: "parital_config",
@@ -104,7 +119,7 @@ class CodableSpec: BaseSpec {
                             "value": ["foo":"bar"],
                             "rule_id": "default"
                         ],
-                        evalDetails: EvaluationDetails(reason: .Cache)
+                        evalDetails: .init(source: .Cache, reason: .Recognized, lcut: 1, receivedAt: 2)
                     ),
                     DynamicConfig(
                         configName: "full_config",
@@ -126,7 +141,7 @@ class CodableSpec: BaseSpec {
                                 ]
                             ]
                         ],
-                        evalDetails: EvaluationDetails(reason: .Cache)
+                        evalDetails: .init(source: .Network, reason: .Unrecognized, lcut: 4, receivedAt: 3)
                     )
                 ].forEach { config in
                     let encoded = try! encoder.encode(config)
@@ -135,8 +150,7 @@ class CodableSpec: BaseSpec {
                     expect(config.name).to(equal(decoded.name))
                     expect(config.ruleID).to(equal(decoded.ruleID))
                     expect(config.secondaryExposures).to(equal(decoded.secondaryExposures))
-                    expect(config.evaluationDetails.reason).to(equal(decoded.evaluationDetails.reason))
-                    expect(config.evaluationDetails.time).to(equal(decoded.evaluationDetails.time))
+                    expect(config.evaluationDetails.source).to(equal(decoded.evaluationDetails.source))
                 }
             }
 
@@ -145,7 +159,7 @@ class CodableSpec: BaseSpec {
                     Layer.init(
                         client: nil,
                         name: "empty_layer",
-                        evalDetails: EvaluationDetails(reason: .Uninitialized)
+                        evalDetails: .uninitialized()
                     ),
                     Layer.init(
                         client: nil,
@@ -155,7 +169,7 @@ class CodableSpec: BaseSpec {
                             "value": ["foo":"bar"],
                             "rule_id": "default"
                         ],
-                        evalDetails: EvaluationDetails(reason: .Uninitialized)
+                        evalDetails: .uninitialized()
                     ),
                     Layer.init(
                         client: StatsigClient(sdkKey: "client-key", user: nil, options: nil) { _ in },
@@ -187,7 +201,7 @@ class CodableSpec: BaseSpec {
                                 ]
                             ]
                         ],
-                        evalDetails: EvaluationDetails(reason: .Uninitialized)
+                        evalDetails: .uninitialized()
                     )
                 ].forEach { config in
                     let encoded = try! encoder.encode(config)
@@ -196,8 +210,6 @@ class CodableSpec: BaseSpec {
                     expect(config.name).to(equal(decoded.name))
                     expect(config.ruleID).to(equal(decoded.ruleID))
                     expect(config.secondaryExposures).to(equal(decoded.secondaryExposures))
-                    expect(config.evaluationDetails.reason).to(equal(decoded.evaluationDetails.reason))
-                    expect(config.evaluationDetails.time).to(equal(decoded.evaluationDetails.time))
                 }
             }
         }

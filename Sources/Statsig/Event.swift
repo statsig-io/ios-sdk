@@ -5,8 +5,8 @@ class Event {
     let name: String
     let value: Any?
     let metadata: [String: String]?
-    let time: TimeInterval
-    let user: [String: Any?]
+    let time: UInt
+    let userData: [String: Any?]
     let secondaryExposures: [[String: String]]?
     var statsigMetadata: [String: String]?
     var allocatedExperimentHash: String?
@@ -26,8 +26,8 @@ class Event {
         secondaryExposures: [[String: String]]? = nil,
         disableCurrentVCLogging: Bool
     ) {
-        self.time = NSDate().epochTimeInMs()
-        self.user = user.toDictionary(forLogging: true)
+        self.time = Time.now()
+        self.userData = user.toDictionary(forLogging: true)
         self.name = name
         self.value = value
         self.metadata = metadata
@@ -74,17 +74,19 @@ class Event {
         evalDetails: EvaluationDetails,
         disableCurrentVCLogging: Bool
     ) -> Event {
+        var metadata = [
+            "gate": gateName,
+            "gateValue": String(gateValue),
+            "ruleID": ruleID
+        ]
+
+        evalDetails.addToDictionary(&metadata)
+
         return statsigInternalEvent(
             user: user,
             name: gateExposureEventName,
             value: nil,
-            metadata: [
-                "gate": gateName,
-                "gateValue": String(gateValue),
-                "ruleID": ruleID,
-                "reason": evalDetails.reason.rawValue,
-                "time": String(evalDetails.time)
-            ],
+            metadata: metadata,
             secondaryExposures: secondaryExposures,
             disableCurrentVCLogging: disableCurrentVCLogging
         )
@@ -98,16 +100,18 @@ class Event {
         evalDetails: EvaluationDetails,
         disableCurrentVCLogging: Bool
     ) -> Event {
+        var metadata = [
+            "config": configName,
+            "ruleID": ruleID,
+        ]
+
+        evalDetails.addToDictionary(&metadata)
+
         return statsigInternalEvent(
             user: user,
             name: configExposureEventName,
             value: nil,
-            metadata: [
-                "config": configName,
-                "ruleID": ruleID,
-                "reason": evalDetails.reason.rawValue,
-                "time": String(evalDetails.time)
-            ],
+            metadata: metadata,
             secondaryExposures: secondaryExposures,
             disableCurrentVCLogging: disableCurrentVCLogging
         )
@@ -124,19 +128,21 @@ class Event {
         isExplicitParameter: Bool,
         evalDetails: EvaluationDetails
     ) -> Event {
+        var metadata = [
+            "config": configName,
+            "ruleID": ruleID,
+            "allocatedExperiment": allocatedExperimentName,
+            "parameterName": parameterName,
+            "isExplicitParameter": "\(isExplicitParameter)"
+        ]
+
+        evalDetails.addToDictionary(&metadata)
+
         return statsigInternalEvent(
             user: user,
             name: layerExposureEventName,
             value: nil,
-            metadata: [
-                "config": configName,
-                "ruleID": ruleID,
-                "allocatedExperiment": allocatedExperimentName,
-                "parameterName": parameterName,
-                "isExplicitParameter": "\(isExplicitParameter)",
-                "reason": evalDetails.reason.rawValue,
-                "time": String(evalDetails.time)
-            ],
+            metadata: metadata,
             secondaryExposures: secondaryExposures,
             disableCurrentVCLogging: disableCurrentVCLogging
         )
@@ -151,7 +157,7 @@ class Event {
 
         return [
             "eventName": name,
-            "user": user,
+            "user": userData,
             "time": time,
             "value": value,
             "metadata": metadataForLogging,
@@ -161,3 +167,5 @@ class Event {
         ].compactMapValues { $0 }
     }
 }
+
+

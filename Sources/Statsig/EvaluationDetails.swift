@@ -1,30 +1,67 @@
 import Foundation
 
 public struct EvaluationDetails: Codable {
-    let time: Double;
-    let reason: EvaluationReason;
+    let source: EvaluationSource;
 
-    init(reason: EvaluationReason, time: Double? = nil) {
+    var reason: EvaluationReason?;
+    var lcut: UInt?
+    var receivedAt: UInt?
+
+    init(
+        source: EvaluationSource,
+        reason: EvaluationReason? = nil,
+        lcut: UInt? = nil,
+        receivedAt: UInt? = nil
+    ) {
+        self.source = source
         self.reason = reason
-        self.time = time ?? NSDate().epochTimeInMs()
+        self.lcut = lcut
+        self.receivedAt = receivedAt
     }
 
-    func toDictionary() -> [String: Any] {
-        return [
-            "time": time,
-            "reason": reason.rawValue,
-        ]
+    func getDetailedReason() -> String {
+        var result = source.rawValue
+        if source == .NoValues || source == .Uninitialized {
+            return result
+        }
+
+        if let reason = reason {
+            result += ":\(reason.rawValue)"
+        }
+        return result
+    }
+
+    func addToDictionary(_ dict: inout [String: String]) {
+        dict["reason"] = getDetailedReason()
+
+        if let lcut = lcut {
+            dict["lcut"] = String(lcut)
+        }
+
+        if let receivedAt = receivedAt {
+            dict["receivedAt"] = String(receivedAt)
+        }
+    }
+
+    static func uninitialized() -> EvaluationDetails {
+        EvaluationDetails(source: .Uninitialized)
     }
 }
 
+public enum EvaluationSource: String, Codable {
+    case Uninitialized
+    case Loading
+    case NoValues
+    case Network
+    case NetworkNotModified
+    case Cache
+    case Bootstrap
+    case InvalidBootstrap
+}
+
 public enum EvaluationReason: String, Codable {
-    case Network;
-    case NetworkNotModified;
-    case Cache;
-    case Sticky;
-    case LocalOverride;
-    case Unrecognized;
-    case Uninitialized;
-    case Bootstrap;
-    case InvalidBootstrap;
+    case Recognized
+    case Unrecognized
+    case Sticky
+    case LocalOverride
 }

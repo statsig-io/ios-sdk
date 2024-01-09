@@ -8,9 +8,21 @@ class OverallMarker: MarkerBase {
     }
 
     func end(success: Bool, details: EvaluationDetails, errorMessage: String?) {
+        var evaluationDetailsData: [String: Any] = [
+            "reason": details.getDetailedReason()
+        ]
+
+        if let lcut = details.lcut {
+            evaluationDetailsData["lcut"] = lcut
+        }
+
+        if let receivedAt = details.receivedAt {
+            evaluationDetailsData["receivedAt"] = receivedAt
+        }
+
         var args: [String: Any] = [
             "success": success,
-            "evaluationDetails": details.toDictionary()
+            "evaluationDetails": evaluationDetailsData
         ]
 
         if let message = errorMessage {

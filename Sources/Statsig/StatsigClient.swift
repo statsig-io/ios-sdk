@@ -68,7 +68,7 @@ public class StatsigClient {
 
             Diagnostics.mark?.overall.end(
                 success: error == nil,
-                details: self.store.cache.getGlobalEvaluationDetails(),
+                details: self.store.cache.getEvaluationDetails(),
                 errorMessage: error
             )
             Diagnostics.log(self.logger, user: capturedUser, context: .initialize)
@@ -154,12 +154,14 @@ public class StatsigClient {
      Presents a view of the current internal state of the SDK.
      */
     public func openDebugView() {
+        let cache = store.cache
+        let reason = cache.getEvaluationDetails().getDetailedReason()
         let state: [String: Any?] = [
             "user": self.currentUser.toDictionary(forLogging: false),
-            "gates": self.store.cache.gates,
-            "configs": self.store.cache.configs,
-            "layers": self.store.cache.layers,
-            "evalReason": "\(self.store.cache.reason)"
+            "gates": cache.gates,
+            "configs": cache.configs,
+            "layers": cache.layers,
+            "evalReason": reason
         ]
 
         DispatchQueue.main.async { [weak self] in
@@ -190,7 +192,7 @@ public class StatsigClient {
 
         return ExternalInitializeResponse(
             values: values,
-            evaluationDetails: self.store.cache.getGlobalEvaluationDetails()
+            evaluationDetails: store.cache.getEvaluationDetails()
         )
     }
 }
@@ -279,7 +281,7 @@ extension StatsigClient {
     private func logGateExposureForGate(_ gateName: String, gate: FeatureGate, isManualExposure: Bool) {
         let gateValue = gate.value
         let ruleID = gate.ruleID
-        let dedupeKey = gateName + (gateValue ? "true" : "false") + ruleID + gate.evaluationDetails.reason.rawValue
+        let dedupeKey = gateName + (gateValue ? "true" : "false") + ruleID + gate.evaluationDetails.getDetailedReason()
 
         if shouldLogExposure(key: dedupeKey) {
             logger.log(
@@ -355,7 +357,7 @@ extension StatsigClient {
 
     private func logConfigExposureForConfig(_ configName: String, config: DynamicConfig, isManualExposure: Bool) {
         let ruleID = config.ruleID
-        let dedupeKey = configName + ruleID + config.evaluationDetails.reason.rawValue
+        let dedupeKey = configName + ruleID + config.evaluationDetails.getDetailedReason()
 
         if shouldLogExposure(key: dedupeKey) {
             logger.log(
@@ -477,7 +479,7 @@ extension StatsigClient {
             allocatedExperiment,
             parameterName,
             "\(isExplicit)",
-            layer.evaluationDetails.reason.rawValue
+            layer.evaluationDetails.getDetailedReason()
         ].joined(separator: "|")
 
         if shouldLogExposure(key: dedupeKey) {

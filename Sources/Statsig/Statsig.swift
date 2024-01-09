@@ -529,7 +529,11 @@ public class Statsig {
             ? client.getFeatureGate(gateName)
             : client.getFeatureGateWithExposureLoggingDisabled(gateName)
         }
-        return result ?? FeatureGate(name: gateName, value: false, ruleID: "", evalDetails: EvaluationDetails(reason: .Uninitialized))
+        return result ?? FeatureGate(
+            name: gateName,
+            value: false,
+            ruleID: "",
+            evalDetails: .uninitialized())
     }
 
     private static func getExperimentImpl(_ experimentName: String, keepDeviceValue: Bool, withExposures: Bool, functionName: String) -> DynamicConfig {
@@ -575,11 +579,11 @@ public class Statsig {
             : client.getLayerWithExposureLoggingDisabled(layerName, keepDeviceValue: keepDeviceValue)
         }
 
-        return result ?? Layer(client: nil, name: layerName, evalDetails: EvaluationDetails(reason: .Uninitialized))
+        return result ?? Layer(client: nil, name: layerName, evalDetails: .uninitialized())
     }
 
     private static func getEmptyConfig(_ name: String) -> DynamicConfig {
-        return DynamicConfig(configName: name, evalDetails: EvaluationDetails(reason: .Uninitialized))
+        return DynamicConfig(configName: name, evalDetails: .uninitialized())
     }
 
     private static func addPendingListeners() {

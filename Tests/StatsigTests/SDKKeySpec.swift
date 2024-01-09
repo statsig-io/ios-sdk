@@ -72,7 +72,7 @@ class SDKKeySpec: BaseSpec {
                 expect(error).toEventually(contain("403"))
                 expect(gate).toEventually(beFalse())
                 expect(NSDictionary(dictionary: config!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
-                expect(config!.evaluationDetails.reason).toEventually(equal(.Uninitialized))
+                expect(config!.evaluationDetails.reason).toEventually(equal(.Unrecognized))
             }
 
             it("works when provided server secret by returning default value") {
@@ -87,7 +87,7 @@ class SDKKeySpec: BaseSpec {
                 expect(error).toEventually(equal("Must use a valid client SDK key."))
                 expect(gate).toEventually(beFalse())
                 expect(NSDictionary(dictionary: config!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
-                expect(config!.evaluationDetails.reason).toEventually(equal(.Uninitialized))
+                expect(config!.evaluationDetails.source).toEventually(equal(.Uninitialized))
             }
         }
     }

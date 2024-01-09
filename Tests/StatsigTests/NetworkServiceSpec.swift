@@ -70,9 +70,13 @@ class NetworkServiceSpec: BaseSpec {
 
                 let store = InternalStore(sdkKey, StatsigUser(userID: "jkw"), options: opts)
                 let ns = NetworkService(sdkKey: sdkKey, options: opts, store: store)
-                let now = NSDate().epochTimeInMs()
+                let now = Time.now()
                 waitUntil { done in
-                    ns.fetchUpdatedValues(for: StatsigUser(userID: "jkw"), lastSyncTimeForUser: now, previousDerivedFields: [:]) {
+                    ns.fetchUpdatedValues(
+                        for: StatsigUser(userID: "jkw"),
+                        lastSyncTimeForUser: now,
+                        previousDerivedFields: [:]
+                    ) {
                         done()
                     }
                 }

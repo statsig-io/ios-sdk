@@ -5,8 +5,7 @@ public struct ExternalInitializeResponse {
     public static func uninitialized() -> ExternalInitializeResponse {
         return ExternalInitializeResponse(
             values: nil,
-            evaluationDetails: EvaluationDetails.init(reason: .Uninitialized)
+            evaluationDetails: .uninitialized()
         )
     }
-
 }

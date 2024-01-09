@@ -38,6 +38,8 @@ extension Array {
 
 class LayerExposureSpec: BaseSpec {
 
+    private static let lcut = 123456
+
     override func spec() {
         super.spec()
         
@@ -54,6 +56,7 @@ class LayerExposureSpec: BaseSpec {
                             "explicit_parameters": []
                         ]
                     ],
+                    "time": LayerExposureSpec.lcut,
                     "has_updates": true
                 ])
 
@@ -80,8 +83,9 @@ class LayerExposureSpec: BaseSpec {
                         "allocatedExperiment": "",
                         "parameterName": "an_int",
                         "isExplicitParameter": "false",
-                        "reason": "Network",
-                        "time": metadata["time"]!
+                        "reason": "Network:Recognized",
+                        "lcut": "\(LayerExposureSpec.lcut)",
+                        "receivedAt": metadata["receivedAt"]!
                     ]))
             }
 
@@ -97,6 +101,7 @@ class LayerExposureSpec: BaseSpec {
                             "explicit_parameters": ["an_int"]
                         ]
                     ],
+                    "time": LayerExposureSpec.lcut,
                     "has_updates": true
                 ])
 
@@ -126,8 +131,9 @@ class LayerExposureSpec: BaseSpec {
                         "allocatedExperiment": "the_allocated_experiment",
                         "parameterName": "an_int",
                         "isExplicitParameter": "true",
-                        "reason": "Network",
-                        "time": metadata["time"]!
+                        "reason": "Network:Recognized",
+                        "lcut": "\(LayerExposureSpec.lcut)",
+                        "receivedAt": metadata["receivedAt"]!
                     ]))
 
                 let implicitEvent = events?[d: 1]
@@ -141,8 +147,9 @@ class LayerExposureSpec: BaseSpec {
                         "allocatedExperiment": "",
                         "parameterName": "a_string",
                         "isExplicitParameter": "false",
-                        "reason": "Network",
-                        "time": metadata["time"]!
+                        "reason": "Network:Recognized",
+                        "lcut": "\(LayerExposureSpec.lcut)",
+                        "receivedAt": metadata["receivedAt"]!
                     ]))
             }
 

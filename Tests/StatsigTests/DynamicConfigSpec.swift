@@ -27,15 +27,14 @@ class DynamicConfigSpec: BaseSpec {
         
         describe("dummy config works as expected") {
             it("only returns the default values") {
-                let dc = DynamicConfig(configName: "dummy", evalDetails: EvaluationDetails(reason: .Uninitialized))
+                let dc = DynamicConfig(configName: "dummy", evalDetails: .init(source: .Network))
                 expect(dc.getValue(forKey: "str", defaultValue: "1")) == "1"
                 expect(dc.getValue(forKey: "bool", defaultValue: true)) == true
                 expect(dc.getValue(forKey: "double", defaultValue: 1.1)) == 1.1
                 expect(dc.getValue(forKey: "int", defaultValue: 3)) == 3
                 expect(dc.getValue(forKey: "strArray", defaultValue: ["1", "2"])) == ["1", "2"]
                 expect(dc.getValue(forKey: "dict", defaultValue: ["key": "value"])) == ["key": "value"]
-                expect(dc.evaluationDetails.reason).to(equal(.Uninitialized))
-                expect(Int(dc.evaluationDetails.time / 1000)) == Int(NSDate().timeIntervalSince1970)
+                expect(dc.evaluationDetails.source).to(equal(.Network))
             }
         }
 
@@ -46,7 +45,7 @@ class DynamicConfigSpec: BaseSpec {
                 dc = DynamicConfig(
                     configName: "testConfig",
                     configObj: DynamicConfigSpec.TestMixedConfig,
-                    evalDetails: EvaluationDetails(reason: .Network))
+                    evalDetails: .init(source: .Network))
             }
 
             it("returns the correct value for key given the defaultValue with correct type") {
@@ -56,8 +55,7 @@ class DynamicConfigSpec: BaseSpec {
                 expect(dc.getValue(forKey: "int", defaultValue: 1)) == 3
                 expect(dc.getValue(forKey: "strArray", defaultValue: [])) == ["1", "2"]
 
-                expect(dc.evaluationDetails.reason).to(equal(.Network))
-                expect(dc.evaluationDetails.time).to(beCloseTo(NSDate().epochTimeInMs(), within: 10))
+                expect(dc.evaluationDetails.source).to(equal(.Network))
 
                 let mixedArray = dc.getValue(forKey: "mixedArray", defaultValue: [])
                 expect(mixedArray.count) == 2

@@ -33,7 +33,7 @@ class FileBasedUserDefaultsUsageSpec: BaseSpec {
             it("returns config from network") {
                 let result = Statsig.getConfig("a_config")
                 expect(result.value as? [String: Bool]).to(equal(["a_bool": true]))
-                expect(result.evaluationDetails.reason).to(equal(EvaluationReason.Network))
+                expect(result.evaluationDetails.reason).to(equal(.Recognized))
             }
 
             it("returns config from cache") {
@@ -43,7 +43,7 @@ class FileBasedUserDefaultsUsageSpec: BaseSpec {
 
                 let result = Statsig.getConfig("a_config")
                 expect(result.value as? [String: Bool]).to(equal(["a_bool": true]))
-                expect(result.evaluationDetails.reason).to(equal(EvaluationReason.Cache))
+                expect(result.evaluationDetails.reason).to(equal(EvaluationReason.Recognized))
             }
         }
     }

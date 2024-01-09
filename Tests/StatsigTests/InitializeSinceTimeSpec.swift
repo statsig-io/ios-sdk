@@ -115,7 +115,7 @@ class InitializeSinceTimeSpec: BaseSpec {
                 _ = TestUtils.startWithResponseAndWait(["has_updates": false], "client-api-key", nil, 200)
 
                 let config = Statsig.getConfig("a_config")
-                expect(config.evaluationDetails.reason).to(equal(.NetworkNotModified))
+                expect(config.evaluationDetails.reason).to(equal(.Recognized))
             }
         }
     }

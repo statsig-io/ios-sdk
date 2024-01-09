@@ -106,8 +106,8 @@ class StatsigSpec: BaseSpec {
 
             it("makes 2 network requests in 0.1 seconds and updates internal store's updatedTime correctly each time when enableAutoValueUpdate is TRUE") {
                 var requestCount = 0
-                var lastSyncTime: Double = 0
-                let now = NSDate().timeIntervalSince1970
+                var lastSyncTime: UInt = 0
+                let dummyLcut = Time.now()
 
                 let opts = StatsigOptions(
                     enableAutoValueUpdate: true,
@@ -121,10 +121,10 @@ class StatsigSpec: BaseSpec {
                     requestCount += 1
 
                     let httpBody = request.statsig_body ?? [:]
-                    lastSyncTime = httpBody["lastSyncTimeForUser"] as? Double ?? 0
+                    lastSyncTime = httpBody["lastSyncTimeForUser"] as? UInt ?? 0
 
                     requestExpectation.fulfill()
-                    return HTTPStubsResponse(jsonObject: ["time": now * 1000, "has_updates": true], statusCode: 200, headers: nil)
+                    return HTTPStubsResponse(jsonObject: ["time": dummyLcut, "has_updates": true], statusCode: 200, headers: nil)
                 }
 
                 Statsig.start(sdkKey: "client-api-key", options: opts)
@@ -139,7 +139,7 @@ class StatsigSpec: BaseSpec {
                 self.wait(for: [requestExpectation], timeout: 1)
                 // second request, "lastSyncTimeForUser" field should be the time when the first request was sent
                 expect(requestCount).to(equal(2))
-                expect(Int(lastSyncTime / 1000)).to(equal(Int(now)))
+                expect(lastSyncTime).to(equal(dummyLcut))
             }
 
             it("works with local cache with different user cache keys") {
@@ -201,8 +201,8 @@ class StatsigSpec: BaseSpec {
                 expect(NSDictionary(dictionary:exp.value)).to(equal(expectedConfig))
                 expect(NSDictionary(dictionary: nonExistentDC.value)).to(equal(NSDictionary()))
 
-                expect(dc.evaluationDetails.reason).to(equal(.Network))
-                expect(exp.evaluationDetails.reason).to(equal(.Network))
+                expect(dc.evaluationDetails.reason).to(equal(.Recognized))
+                expect(exp.evaluationDetails.reason).to(equal(.Recognized))
                 expect(nonExistentDC.evaluationDetails.reason).to(equal(.Unrecognized))
 
                 // Now add overrides on top and check if they work
@@ -235,7 +235,7 @@ class StatsigSpec: BaseSpec {
                 Statsig.removeOverride(configName)
                 expect(NSDictionary(dictionary: Statsig.getConfig(configName).value)).to(
                     equal(NSDictionary(dictionary: DynamicConfigSpec.TestMixedConfig["value"] as! [String: Any])))
-                expect(Statsig.getConfig(configName).evaluationDetails.reason).to(equal(.Network))
+                expect(Statsig.getConfig(configName).evaluationDetails.reason).to(equal(.Recognized))
 
                 overrides = Statsig.getAllOverrides()
                 expect(overrides?.gates.keys.count).to(equal(1))
@@ -273,11 +273,11 @@ class StatsigSpec: BaseSpec {
 
                 var exp = Statsig.getExperiment("exp", keepDeviceValue: true)
                 expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v1"))
-                expect(exp.evaluationDetails.reason).to(equal(.Network))
+                expect(exp.evaluationDetails.reason).to(equal(.Recognized))
 
                 var layer = Statsig.getLayer("layer", keepDeviceValue: true)
                 expect(layer.getValue(forKey: "key", defaultValue: "")).to(equal("layer_v1"))
-                expect(layer.evaluationDetails.reason).to(equal(.Network))
+                expect(layer.evaluationDetails.reason).to(equal(.Recognized))
 
                 Statsig.shutdown()
 
@@ -344,11 +344,11 @@ class StatsigSpec: BaseSpec {
 
                 exp = Statsig.getExperiment("exp", keepDeviceValue: true)
                 expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v3"))
-                expect(exp.evaluationDetails.reason).to(equal(.Network))
+                expect(exp.evaluationDetails.reason).to(equal(.Recognized))
 
                 layer = Statsig.getLayer("layer", keepDeviceValue: true)
                 expect(layer.getValue(forKey: "key", defaultValue: "")).to(equal("layer_v3"))
-                expect(layer.evaluationDetails.reason).to(equal(.Network))
+                expect(layer.evaluationDetails.reason).to(equal(.Recognized))
 
                 Statsig.shutdown()
 
@@ -382,7 +382,7 @@ class StatsigSpec: BaseSpec {
 
                 exp = Statsig.getExperiment("exp", keepDeviceValue: true)
                 expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v4"))
-                expect(exp.evaluationDetails.reason).to(equal(.Network))
+                expect(exp.evaluationDetails.reason).to(equal(.Recognized))
 
                 layer = Statsig.getLayer("layer", keepDeviceValue: true)
                 expect(layer.getValue(forKey: "key", defaultValue: "")).to(equal("layer_v3"))
@@ -415,11 +415,11 @@ class StatsigSpec: BaseSpec {
 
                 exp = Statsig.getExperiment("exp", keepDeviceValue: false)
                 expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v5"))
-                expect(exp.evaluationDetails.reason).to(equal(.Network))
+                expect(exp.evaluationDetails.reason).to(equal(.Recognized))
 
                 layer = Statsig.getLayer("layer", keepDeviceValue: false)
                 expect(layer.getValue(forKey: "key", defaultValue: "")).to(equal("layer_v5"))
-                expect(layer.evaluationDetails.reason).to(equal(.Network))
+                expect(layer.evaluationDetails.reason).to(equal(.Recognized))
 
                 // 6. Only sets sticky values when experiment is active
 
@@ -450,11 +450,11 @@ class StatsigSpec: BaseSpec {
 
                 exp = Statsig.getExperiment("exp", keepDeviceValue: true)
                 expect(exp.getValue(forKey: "key", defaultValue: "")).to(equal("exp_v6"))
-                expect(exp.evaluationDetails.reason).to(equal(.Network))
+                expect(exp.evaluationDetails.reason).to(equal(.Recognized))
 
                 layer = Statsig.getLayer("layer", keepDeviceValue: true)
                 expect(layer.getValue(forKey: "key", defaultValue: "")).to(equal("layer_v6"))
-                expect(layer.evaluationDetails.reason).to(equal(.Network))
+                expect(layer.evaluationDetails.reason).to(equal(.Recognized))
 
                 Statsig.shutdown()
             }
@@ -486,7 +486,7 @@ class StatsigSpec: BaseSpec {
                 expect(error).to(equal("initTimeout Expired"))
                 expect(gate).to(beFalse())
                 expect(NSDictionary(dictionary: dc!.value)).to(equal(NSDictionary(dictionary: [:])))
-                expect(dc!.evaluationDetails.reason).to(equal(.Uninitialized))
+                expect(dc!.evaluationDetails.reason).to(equal(.Unrecognized))
                 expect(timeDiff).to(beCloseTo(0.1, within: 0.01))
 
 
@@ -500,7 +500,7 @@ class StatsigSpec: BaseSpec {
                 expect(error).to(equal("initTimeout Expired"))
                 expect(gate).to(beFalse())
                 expect(NSDictionary(dictionary: dc!.value)).to(equal(NSDictionary(dictionary: [:])))
-                expect(dc!.evaluationDetails.reason).to(equal(.Uninitialized))
+                expect(dc!.evaluationDetails.reason).to(equal(.Unrecognized))
                 expect(timeDiff).to(beCloseTo(0.1, within: 0.01))
             }
 
@@ -535,9 +535,9 @@ class StatsigSpec: BaseSpec {
                 expect(gate).toEventually(beTrue())
                 expect(nonExistentGate).toEventually(beFalse())
                 expect(dc).toEventuallyNot(beNil())
-                expect(dc?.evaluationDetails.reason).toEventually(equal(.Cache))
+                expect(dc?.evaluationDetails.reason).toEventually(equal(.Recognized))
                 expect(exp).toEventuallyNot(beNil())
-                expect(exp?.evaluationDetails.reason).toEventually(equal(.Cache))
+                expect(exp?.evaluationDetails.reason).toEventually(equal(.Recognized))
                 expect(NSDictionary(dictionary: nonExistentDC!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
                 expect(nonExistentDC?.evaluationDetails.reason).toEventually(equal(.Unrecognized))
             }
@@ -626,8 +626,9 @@ class StatsigSpec: BaseSpec {
                         "gate": "gate_name_2",
                         "gateValue": "true",
                         "ruleID": "rule_id_2",
-                        "reason": "Network",
-                        "time": metadata!["time"]!
+                        "reason": "Network:Recognized",
+                        "lcut": "0",
+                        "receivedAt": metadata!["receivedAt"]!
                     ]))
                 )
                 expect(secondaryExposures).to(equal([]))
@@ -647,8 +648,9 @@ class StatsigSpec: BaseSpec {
                     NSDictionary(dictionary: [
                         "config": "config",
                         "ruleID": "default",
-                        "reason": "Network",
-                        "time": metadata!["time"]!
+                        "reason": "Network:Recognized",
+                        "lcut": "0",
+                        "receivedAt": metadata!["receivedAt"]!
                     ]))
                 )
                 expect(secondaryExposures).to(equal([]))
@@ -710,8 +712,9 @@ class StatsigSpec: BaseSpec {
                         "gate": "gate_name_2",
                         "gateValue": "true",
                         "ruleID": "rule_id_2",
-                        "reason": "Network",
-                        "time": metadata!["time"]!
+                        "reason": "Network:Recognized",
+                        "lcut": "0",
+                        "receivedAt": metadata!["receivedAt"]!
                     ]))
                 )
                 expect(secondaryExposures).to(equal([]))

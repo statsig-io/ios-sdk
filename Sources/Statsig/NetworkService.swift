@@ -28,8 +28,9 @@ class NetworkService {
 
     func fetchUpdatedValues(
         for user: StatsigUser,
-        lastSyncTimeForUser: Double,
-        previousDerivedFields: [String: String], completion: (() -> Void)?
+        lastSyncTimeForUser: UInt,
+        previousDerivedFields: [String: String],
+        completion: (() -> Void)?
     ) {
         let (body, _) = makeReqBody([
             "user": user.toDictionary(forLogging: false),
@@ -39,6 +40,7 @@ class NetworkService {
         ])
 
         guard let body = body else {
+            self.store.finalizeValues()
             completion?()
             return
         }
@@ -47,33 +49,40 @@ class NetworkService {
         let fullUserHash = user.getFullUserHash()
 
         makeAndSendRequest(.initialize, body: body) { [weak self] data, _, _ in
-            guard let self = self,
-                  let dict = data?.json,
-                  dict["has_updates"] as? Bool == true else {
+            guard let dict = data?.json, dict["has_updates"] as? Bool == true else {
+                self?.store.finalizeValues()
                 completion?()
                 return
             }
 
-            self.store.saveValues(dict, cacheKey, fullUserHash, completion)
+            self?.store.saveValues(dict, cacheKey, fullUserHash, completion)
         }
     }
 
-    func fetchInitialValues(for user: StatsigUser, sinceTime: Double, previousDerivedFields: [String: String], completion: completionBlock) {
+    func fetchInitialValues(
+        for user: StatsigUser,
+        sinceTime: UInt,
+        previousDerivedFields: [String: String],
+        completion: completionBlock
+    ) {
         var task: URLSessionDataTask?
         var completed = false
         let lock = NSLock()
         
-        let done: (String?) -> Void = { err in
+        let done: (String?) -> Void = { [weak self] err in
             // Ensures the completion is invoked only once
             lock.lock()
             defer { lock.unlock() }
             guard !completed else { return }
             completed = true
-            
-            DispatchQueue.main.async {
-                task?.cancel()
-                completion?(err)
+
+            self?.store.finalizeValues {
+                DispatchQueue.main.async {
+                    task?.cancel()
+                    completion?(err)
+                }
             }
+
         }
 
         if statsigOptions.initTimeout > 0 {
@@ -109,6 +118,7 @@ class NetworkService {
             }
 
             let statusCode = response?.status ?? 0
+
             if !(200...299).contains(statusCode) {
                 done("An error occurred during fetching values for the user. \(statusCode)")
                 return
@@ -230,7 +240,7 @@ class NetworkService {
         var request = URLRequest(url: requestURL)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(sdkKey, forHTTPHeaderField: "STATSIG-API-KEY")
-        request.setValue("\(Int(NSDate().epochTimeInMs()))", forHTTPHeaderField: "STATSIG-CLIENT-TIME")
+        request.setValue("\(Time.now())", forHTTPHeaderField: "STATSIG-CLIENT-TIME")
         request.setValue(DeviceEnvironment.sdkType, forHTTPHeaderField: "STATSIG-SDK-TYPE")
         request.setValue(DeviceEnvironment.sdkVersion, forHTTPHeaderField: "STATSIG-SDK-VERSION")
         request.httpBody = body
