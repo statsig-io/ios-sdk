@@ -15,8 +15,6 @@ public struct StatsigOverrides {
 }
 
 struct StatsigValuesCache {
-
-
     var cacheByID: [String: [String: Any]]
     var userCacheKey: UserCacheKey
     var userLastUpdateTime: Double
@@ -217,13 +215,16 @@ struct StatsigValuesCache {
     }
 
     private func getCacheValues(forCacheKey key: UserCacheKey) -> [String: Any] {
-        return cacheByID[key.v2] ?? [
+        return cacheByID[key.v2] ?? getDefaultValues()
+    }
+
+    private func getDefaultValues() -> [String: Any] {
+        [
             InternalStore.gatesKey: [:],
             InternalStore.configsKey: [:],
             InternalStore.stickyExpKey: [:],
             "time": 0,
         ]
-
     }
 
     private mutating func saveToUserDefaults() {
@@ -252,7 +253,7 @@ struct StatsigValuesCache {
 
         let cachedValues = getCacheValues(forCacheKey: userCacheKey)
         if cacheByID[userCacheKey.v2] == nil {
-            cacheByID[userCacheKey.v2] = cachedValues
+            cacheByID[userCacheKey.v2] = getDefaultValues()
         } else {
             // The values we serve now is from the local cache
             source = .Cache
