@@ -21,7 +21,7 @@ struct StatsigValuesCache {
     var stickyDeviceExperiments: [String: [String: Any]]
     var source: EvaluationSource = .Loading
 
-    var lcut: UInt? = nil
+    var lcut: UInt64? = nil
     var receivedValuesAt: UInt64? = nil
     var gates: [String: [String: Any]]? = nil
     var configs: [String: [String: Any]]? = nil
@@ -31,7 +31,7 @@ struct StatsigValuesCache {
 
     var userCache: [String: Any] {
         didSet {
-            lcut = userCache[InternalStore.lcutKey] as? UInt
+            lcut = userCache[InternalStore.lcutKey] as? UInt64
             receivedValuesAt = userCache[InternalStore.evalTimeKey] as? UInt64
             gates = userCache[InternalStore.gatesKey] as? [String: [String: Any]]
             configs = userCache[InternalStore.configsKey] as? [String: [String: Any]]
@@ -179,7 +179,7 @@ struct StatsigValuesCache {
             return
         }
 
-        var oldestTime = UInt.max
+        var oldestTime = UInt64.max
         var oldestEntryKey: String? = nil
         for (key, value) in cacheByID {
             let evalTime = Time.parse(value[InternalStore.evalTimeKey])

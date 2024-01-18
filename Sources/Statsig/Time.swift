@@ -5,22 +5,22 @@ public class Time {
         UInt64(Date().timeIntervalSince1970 * 1000)
     }
 
-    public static func parse(_ value: Any?) -> UInt {
-        if let time = value as? UInt {
+    public static func parse(_ value: Any?) -> UInt64 {
+        if let time = value as? UInt64 {
             return time
         }
 
         if let time = value as? Double {
-            return UInt(time)
+            return UInt64(time)
         }
 
         if let str = value as? String {
-            if let time = UInt(str) {
+            if let time = UInt64(str) {
                 return time
             }
 
             if let time = Double(str) {
-                return UInt(time)
+                return UInt64(time)
             }
         }
 
