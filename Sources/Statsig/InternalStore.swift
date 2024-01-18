@@ -22,7 +22,7 @@ struct StatsigValuesCache {
     var source: EvaluationSource = .Loading
 
     var lcut: UInt? = nil
-    var receivedValuesAt: UInt? = nil
+    var receivedValuesAt: UInt64? = nil
     var gates: [String: [String: Any]]? = nil
     var configs: [String: [String: Any]]? = nil
     var layers: [String: [String: Any]]? = nil
@@ -32,7 +32,7 @@ struct StatsigValuesCache {
     var userCache: [String: Any] {
         didSet {
             lcut = userCache[InternalStore.lcutKey] as? UInt
-            receivedValuesAt = userCache[InternalStore.evalTimeKey] as? UInt
+            receivedValuesAt = userCache[InternalStore.evalTimeKey] as? UInt64
             gates = userCache[InternalStore.gatesKey] as? [String: [String: Any]]
             configs = userCache[InternalStore.configsKey] as? [String: [String: Any]]
             layers = userCache[InternalStore.layerConfigsKey] as? [String: [String: Any]]
@@ -126,10 +126,10 @@ struct StatsigValuesCache {
         )
     }
 
-    func getLastUpdatedTime(user: StatsigUser) -> UInt {
+    func getLastUpdatedTime(user: StatsigUser) -> UInt64 {
         if (userCache[InternalStore.userHashKey] as? String == user.getFullUserHash()) {
             let cachedValue = userCache[InternalStore.lcutKey]
-            return cachedValue as? UInt ?? 0
+            return cachedValue as? UInt64 ?? 0
         }
 
         return 0
@@ -367,7 +367,7 @@ class InternalStore {
         ?? InternalStore.getEmptyOverrides()
     }
 
-    func getLastUpdateTime(user: StatsigUser) -> UInt {
+    func getLastUpdateTime(user: StatsigUser) -> UInt64 {
         storeQueue.sync {
             return cache.getLastUpdatedTime(user: user)
         }

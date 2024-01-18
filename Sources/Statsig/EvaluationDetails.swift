@@ -5,13 +5,13 @@ public struct EvaluationDetails: Codable {
 
     var reason: EvaluationReason?;
     var lcut: UInt?
-    var receivedAt: UInt?
+    var receivedAt: UInt64?
 
     init(
         source: EvaluationSource,
         reason: EvaluationReason? = nil,
         lcut: UInt? = nil,
-        receivedAt: UInt? = nil
+        receivedAt: UInt64? = nil
     ) {
         self.source = source
         self.reason = reason

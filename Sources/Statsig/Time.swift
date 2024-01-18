@@ -1,8 +1,8 @@
 import Foundation
 
 public class Time {
-    public static func now() -> UInt {
-        UInt(Date().timeIntervalSince1970 * 1000)
+    public static func now() -> UInt64 {
+        UInt64(Date().timeIntervalSince1970 * 1000)
     }
 
     public static func parse(_ value: Any?) -> UInt {

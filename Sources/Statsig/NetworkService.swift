@@ -28,7 +28,7 @@ class NetworkService {
 
     func fetchUpdatedValues(
         for user: StatsigUser,
-        lastSyncTimeForUser: UInt,
+        lastSyncTimeForUser: UInt64,
         previousDerivedFields: [String: String],
         completion: (() -> Void)?
     ) {
@@ -61,7 +61,7 @@ class NetworkService {
 
     func fetchInitialValues(
         for user: StatsigUser,
-        sinceTime: UInt,
+        sinceTime: UInt64,
         previousDerivedFields: [String: String],
         completion: completionBlock
     ) {
