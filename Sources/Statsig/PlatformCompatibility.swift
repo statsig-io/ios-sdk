@@ -37,9 +37,9 @@ struct DeviceInfo {
 
 class PlatformCompatibility
 {
-    static let willResignActiveNotification = WKApplication.willResignActiveNotification
+    static let willResignActiveNotification = WKExtension.applicationWillResignActiveNotification
     static let willTerminateNotification = NSNotification.Name(rawValue: "willTerminateNotification")
-    static let willEnterForegroundNotification = WKApplication.willEnterForegroundNotification
+    static let willEnterForegroundNotification = WKExtension.applicationWillEnterForegroundNotification
 
     static let deviceInfo = DeviceInfo()
 

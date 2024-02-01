@@ -106,7 +106,7 @@ class StatsigSpec: BaseSpec {
 
             it("makes 2 network requests in 0.1 seconds and updates internal store's updatedTime correctly each time when enableAutoValueUpdate is TRUE") {
                 var requestCount = 0
-                var lastSyncTime: UInt = 0
+                var lastSyncTime: UInt64 = 0
                 let dummyLcut = Time.now()
 
                 let opts = StatsigOptions(
@@ -121,7 +121,7 @@ class StatsigSpec: BaseSpec {
                     requestCount += 1
 
                     let httpBody = request.statsig_body ?? [:]
-                    lastSyncTime = httpBody["lastSyncTimeForUser"] as? UInt ?? 0
+                    lastSyncTime = httpBody["lastSyncTimeForUser"] as? UInt64 ?? 0
 
                     requestExpectation.fulfill()
                     return HTTPStubsResponse(jsonObject: ["time": dummyLcut, "has_updates": true], statusCode: 200, headers: nil)

@@ -5,7 +5,7 @@ class Event {
     let name: String
     let value: Any?
     let metadata: [String: String]?
-    let time: UInt
+    let time: UInt64
     let userData: [String: Any?]
     let secondaryExposures: [[String: String]]?
     var statsigMetadata: [String: String]?
