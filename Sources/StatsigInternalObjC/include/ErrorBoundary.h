@@ -18,6 +18,9 @@ NS_ASSUME_NONNULL_BEGIN
            task:(void (^_Nonnull)(void))task
    withRecovery:(void (^_Nullable)(void))recovery;
 
+- (void)logException:(NSString *)tag
+           exception:(NSException *)exception;
+
 @end
 
 NS_ASSUME_NONNULL_END

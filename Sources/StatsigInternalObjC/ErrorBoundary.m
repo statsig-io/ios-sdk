@@ -5,6 +5,7 @@
 @property (nonatomic, strong) NSString *clientKey;
 @property (nonatomic, strong) NSDictionary *deviceEnvironment;
 @property (nonatomic, strong) NSMutableSet *seen;
+@property (nonatomic, strong) NSString *url;
 
 @end
 
@@ -16,6 +17,7 @@
     it.clientKey = clientKey;
     it.deviceEnvironment = deviceEnvironment;
     it.seen = [NSMutableSet new];
+    it.url = @"https://statsigapi.net/v1/sdk_exception";
     return it;
 }
 
@@ -45,9 +47,10 @@
     }
 }
 
-- (void)logException:(NSString *)tag exception:(NSException *)exception {
+- (void)logException:(NSString *)tag
+           exception:(NSException *)exception {
     @try {
-        NSURL *url = [NSURL URLWithString:@"https://statsigapi.net/v1/sdk_exception"];
+        NSURL *url = [NSURL URLWithString:self.url];
         NSMutableURLRequest *request =
         [[NSMutableURLRequest alloc] initWithURL: url];
 

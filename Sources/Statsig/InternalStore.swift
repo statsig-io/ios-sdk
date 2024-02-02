@@ -468,6 +468,11 @@ class InternalStore {
         _ userHash: String?,
         _ completion: (() -> Void)? = nil
     ) {
+        guard SDKKeyValidator.validate(self.cache.sdkKey, values) else {
+            completion?()
+            return
+        }
+
         storeQueue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
 
