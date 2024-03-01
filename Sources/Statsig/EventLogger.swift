@@ -1,7 +1,7 @@
 import Foundation
 
 internal func getFailedEventStorageKey(_ sdkKey: String) -> String {
-    return "\(EventLogger.failedLogsKey):\(sdkKey)".djb2()
+    return "\(EventLogger.failedLogsKey):\(sdkKey.djb2())"
 }
 
 class EventLogger {
