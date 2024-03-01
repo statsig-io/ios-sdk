@@ -53,7 +53,7 @@ class LogEventFailureSpec: BaseSpec {
                 network.responseError = "Nah uh uh uh"
                 network.responseData = "{}".data(using: .utf8)
 
-                logger = EventLogger(user: user, networkService: network, userDefaults: defaults)
+                logger = EventLogger(sdkKey: "client-key", user: user, networkService: network, userDefaults: defaults)
                 logger.log(Event(user: user, name: "an_event", disableCurrentVCLogging: true))
             }
 

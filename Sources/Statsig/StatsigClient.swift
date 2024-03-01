@@ -46,7 +46,7 @@ public class StatsigClient {
         self.statsigOptions = options ?? StatsigOptions()
         self.store = InternalStore(sdkKey, self.currentUser, options: statsigOptions)
         self.networkService = NetworkService(sdkKey: sdkKey, options: statsigOptions, store: store)
-        self.logger = EventLogger(user: currentUser, networkService: networkService)
+        self.logger = EventLogger(sdkKey: sdkKey, user: currentUser, networkService: networkService)
         self.logger.start()
         self.loggedExposures = [String: TimeInterval]()
 

@@ -23,6 +23,7 @@ final class AppLifecycleSpec: BaseSpec {
             _ = TestUtils.startWithStatusAndWait(options: opts)
 
             logger = SpiedEventLogger(
+                sdkKey: "client-key",
                 user: StatsigUser(),
                 networkService: Statsig.client!.logger.networkService,
                 userDefaults: MockDefaults()

@@ -27,11 +27,11 @@ class EventLoggerSpec: BaseSpec {
 
             afterEach {
                 HTTPStubs.removeAllStubs()
-                EventLogger.deleteLocalStorage()
+                EventLogger.deleteLocalStorage(sdkKey: "client-key")
             }
 
             it("should add events to internal queue and send once flush timer hits") {
-                let logger = EventLogger(user: user, networkService: ns, userDefaults: MockDefaults())
+                let logger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: MockDefaults())
                 logger.start(flushInterval: 1)
                 logger.log(event1)
                 logger.log(event2)
@@ -61,7 +61,7 @@ class EventLoggerSpec: BaseSpec {
             }
 
             it("should add events to internal queue and send once it passes max batch size") {
-                let logger = EventLogger(user: user, networkService: ns, userDefaults: MockDefaults())
+                let logger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: MockDefaults())
                 logger.maxEventQueueSize = 3
                 logger.log(event1)
                 logger.log(event2)
@@ -86,7 +86,7 @@ class EventLoggerSpec: BaseSpec {
             }
 
             it("should send events with flush()") {
-                let logger = EventLogger(user: user, networkService: ns, userDefaults: MockDefaults())
+                let logger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: MockDefaults())
                 logger.start(flushInterval: 10)
                 logger.log(event1)
                 logger.log(event2)
@@ -120,7 +120,7 @@ class EventLoggerSpec: BaseSpec {
                 }
 
                 let userDefaults = MockDefaults()
-                let logger = EventLogger(user: user, networkService: ns, userDefaults: userDefaults)
+                let logger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: userDefaults)
                 logger.start(flushInterval: 10)
                 logger.log(event1)
                 logger.log(event2)
@@ -131,7 +131,7 @@ class EventLoggerSpec: BaseSpec {
                 expect(isPendingRequest).toEventually(beFalse())
                 isPendingRequest = true
 
-                let savedData = userDefaults.data[EventLogger.failedLogsKey] as? [Data]
+                let savedData = userDefaults.data[getFailedEventStorageKey("client-key")] as? [Data]
                 var resendData: [Data] = []
 
                 stub(condition: isHost("api.statsig.com")) { request in
@@ -139,7 +139,7 @@ class EventLoggerSpec: BaseSpec {
                     return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 403))
                 }
 
-                _ = EventLogger(user: user, networkService: ns, userDefaults: userDefaults)
+                _ = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: userDefaults)
 
                 expect(resendData.isEmpty).toEventually(beFalse())
                 expect(savedData).toEventuallyNot(beNil())
@@ -158,25 +158,25 @@ class EventLoggerSpec: BaseSpec {
                     text += "test1234567"
                 }
 
-                var logger = EventLogger(user: user, networkService: ns, userDefaults: userDefaults)
+                var logger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: userDefaults)
                 logger.start(flushInterval: 10)
                 logger.log(Event(user: user, name: "a", value: 1, metadata: ["text": text], disableCurrentVCLogging: false))
                 logger.stop()
 
                 // Fail to save because event is too big
-                expect(userDefaults.data[EventLogger.failedLogsKey] as? [Data]).toEventuallyNot(beNil())
-                expect((userDefaults.data[EventLogger.failedLogsKey] as! [Data]).count).to(equal(0))
+                expect(userDefaults.data[getFailedEventStorageKey("client-key")] as? [Data]).toEventuallyNot(beNil())
+                expect((userDefaults.data[getFailedEventStorageKey("client-key")] as! [Data]).count).to(equal(0))
 
                 userDefaults.reset()
 
-                logger = EventLogger(user: user, networkService: ns, userDefaults: userDefaults)
+                logger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: userDefaults)
                 logger.start(flushInterval: 2)
                 logger.log(Event(user: user, name: "b", value: 1, metadata: ["text": "small"], disableCurrentVCLogging: false))
                 logger.stop()
 
                 // Successfully save event
-                expect(userDefaults.data[EventLogger.failedLogsKey] as? [Data]).toEventuallyNot(beNil())
-                expect((userDefaults.data[EventLogger.failedLogsKey] as! [Data]).count).to(equal(1))
+                expect(userDefaults.data[getFailedEventStorageKey("client-key")] as? [Data]).toEventuallyNot(beNil())
+                expect((userDefaults.data[getFailedEventStorageKey("client-key")] as! [Data]).count).to(equal(1))
             }
         }
     }

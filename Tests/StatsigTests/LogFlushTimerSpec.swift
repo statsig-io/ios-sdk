@@ -22,7 +22,7 @@ class LogFlushTimerSpec: BaseSpec {
                 let opts = StatsigOptions()
                 let store = InternalStore(key, user, options: opts)
                 let network = NetworkService(sdkKey: key, options: opts, store: store)
-                logger = SpiedEventLogger(user: user, networkService: network, userDefaults: MockDefaults())
+                logger = SpiedEventLogger(sdkKey: "client-key", user: user, networkService: network, userDefaults: MockDefaults())
             }
 
             it("invalidates previous timers") {

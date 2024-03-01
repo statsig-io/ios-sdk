@@ -1,7 +1,12 @@
 import Foundation
 
+internal func getFailedEventStorageKey(_ sdkKey: String) -> String {
+    return "\(EventLogger.failedLogsKey):\(sdkKey)".djb2()
+}
+
 class EventLogger {
     internal static let failedLogsKey = "com.Statsig.EventLogger.loggingRequestUserDefaultsKey"
+
     private static let eventQueueLabel = "com.Statsig.eventQueue"
 
     let networkService: NetworkService
@@ -9,6 +14,7 @@ class EventLogger {
 
     let logQueue = DispatchQueue(label: eventQueueLabel, qos: .userInitiated)
     let failedRequestLock = NSLock()
+    let storageKey: String
 
     var maxEventQueueSize: Int = 50
     var events: [Event]
@@ -17,25 +23,31 @@ class EventLogger {
     var flushTimer: Timer?
     var user: StatsigUser
 
-    #if os(tvOS)
-        let MAX_SAVED_LOG_REQUEST_SIZE = 100_000 //100 KB
-    #else
-        let MAX_SAVED_LOG_REQUEST_SIZE = 1_000_000 //1 MB
-    #endif
+#if os(tvOS)
+    let MAX_SAVED_LOG_REQUEST_SIZE = 100_000 //100 KB
+#else
+    let MAX_SAVED_LOG_REQUEST_SIZE = 1_000_000 //1 MB
+#endif
 
-    init(user: StatsigUser, networkService: NetworkService, userDefaults: DefaultsLike = StatsigUserDefaults.defaults) {
+    init(
+        sdkKey: String,
+        user: StatsigUser,
+        networkService: NetworkService,
+        userDefaults: DefaultsLike = StatsigUserDefaults.defaults
+    ) {
         self.events = [Event]()
         self.failedRequestQueue = [Data]()
         self.user = user
         self.networkService = networkService
         self.loggedErrorMessage = Set<String>()
         self.userDefaults = userDefaults
+        self.storageKey = getFailedEventStorageKey(sdkKey)
 
-        if let localCache = userDefaults.array(forKey: EventLogger.failedLogsKey) as? [Data] {
+        if let localCache = userDefaults.array(forKey: storageKey) as? [Data] {
             self.failedRequestQueue = localCache
         }
 
-        userDefaults.removeObject(forKey: EventLogger.failedLogsKey)
+        userDefaults.removeObject(forKey: storageKey)
 
         networkService.sendRequestsWithData(failedRequestQueue) { [weak self] failedRequestsData in
             guard let failedRequestsData = failedRequestsData else { return }
@@ -133,11 +145,11 @@ class EventLogger {
 
         userDefaults.setValue(
             failedRequestQueue,
-            forKey: EventLogger.failedLogsKey
+            forKey: storageKey
         )
     }
 
-    static func deleteLocalStorage() {
-        StatsigUserDefaults.defaults.removeObject(forKey: EventLogger.failedLogsKey)
+    static func deleteLocalStorage(sdkKey: String) {
+        StatsigUserDefaults.defaults.removeObject(forKey: getFailedEventStorageKey(sdkKey))
     }
 }
