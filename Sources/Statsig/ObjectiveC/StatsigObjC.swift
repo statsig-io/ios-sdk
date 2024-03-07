@@ -129,7 +129,7 @@ public final class StatsigObjC: NSObject {
     }
 
     @objc public static func getLayerWithExposureLoggingDisabled(_ layerName: String, keepDeviceValue: Bool) -> LayerObjC {
-        return LayerObjC(Statsig.getLayer(layerName, keepDeviceValue: keepDeviceValue))
+        return LayerObjC(Statsig.getLayerWithExposureLoggingDisabled(layerName, keepDeviceValue: keepDeviceValue))
     }
 
     //

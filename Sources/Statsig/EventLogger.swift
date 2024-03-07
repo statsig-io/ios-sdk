@@ -8,6 +8,7 @@ class EventLogger {
     internal static let failedLogsKey = "com.Statsig.EventLogger.loggingRequestUserDefaultsKey"
 
     private static let eventQueueLabel = "com.Statsig.eventQueue"
+    private static let nonExposedChecksEvent = "non_exposed_checks"
 
     let networkService: NetworkService
     let userDefaults: DefaultsLike
@@ -22,6 +23,7 @@ class EventLogger {
     var loggedErrorMessage: Set<String>
     var flushTimer: Timer?
     var user: StatsigUser
+    var nonExposedChecks: [String: Int]
 
 #if os(tvOS)
     let MAX_SAVED_LOG_REQUEST_SIZE = 100_000 //100 KB
@@ -42,6 +44,7 @@ class EventLogger {
         self.loggedErrorMessage = Set<String>()
         self.userDefaults = userDefaults
         self.storageKey = getFailedEventStorageKey(sdkKey)
+        self.nonExposedChecks = [String: Int]()
 
         if let localCache = userDefaults.array(forKey: storageKey) as? [Data] {
             self.failedRequestQueue = localCache
@@ -80,12 +83,14 @@ class EventLogger {
 
     func stop() {
         flushTimer?.invalidate()
+        addNonExposedChecksEvent()
         logQueue.sync {
             self.flushInternal(isShuttingDown: true)
         }
     }
 
     func flush() {
+        addNonExposedChecksEvent()
         logQueue.async { [weak self] in
             self?.flushInternal()
         }
@@ -117,6 +122,24 @@ class EventLogger {
                                                     metadata: ["error": errorMessage]))
             }
         }
+    }
+
+    func addNonExposedCheck(_ configName: String) {
+        let count = nonExposedChecks[configName] ?? 0
+        nonExposedChecks[configName] = count + 1
+    }
+
+    func addNonExposedChecksEvent() {
+        if (self.nonExposedChecks.isEmpty) {
+            return
+        }
+        let json = try? JSONSerialization.data(withJSONObject: nonExposedChecks)
+        let jsonString = String(data: json!, encoding: .ascii)
+        if jsonString != nil {
+            self.events.append(Event.statsigInternalEvent(user: nil, name: EventLogger.nonExposedChecksEvent, value: nil,
+                                           metadata: ["checks": jsonString!]))
+        }
+        self.nonExposedChecks = [String: Int]()
     }
 
     private func addSingleFailedLogRequest(_ requestData: Data?) {

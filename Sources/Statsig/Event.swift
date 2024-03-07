@@ -19,7 +19,7 @@ class Event {
     static let currentVCKey = "currentPage"
 
     init(
-        user: StatsigUser,
+        user: StatsigUser?,
         name: String,
         value: Any? = nil,
         metadata: [String: String]? = nil,
@@ -27,7 +27,7 @@ class Event {
         disableCurrentVCLogging: Bool
     ) {
         self.time = Time.now()
-        self.userData = user.toDictionary(forLogging: true)
+        self.userData = user?.toDictionary(forLogging: true) ?? [:]
         self.name = name
         self.value = value
         self.metadata = metadata
@@ -48,7 +48,7 @@ class Event {
     }
 
     static func statsigInternalEvent(
-        user: StatsigUser,
+        user: StatsigUser?,
         name: String,
         value: Any? = nil,
         metadata: [String: String]? = nil,
