@@ -221,9 +221,10 @@ extension StatsigClient {
      */
     public func getFeatureGate(_ gateName: String) -> FeatureGate {
         let gate = store.checkGate(forName: gateName)
-
         logGateExposureForGate(gateName, gate: gate, isManualExposure: false)
-
+        if let cb = statsigOptions.evaluationCallback {
+            cb(.gate(gate))
+        }
         return gate
     }
 
@@ -249,7 +250,11 @@ extension StatsigClient {
      */
     public func getFeatureGateWithExposureLoggingDisabled(_ gateName: String) -> FeatureGate {
         logger.addNonExposedCheck(gateName)
-        return store.checkGate(forName: gateName)
+        let gate = store.checkGate(forName: gateName)
+        if let cb = statsigOptions.evaluationCallback {
+            cb(.gate(gate))
+        }
+        return gate;
     }
 
     /**
@@ -312,9 +317,10 @@ extension StatsigClient {
      */
     public func getConfig(_ configName: String) -> DynamicConfig {
         let config = store.getConfig(forName: configName)
-
         logConfigExposureForConfig(configName, config: config, isManualExposure: false)
-
+        if let cb = statsigOptions.evaluationCallback {
+            cb(.config(config))
+        }
         return config
     }
 
@@ -328,7 +334,11 @@ extension StatsigClient {
      */
     public func getConfigWithExposureLoggingDisabled(_ configName: String) -> DynamicConfig {
         logger.addNonExposedCheck(configName)
-        return store.getConfig(forName: configName)
+        let config = store.getConfig(forName: configName)
+        if let cb = statsigOptions.evaluationCallback {
+            cb(.config(config))
+        }
+        return config
     }
 
     /**
@@ -389,9 +399,10 @@ extension StatsigClient {
      */
     public func getExperiment(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
         let experiment = store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
-
         logConfigExposureForConfig(experimentName, config: experiment, isManualExposure: false)
-
+        if let cb = statsigOptions.evaluationCallback {
+            cb(.experiment(experiment))
+        }
         return experiment
     }
 
@@ -406,7 +417,11 @@ extension StatsigClient {
      */
     public func getExperimentWithExposureLoggingDisabled(_ experimentName: String, keepDeviceValue: Bool = false) -> DynamicConfig {
         logger.addNonExposedCheck(experimentName)
-        return store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
+        let experiment = store.getExperiment(forName: experimentName, keepDeviceValue: keepDeviceValue)
+        if let cb = statsigOptions.evaluationCallback {
+            cb(.experiment(experiment))
+        }
+        return experiment
     }
 
     /**
@@ -439,7 +454,11 @@ extension StatsigClient {
      SeeAlso [Layers Documentation](https://docs.statsig.com/layers)
      */
     public func getLayer(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
-        return store.getLayer(client: self, forName: layerName, keepDeviceValue: keepDeviceValue)
+        let layer = store.getLayer(client: self, forName: layerName, keepDeviceValue: keepDeviceValue)
+        if let cb = statsigOptions.evaluationCallback {
+            cb(.layer(layer))
+        }
+        return layer
     }
 
     /**
@@ -453,7 +472,11 @@ extension StatsigClient {
      */
     public func getLayerWithExposureLoggingDisabled(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
         logger.addNonExposedCheck(layerName)
-        return store.getLayer(client: nil, forName: layerName, keepDeviceValue: keepDeviceValue)
+        let layer = store.getLayer(client: nil, forName: layerName, keepDeviceValue: keepDeviceValue)
+        if let cb = statsigOptions.evaluationCallback {
+            cb(.layer(layer))
+        }
+        return layer
     }
 
     /**

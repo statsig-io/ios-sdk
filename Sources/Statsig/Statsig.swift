@@ -518,7 +518,11 @@ public class Statsig {
     //
 
     private static func checkGateImpl(_ gateName: String, withExposures: Bool, functionName: String) -> FeatureGate {
-        var result: FeatureGate? = nil
+        var result: FeatureGate = FeatureGate(
+            name: gateName,
+            value: false,
+            ruleID: "",
+            evalDetails: .uninitialized())
         errorBoundary.capture(functionName) {
             guard let client = client else {
                 print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning false as the default.")
@@ -529,15 +533,12 @@ public class Statsig {
             ? client.getFeatureGate(gateName)
             : client.getFeatureGateWithExposureLoggingDisabled(gateName)
         }
-        return result ?? FeatureGate(
-            name: gateName,
-            value: false,
-            ruleID: "",
-            evalDetails: .uninitialized())
+        
+        return result
     }
 
     private static func getExperimentImpl(_ experimentName: String, keepDeviceValue: Bool, withExposures: Bool, functionName: String) -> DynamicConfig {
-        var result: DynamicConfig? = nil
+        var result: DynamicConfig = getEmptyConfig(experimentName)
         errorBoundary.capture(functionName) {
             guard let client = client else {
                 print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning a dummy DynamicConfig that will only return default values.")
@@ -547,12 +548,12 @@ public class Statsig {
             result = withExposures
             ? client.getExperiment(experimentName, keepDeviceValue: keepDeviceValue)
             : client.getExperimentWithExposureLoggingDisabled(experimentName, keepDeviceValue: keepDeviceValue)
-        }
-        return result ?? getEmptyConfig(experimentName)
+        }        
+        return result
     }
 
     private static func getConfigImpl(_ configName: String, withExposures: Bool, functionName: String) -> DynamicConfig {
-        var result: DynamicConfig? = nil
+        var result: DynamicConfig = getEmptyConfig(configName)
         errorBoundary.capture(functionName) {
             guard let client = client else {
                 print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning a dummy DynamicConfig that will only return default values.")
@@ -562,12 +563,12 @@ public class Statsig {
             result = withExposures
             ? client.getConfig(configName)
             : client.getConfigWithExposureLoggingDisabled(configName)
-        }
-        return result ?? getEmptyConfig(configName)
+        }        
+        return result
     }
 
     private static func getLayerImpl(_ layerName: String, keepDeviceValue: Bool, withExposures: Bool, functionName: String) -> Layer {
-        var result: Layer?
+        var result: Layer = Layer(client: nil, name: layerName, evalDetails: .uninitialized())
         errorBoundary.capture(functionName) {
             guard let client = client else {
                 print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning an empty Layer object")
@@ -578,8 +579,7 @@ public class Statsig {
             ? client.getLayer(layerName, keepDeviceValue: keepDeviceValue)
             : client.getLayerWithExposureLoggingDisabled(layerName, keepDeviceValue: keepDeviceValue)
         }
-
-        return result ?? Layer(client: nil, name: layerName, evalDetails: .uninitialized())
+        return result
     }
 
     private static func getEmptyConfig(_ name: String) -> DynamicConfig {

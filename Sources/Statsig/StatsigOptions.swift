@@ -78,6 +78,15 @@ public class StatsigOptions {
         }
     }
 
+    public var evaluationCallback: ((EvaluationCallbackData) -> Void)?
+
+    public enum EvaluationCallbackData {
+        case gate (FeatureGate)
+        case config (DynamicConfig)
+        case experiment (DynamicConfig)
+        case layer (Layer)
+    }
+
     internal var mainApiUrl: URL?
     internal var logEventApiUrl: URL?
     var environment: [String: String] = [:]
@@ -94,7 +103,8 @@ public class StatsigOptions {
                 disableHashing: Bool? = false,
                 shutdownOnBackground: Bool? = true,
                 api: String? = nil,
-                eventLoggingApi: String? = nil
+                eventLoggingApi: String? = nil,
+                evaluationCallback: ((EvaluationCallbackData) -> Void)? = nil
     )
     {
         if let initTimeout = initTimeout, initTimeout >= 0 {
@@ -149,5 +159,7 @@ public class StatsigOptions {
         }
 
         self.overrideStableID = overrideStableID
+
+        self.evaluationCallback = evaluationCallback
     }
 }
