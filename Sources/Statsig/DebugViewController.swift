@@ -21,8 +21,7 @@ class DebugViewController: UIViewController, WKNavigationDelegate, WKScriptMessa
             return
         }
 
-//        guard let url = URL(string: "https://console.statsig.com/client_sdk_debugger_redirect?sdkKey=\(sdkKey)") else {
-        guard let url = URL(string: "http://localhost:3000/client_sdk_debugger_redirect?sdkKey=\(sdkKey)") else {
+        guard let url = URL(string: "https://console.statsig.com/client_sdk_debugger_redirect?sdkKey=\(sdkKey)") else {
             print("[Statsig] DebugView failed to create required URL")
             return
         }
