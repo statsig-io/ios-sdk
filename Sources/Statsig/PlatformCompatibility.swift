@@ -23,7 +23,7 @@ class PlatformCompatibility
     }
 }
 
-#elseif canImport(WatchKit)
+#elseif os(watchOS)
 
 import WatchKit
 import UIKit
@@ -50,7 +50,7 @@ class PlatformCompatibility
     }
 }
 
-#elseif canImport(UIKit)
+#elseif os(iOS) || os(tvOS)
 
 import UIKit
 
@@ -58,7 +58,7 @@ struct DeviceInfo {
     let systemVersion = UIDevice.current.systemVersion
     let systemName = UIDevice.current.systemName
     let model = UIDevice.current.model
-    let os = "iOS"
+    let os = UIDevice.current.userInterfaceIdiom == .tv ? "tvOS" : "iOS"
 }
 
 class PlatformCompatibility
@@ -80,7 +80,42 @@ class PlatformCompatibility
     }
 }
 
-#elseif canImport(AppKit)
+#elseif os(visionOS)
+
+import UIKit
+
+struct DeviceInfo {
+    let systemVersion = UIDevice.current.systemVersion
+    let systemName = UIDevice.current.systemName
+    let model = UIDevice.current.model
+    let os = "visionOS"
+}
+
+class PlatformCompatibility
+{
+    static let willResignActiveNotification = UIApplication.willResignActiveNotification
+    static let willTerminateNotification = UIApplication.willTerminateNotification
+    static let willEnterForegroundNotification = UIApplication.willEnterForegroundNotification
+
+    static let deviceInfo = DeviceInfo()
+
+    static func getRootViewControllerClassName(_ callback: @escaping (_ name: String?) -> Void) {
+        DispatchQueue.main.async { [callback] in
+            let scene = UIApplication.shared.connectedScenes.first(where: { scene in
+                return scene.activationState == UIScene.ActivationState.foregroundActive
+            })
+
+            if let root = (scene?.delegate as? UIWindowSceneDelegate)?.window??.rootViewController {
+                callback("\(root)")
+            } else {
+                callback(nil)
+            }
+        }
+    }
+}
+
+#elseif os(macOS)
+
 import AppKit
 import IOKit
 

@@ -29,7 +29,7 @@ class ManyUpdatesViewController: UIViewController {
     private func addButton() {
         let button = UIButton(type: .system)
         button.frame = CGRect(x: 100, y: 100, width: 200, height: 50)
-        button.setTitle("Click", for: .normal)
+        button.setTitle("Tap", for: .normal)
         button.addTarget(self, action: #selector(runUpdates), for: .touchUpInside)
         view.addSubview(button)
     }

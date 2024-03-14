@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		5C10DDA92AD4FB60003C4CE1 /* BasicViewControllerObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = 5C10DDA82AD4FB60003C4CE1 /* BasicViewControllerObjC.m */; };
+		5C5A4BD32BA211F900EAF9AF /* ShowDebugViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C5A4BD22BA211F900EAF9AF /* ShowDebugViewController.swift */; };
 		5C68BE032AF9A3B9006FD9B5 /* Statsig in Frameworks */ = {isa = PBXBuildFile; productRef = 5C68BE022AF9A3B9006FD9B5 /* Statsig */; };
 		5C68BE052AF9A66C006FD9B5 /* Statsig in Frameworks */ = {isa = PBXBuildFile; productRef = 5C68BE042AF9A66C006FD9B5 /* Statsig */; };
 		5C68BE072AF9A6DC006FD9B5 /* ManyGatesSwiftUIViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C68BE062AF9A6DC006FD9B5 /* ManyGatesSwiftUIViewController.swift */; };
@@ -36,6 +37,7 @@
 		5C10DDA72AD4FB60003C4CE1 /* BasicViewControllerObjC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BasicViewControllerObjC.h; sourceTree = "<group>"; };
 		5C10DDA82AD4FB60003C4CE1 /* BasicViewControllerObjC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BasicViewControllerObjC.m; sourceTree = "<group>"; };
 		5C52DCB52AEA234F00807F7D /* sdk */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = sdk; path = ..; sourceTree = "<group>"; };
+		5C5A4BD22BA211F900EAF9AF /* ShowDebugViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShowDebugViewController.swift; sourceTree = "<group>"; };
 		5C68BE062AF9A6DC006FD9B5 /* ManyGatesSwiftUIViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManyGatesSwiftUIViewController.swift; sourceTree = "<group>"; };
 		5C68BFB92AFAA68B006FD9B5 /* ExampleDirectoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleDirectoryViewController.swift; sourceTree = "<group>"; };
 		5C80945F2ADF17F2001AF600 /* Constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
@@ -87,6 +89,7 @@
 				5C10DDA82AD4FB60003C4CE1 /* BasicViewControllerObjC.m */,
 				5CAFD04D2ADAEEDD00ACAF79 /* PerfViewControllerObjC.h */,
 				5CAFD04E2ADAEEDD00ACAF79 /* PerfViewControllerObjC.m */,
+				5C5A4BD22BA211F900EAF9AF /* ShowDebugViewController.swift */,
 				5C9C319F2B17970900FA7212 /* ManyUpdatesViewController.swift */,
 				5CDBFC9D2AD4EFE0002E6E60 /* BasicViewController.swift */,
 				5C68BE062AF9A6DC006FD9B5 /* ManyGatesSwiftUIViewController.swift */,
@@ -261,6 +264,7 @@
 				5C9C31A02B17970900FA7212 /* ManyUpdatesViewController.swift in Sources */,
 				5CDBFC9A2AD4EFE0002E6E60 /* AppDelegate.swift in Sources */,
 				5C68BFBA2AFAA68B006FD9B5 /* ExampleDirectoryViewController.swift in Sources */,
+				5C5A4BD32BA211F900EAF9AF /* ShowDebugViewController.swift in Sources */,
 				5C8094602ADF17F2001AF600 /* Constants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

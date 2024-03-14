@@ -1,0 +1,40 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CODE_SIGNING_REQUIRED: NO
+  CODE_SIGN_IDENTITY: ""
+  FORCE_COLOR: true
+
+jobs:
+  main:
+    name: Build
+    runs-on: self-hosted
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          [
+            "platform=iOS Simulator,name=iPhone SE (2nd generation)",
+            "platform=macOS",
+            "platform=tvOS Simulator,name=Apple TV",
+            "platform=visionOS",
+          ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Run Build ${{ matrix.platform }}
+        run: |
+          cd .swiftpm/xcode
+          xcodebuild build \
+            -destination "${{ matrix.platform }}" \
+            -workspace package.xcworkspace \
+            -scheme Statsig \
+            | xcbeautify && exit ${PIPESTATUS[0]}

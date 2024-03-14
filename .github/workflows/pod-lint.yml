@@ -1,4 +1,4 @@
-name: Test
+name: Lint
 
 on:
   workflow_dispatch:
@@ -7,16 +7,13 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  FORCE_COLOR: true
-
 jobs:
   main:
-    name: Test
+    name: Lint
     runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@main
 
-      - name: Run Tests
-        run: ./run_tests.sh
+      - name: Lint Podspec
+        run: pod lib lint Statsig.podspec --skip-tests

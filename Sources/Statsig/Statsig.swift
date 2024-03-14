@@ -492,9 +492,9 @@ public class Statsig {
     /**
      Presents a view of the current internal state of the SDK.
      */
-    public static func openDebugView() {
+    public static func openDebugView(_ callback: DebuggerCallback? = nil) {
         errorBoundary.capture("openDebugView") {
-            client?.openDebugView()
+            client?.openDebugView(callback)
         }
     }
 

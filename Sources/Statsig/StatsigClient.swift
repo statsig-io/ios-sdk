@@ -153,7 +153,7 @@ public class StatsigClient {
     /**
      Presents a view of the current internal state of the SDK.
      */
-    public func openDebugView() {
+    public func openDebugView(_ callback: DebuggerCallback? = nil) {
         let cache = store.cache
         let reason = cache.getEvaluationDetails().getDetailedReason()
         let state: [String: Any?] = [
@@ -166,7 +166,7 @@ public class StatsigClient {
 
         DispatchQueue.main.async { [weak self] in
             if let self = self {
-                DebugViewController.show(self.sdkKey, state)
+                DebugViewController.show(self.sdkKey, state, callback)
             }
         }
     }

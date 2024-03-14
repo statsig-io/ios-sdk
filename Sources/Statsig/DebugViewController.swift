@@ -1,21 +1,28 @@
+public typealias DebuggerCallback = (Bool) -> Void
 
 #if os(iOS)
 
 import UIKit
 import WebKit
 
-class DebugViewController: UIViewController, WKNavigationDelegate {
+class DebugViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler {
+    private let messageHandlerName = "statsigDebugMessageHandler"
+
     private var webView: WKWebView?
     private var url: URL
     private var state: [String: Any?]
+    private var isReloadRequested: Bool = false
+    private var callback: DebuggerCallback?
 
-    static func show(_ sdkKey: String, _ state: [String: Any?]) {
+
+    static func show(_ sdkKey: String, _ state: [String: Any?], _ callback: DebuggerCallback? = nil) {
         guard JSONSerialization.isValidJSONObject(state) else {
             print("[Statsig] DebugView received Invalid state")
             return
         }
 
-        guard let url = URL(string: "https://console.statsig.com/client_sdk_debugger_redirect?sdkKey=\(sdkKey)") else {
+//        guard let url = URL(string: "https://console.statsig.com/client_sdk_debugger_redirect?sdkKey=\(sdkKey)") else {
+        guard let url = URL(string: "http://localhost:3000/client_sdk_debugger_redirect?sdkKey=\(sdkKey)") else {
             print("[Statsig] DebugView failed to create required URL")
             return
         }
@@ -39,13 +46,14 @@ class DebugViewController: UIViewController, WKNavigationDelegate {
             return
         }
 
-        let debugger = DebugViewController(url: url, state: state)
-        root.show(debugger, sender: nil)
+        let debugger = DebugViewController(url: url, state: state, callback: callback)
+        root.present(debugger, animated: true)
     }
 
-    init(url: URL, state: [String: Any?]) {
+    init(url: URL, state: [String: Any?], callback: DebuggerCallback?) {
         self.url = url
         self.state = state
+        self.callback = callback
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -56,20 +64,26 @@ class DebugViewController: UIViewController, WKNavigationDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-
         do {
             let data = try JSONSerialization.data(withJSONObject: self.state, options: [])
             let json = data.text ?? "{}"
 
             let config = WKWebViewConfiguration()
+            let userContentController = WKUserContentController()
+
+
+
             let script = WKUserScript(source: "window.__StatsigClientState = \(json)",
                                       injectionTime: .atDocumentStart,
                                       forMainFrameOnly: false)
-            config.userContentController.addUserScript(script)
+            userContentController.addUserScript(script)
+
+            config.userContentController = userContentController
 
             let webView = WKWebView(frame: view.bounds, configuration: config)
             webView.frame = view.bounds
             webView.navigationDelegate = self
+            webView.configuration.userContentController.add(self, name: messageHandlerName)
             view.addSubview(webView)
             webView.load(URLRequest(url: url))
             self.webView = webView
@@ -83,14 +97,32 @@ class DebugViewController: UIViewController, WKNavigationDelegate {
 
     }
 
+    override func viewWillDisappear(_ animated: Bool) {
+        callback?(isReloadRequested)
+    }
+    
     @objc func closeButtonTapped() {
         dismiss(animated: true, completion: nil)
     }
+
+    func userContentController(
+        _ userContentController: WKUserContentController,
+        didReceive message: WKScriptMessage
+    ) {
+        if (message.name != messageHandlerName) {
+            return
+        }
+
+        if (message.body as? String == "RELOAD_REQUIRED") {
+            isReloadRequested = true
+        }
+    }
+
 }
 
 #else
 class DebugViewController {
-    static func show(_ sdkKey: String, _ state: [String: Any?]) {
+    static func show(_ sdkKey: String, _ state: [String: Any?], _ callback: DebuggerCallback? = nil) {
         print("[Statsig] DebugView is currently only available on iOS")
     }
 }

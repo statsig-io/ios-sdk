@@ -10,7 +10,7 @@ let Examples: [(String, UIViewController)] = [
     ( "Perf (ObjC)", PerfViewControllerObjC() ),
     ( "Many Gates (SwiftUI)", ManyGatesSwiftUIViewController() ),
     ( "Many Updates (Swift)", ManyUpdatesViewController() ),
-
+    ( "Open Debug View", ShowDebugViewController())
 ]
 
 
