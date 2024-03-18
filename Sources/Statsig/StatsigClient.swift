@@ -704,9 +704,9 @@ extension StatsigClient {
         self.networkService.fetchUpdatedValues(
             for: currentUser,
             lastSyncTimeForUser: sinceTime,
-            previousDerivedFields: previousDerivedFields,
-            completion: nil
-        )
+            previousDerivedFields: previousDerivedFields) { [weak self] error in
+                self?.notifyOnUserUpdatedListeners(error)
+            }
     }
 
     private static func normalizeUser(_ user: StatsigUser?, options: StatsigOptions?) -> StatsigUser {
