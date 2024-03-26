@@ -6,3 +6,12 @@ Statsig helps you move faster with feature gates (feature flags), and/or dynamic
 
 ## Getting Started
 Check out our [SDK docs](https://docs.statsig.com/client/iosClientSDK) to get started.
+
+
+## Apple's Privacy Manifest
+
+Following Apple's rules, we've included a Privacy Manifest in the Statsig SDK to explain its basic features. 
+Developers will need to fill out their own Privacy Manifest, listing the information they add to the StatsigUser class. 
+Important details like UserID and Email should be mentioned, but they aren't included by default because not everyone using the SDK will include these details in their StatsigUser class.
+
+For more on how we use and handle data in our SDK, look at the PrivacyInfo.xcprivacy file. If you need help putting these steps into action in your app, check Apple's official guide on Privacy Manifests at https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_data_use_in_privacy_manifests.
