@@ -50,11 +50,10 @@
     [Statsig manuallyLogExposureWithFeatureGate:decoded];
 
     [self shutdownStatsig];
-    XCTAssertEqual(_logs.count, 2);
+    XCTAssertEqual(_logs.count, 1);
     XCTAssertEqualObjects(_logs[0][@"eventName"], @"statsig::gate_exposure");
     XCTAssertEqualObjects(_logs[0][@"metadata"][@"gate"], @"test_public");
     XCTAssertEqualObjects(_logs[0][@"metadata"][@"isManualExposure"], @"true");
-    XCTAssertEqualObjects(_logs[1][@"eventName"], @"statsig::non_exposed_checks");
 }
 
 - (void)testManualConfigExposure {
@@ -67,11 +66,10 @@
     [Statsig manuallyLogExposureWithDynamicConfig:decoded];
 
     [self shutdownStatsig];
-    XCTAssertEqual(_logs.count, 2);
+    XCTAssertEqual(_logs.count, 1);
     XCTAssertEqualObjects(_logs[0][@"eventName"], @"statsig::config_exposure");
     XCTAssertEqualObjects(_logs[0][@"metadata"][@"config"], @"test_disabled_config");
     XCTAssertEqualObjects(_logs[0][@"metadata"][@"isManualExposure"], @"true");
-    XCTAssertEqualObjects(_logs[1][@"eventName"], @"statsig::non_exposed_checks");
 }
 
 - (void)testManualLayerExposure {
@@ -84,12 +82,11 @@
     [Statsig manuallyLogExposureWithLayer:decoded parameterName:@"a_string"];
 
     [self shutdownStatsig];
-    XCTAssertEqual(_logs.count, 2);
+    XCTAssertEqual(_logs.count, 1);
     XCTAssertEqualObjects(_logs[0][@"eventName"], @"statsig::layer_exposure");
     XCTAssertEqualObjects(_logs[0][@"metadata"][@"config"], @"layer_with_many_params");
     XCTAssertEqualObjects(_logs[0][@"metadata"][@"parameterName"], @"a_string");
     XCTAssertEqualObjects(_logs[0][@"metadata"][@"isManualExposure"], @"true");
-    XCTAssertEqualObjects(_logs[1][@"eventName"], @"statsig::non_exposed_checks");
 }
 
 #pragma mark - Helpers

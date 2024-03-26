@@ -46,7 +46,7 @@ class ExposureLoggingSpec: BaseSpec {
                 logs = []
                 TestUtils.captureLogs(host: "ExposureLoggingSpec") { captured in
                     if let events = captured["events"] as? [[String: Any]] {
-                        logs = events.filter( { ($0["eventName"] as? String) != "statsig::non_exposed_checks" } )
+                        logs = events
                     }
                 }
             }
