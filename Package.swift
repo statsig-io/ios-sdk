@@ -20,17 +20,20 @@ let package = Package(
         .target(
             name: "Statsig",
             dependencies: [.target(name: "StatsigInternalObjC")],
-            path: "Sources/Statsig"),
+            path: "Sources/Statsig"
+        ),
         .target(name: "StatsigInternalObjC",
-                     path: "Sources/StatsigInternalObjC",
-                     publicHeadersPath: "include",
-                     cSettings: [
-                         .headerSearchPath("."),
-                         .headerSearchPath("Private"),
-                     ]),
+                path: "Sources/StatsigInternalObjC",
+                publicHeadersPath: "include",
+                cSettings: [
+                    .headerSearchPath("."),
+                    .headerSearchPath("Private"),
+                ]
+               ),
         .testTarget(
             name: "StatsigTests",
-            dependencies: ["Statsig", "Quick", "Nimble", "OHHTTPStubs", .product(name: "OHHTTPStubsSwift", package: "OHHTTPStubs")]),
+            dependencies: ["Statsig", "Quick", "Nimble", "OHHTTPStubs", .product(name: "OHHTTPStubsSwift", package: "OHHTTPStubs")]
+        ),
         .testTarget(
             name: "StatsigObjcTests",
             dependencies: [.target(name: "Statsig"),.product(name: "OCMock", package: "ocmock")],

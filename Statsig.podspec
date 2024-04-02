@@ -25,6 +25,7 @@ Pod::Spec.new do |spec|
 
   spec.source       = { :git => "https://github.com/statsig-io/ios-sdk.git", :tag => "#{spec.version}" }
   spec.source_files  = "Sources/Statsig/**/*.swift"
+  spec.resource_bundles  = {"Statsig" => ["PrivacyInfo.xcprivacy"]}
   spec.default_subspec = 'StatsigInternalObjC'
 
   spec.swift_version = '5.0'
