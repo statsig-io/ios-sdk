@@ -39,6 +39,19 @@ class AtomicDictionary<T>
             self.internalDictionary[key] = value
         }
     }
+    
+    func removeValue(forKey key: String) {
+        self.queue.async(flags: .barrier) {
+            self.internalDictionary.removeValue(forKey: key)
+        }
+    }
+    
+    
+    func count() -> Int {
+        return self.queue.sync {
+            return self.internalDictionary.count
+        }
+    }
 
     func keys() -> [String] {
         var keys: [String] = []

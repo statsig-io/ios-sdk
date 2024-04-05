@@ -17,6 +17,7 @@ class NetworkService {
     let sdkKey: String
     let statsigOptions: StatsigOptions
     var store: InternalStore
+    var inflightRequests = AtomicDictionary<URLSessionTask>(label: "com.Statsig.InFlightRequests")
 
     private final let networkRetryErrorCodes = [408, 500, 502, 503, 504, 522, 524, 599]
 
@@ -65,6 +66,15 @@ class NetworkService {
         previousDerivedFields: [String: String],
         completion: completionBlock
     ) {
+        let cacheKey = UserCacheKey.from(user: user, sdkKey: self.sdkKey)
+        if let inflight = inflightRequests[cacheKey.v2] {
+            inflight.cancel()
+        }
+        
+        if inflightRequests.count() > 50 {
+            inflightRequests.reset()
+        }
+
         var task: URLSessionDataTask?
         var completed = false
         let lock = NSLock()
@@ -73,6 +83,9 @@ class NetworkService {
             // Ensures the completion is invoked only once
             lock.lock()
             defer { lock.unlock() }
+            
+            self?.inflightRequests.removeValue(forKey: cacheKey.v2)
+            
             guard !completed else { return }
             completed = true
 
@@ -104,7 +117,6 @@ class NetworkService {
             return
         }
 
-        let cacheKey = UserCacheKey.from(user: user, sdkKey: self.sdkKey)
         let fullUserHash = user.getFullUserHash()
 
         makeAndSendRequest(
@@ -148,7 +160,8 @@ class NetworkService {
                 done(nil)
             }
 
-        } taskCapture: { capturedTask in
+        } taskCapture: { [weak self] capturedTask in
+            self?.inflightRequests[cacheKey.v2] = capturedTask
             task = capturedTask
         }
     }
