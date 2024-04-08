@@ -8,6 +8,7 @@ class EventLogger {
     internal static let failedLogsKey = "com.Statsig.EventLogger.loggingRequestUserDefaultsKey"
 
     private static let eventQueueLabel = "com.Statsig.eventQueue"
+    private static let nonExposedChecksEvent = "non_exposed_checks"
 
     let networkService: NetworkService
     let userDefaults: DefaultsLike
@@ -22,6 +23,7 @@ class EventLogger {
     var loggedErrorMessage: Set<String>
     var flushTimer: Timer?
     var user: StatsigUser
+    var nonExposedChecks: [String: Int]
 
 #if os(tvOS)
     let MAX_SAVED_LOG_REQUEST_SIZE = 100_000 //100 KB
@@ -42,6 +44,7 @@ class EventLogger {
         self.loggedErrorMessage = Set<String>()
         self.userDefaults = userDefaults
         self.storageKey = getFailedEventStorageKey(sdkKey)
+        self.nonExposedChecks = [String: Int]()
 
         if let localCache = userDefaults.array(forKey: storageKey) as? [Data] {
             self.failedRequestQueue = localCache
@@ -81,12 +84,14 @@ class EventLogger {
     func stop() {
         flushTimer?.invalidate()
         logQueue.sync {
+            self.addNonExposedChecksEvent()
             self.flushInternal(isShuttingDown: true)
         }
     }
 
     func flush() {
         logQueue.async { [weak self] in
+            self?.addNonExposedChecksEvent()
             self?.flushInternal()
         }
     }
@@ -113,10 +118,50 @@ class EventLogger {
 
             if let errorMessage = errorMessage, !self.loggedErrorMessage.contains(errorMessage) {
                 self.loggedErrorMessage.insert(errorMessage)
-                self.log(Event.statsigInternalEvent(user: self.user, name: "log_event_failed", value: nil,
-                                                    metadata: ["error": errorMessage]))
+                self.log(Event.statsigInternalEvent(
+                    user: self.user,
+                    name: "log_event_failed",
+                    value: nil,
+                    metadata: ["error": errorMessage])
+                )
             }
         }
+    }
+
+    func incrementNonExposedCheck(_ configName: String) {
+        logQueue.async { [weak self] in
+            guard let self = self else {
+                return
+            }
+
+            let count = self.nonExposedChecks[configName] ?? 0
+            self.nonExposedChecks[configName] = count + 1
+        }
+    }
+
+    func addNonExposedChecksEvent() {
+        if (self.nonExposedChecks.isEmpty) {
+            return
+        }
+
+        guard JSONSerialization.isValidJSONObject(nonExposedChecks),
+              let data = try? JSONSerialization.data(withJSONObject: nonExposedChecks),
+              let json = String(data: data, encoding: .ascii)
+        else {
+            self.nonExposedChecks = [String: Int]()
+            return
+        }
+
+        let event = Event.statsigInternalEvent(
+            user: nil,
+            name: EventLogger.nonExposedChecksEvent,
+            value: nil,
+            metadata: [
+                "checks": json
+            ]
+        )
+        self.events.append(event)
+        self.nonExposedChecks = [String: Int]()
     }
 
     private func addSingleFailedLogRequest(_ requestData: Data?) {
