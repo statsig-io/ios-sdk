@@ -77,6 +77,11 @@ public class StatsigOptions {
             logEventApiUrl = URL(string: eventLoggingApi) ?? logEventApiUrl
         }
     }
+    
+    /**
+     A callback to validate the user on initialization/updateUser.
+     */
+    public var userValidationCallback: ((StatsigUser) -> StatsigUser)?
 
     public var evaluationCallback: ((EvaluationCallbackData) -> Void)?
 
@@ -104,7 +109,8 @@ public class StatsigOptions {
                 shutdownOnBackground: Bool? = true,
                 api: String? = nil,
                 eventLoggingApi: String? = nil,
-                evaluationCallback: ((EvaluationCallbackData) -> Void)? = nil
+                evaluationCallback: ((EvaluationCallbackData) -> Void)? = nil,
+                userValidationCallback: ((StatsigUser) -> StatsigUser)? = nil
     )
     {
         if let initTimeout = initTimeout, initTimeout >= 0 {
@@ -161,5 +167,7 @@ public class StatsigOptions {
         self.overrideStableID = overrideStableID
 
         self.evaluationCallback = evaluationCallback
+        
+        self.userValidationCallback = userValidationCallback
     }
 }

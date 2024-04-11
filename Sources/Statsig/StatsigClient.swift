@@ -711,6 +711,9 @@ extension StatsigClient {
 
     private static func normalizeUser(_ user: StatsigUser?, options: StatsigOptions?) -> StatsigUser {
         var normalized = user ?? StatsigUser()
+        if let validationCallback = options?.userValidationCallback {
+            normalized = validationCallback(normalized)
+        }
         normalized.statsigEnvironment = options?.environment ?? [:]
         if let stableID = options?.overrideStableID {
             normalized.setStableID(stableID)
