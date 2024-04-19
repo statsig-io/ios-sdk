@@ -4,13 +4,18 @@ struct UserCacheKey {
     let v1: String
     let v2: String
     
-    static func from(user: StatsigUser, sdkKey: String) -> UserCacheKey {
-        let v1 = getVersion1(user: user)
-        let v2 = getVersion2(user: user, sdkKey: sdkKey)
+    static func from(_ options: StatsigOptions, _ user: StatsigUser, _ sdkKey: String) -> UserCacheKey {
+        if let customCacheKey = options.customCacheKey {
+            let key = customCacheKey(sdkKey, user)
+            return UserCacheKey(v1: key, v2: key)
+        }
+        
+        let v1 = getVersion1(user)
+        let v2 = getVersion2(user, sdkKey)
         return UserCacheKey(v1: v1, v2: v2)
     }
     
-    static func getVersion1(user: StatsigUser) -> String {
+    private static func getVersion1(_ user: StatsigUser) -> String {
         var key = user.userID ?? "null"
         if let customIDs = user.customIDs {
             for (idType, idValue) in customIDs {
@@ -21,7 +26,7 @@ struct UserCacheKey {
     }
 
     // uid:USER_ID|cids:CUSTOM_ID_KEY-CUSTOM_ID_VALUE|k:SDK_KEY
-    static func getVersion2(user: StatsigUser, sdkKey: String) -> String {
+    private static func getVersion2(_ user: StatsigUser, _ sdkKey: String) -> String {
         let cids: [String] = user.customIDs?.map { key, value in
             return "\(key)-\(value)"
         } ?? []

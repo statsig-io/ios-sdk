@@ -14,14 +14,16 @@ class UserCacheKeySpec: BaseSpec {
 
     override func spec() {
         super.spec()
+        
+        let options = StatsigOptions()
 
         describe("UserCacheKey") {
             it("gets the same keys for identical users") {
                 let firstUser = StatsigUser(userID: "a-user")
                 let secondUser = StatsigUser(userID: "a-user")
 
-                let firstKey = UserCacheKey.from(user: firstUser, sdkKey: "some-key")
-                let secondKey = UserCacheKey.from(user: secondUser, sdkKey: "some-key")
+                let firstKey = UserCacheKey.from(options, firstUser, "some-key")
+                let secondKey = UserCacheKey.from(options, secondUser, "some-key")
 
                 expect(firstKey.v1).to(equal(secondKey.v1))
                 expect(firstKey.v2).to(equal(secondKey.v2))
@@ -31,8 +33,8 @@ class UserCacheKeySpec: BaseSpec {
                 let firstUser = StatsigUser(userID: "a-user")
                 let secondUser = StatsigUser(userID: "b-user")
 
-                let firstKey = UserCacheKey.from(user: firstUser, sdkKey: "some-key")
-                let secondKey = UserCacheKey.from(user: secondUser, sdkKey: "some-key")
+                let firstKey = UserCacheKey.from(options, firstUser, "some-key")
+                let secondKey = UserCacheKey.from(options, secondUser, "some-key")
 
                 expect(firstKey.v1).notTo(equal(secondKey.v1))
                 expect(firstKey.v2).notTo(equal(secondKey.v2))
@@ -43,9 +45,9 @@ class UserCacheKeySpec: BaseSpec {
                 let secondUser = StatsigUser(userID: "a-user")
 
                 let firstKey = UserCacheKey
-                    .from(user: firstUser, sdkKey: "some-key")
+                    .from(options, firstUser, "some-key")
                 let secondKey = UserCacheKey
-                    .from(user: secondUser, sdkKey: "some-other-key")
+                    .from(options, secondUser, "some-other-key")
 
                 expect(firstKey.v1).to(equal(secondKey.v1))
                 expect(firstKey.v2).notTo(equal(secondKey.v2))
@@ -56,9 +58,9 @@ class UserCacheKeySpec: BaseSpec {
                 let secondUser = StatsigUser()
 
                 let firstKey = UserCacheKey
-                    .from(user: firstUser, sdkKey: "some-key")
+                    .from(options, firstUser, "some-key")
                 let secondKey = UserCacheKey
-                    .from(user: secondUser, sdkKey: "some-key")
+                    .from(options, secondUser, "some-key")
 
 
                 expect(firstKey.v1).to(equal(secondKey.v1))
@@ -70,13 +72,25 @@ class UserCacheKeySpec: BaseSpec {
                 let secondUser = StatsigUser(customIDs: ["b": "2", "a": "1"])
 
                 let firstKey = UserCacheKey
-                    .from(user: firstUser, sdkKey: "some-key")
+                    .from(options, firstUser, "some-key")
                 let secondKey = UserCacheKey
-                    .from(user: secondUser, sdkKey: "some-key")
+                    .from(options, secondUser, "some-key")
 
                 // its a known bug that v1 didn't handle this case
                 
                 expect(firstKey.v2).to(equal(secondKey.v2))
+            }
+            
+            it("uses custom cache key when provided") {
+                let sdkKey = "client-key"
+                let user = StatsigUser(customIDs: ["a": "1", "b": "2"])
+                
+                let custom = "mine"
+                let opts = StatsigOptions(customCacheKey: { _, _ in custom })
+                let key = UserCacheKey.from(opts, user, sdkKey)
+                
+                expect(key.v1).to(equal(custom))
+                expect(key.v2).to(equal(custom))
             }
         }
     }

@@ -111,10 +111,11 @@ class LayerConfigSpec: BaseSpec {
                     }
                 }
 
+                let options = StatsigOptions()
                 let user = StatsigUser(userID: "dloomb")
-                store = InternalStore("", user, options: StatsigOptions())
+                store = InternalStore("", user, options: options)
 
-                let cacheKey = UserCacheKey.from(user: user, sdkKey: "")
+                let cacheKey = UserCacheKey.from(options, user, "")
                 store.cache.saveValues(Data.CacheValues, cacheKey, user.getFullUserHash())
             }
 

@@ -28,6 +28,7 @@ struct StatsigValuesCache {
     var layers: [String: [String: Any]]? = nil
     var hashUsed: String? = nil
     var sdkKey: String
+    var options: StatsigOptions
 
     var userCache: [String: Any] {
         didSet {
@@ -40,7 +41,8 @@ struct StatsigValuesCache {
         }
     }
 
-    init(_ sdkKey: String, _ user: StatsigUser, initialValues: [String: Any]?) {
+    init(_ sdkKey: String, _ user: StatsigUser, _ options: StatsigOptions) {
+        self.options = options
         self.sdkKey = sdkKey
         self.cacheByID = StatsigValuesCache.loadDictMigratingIfRequired(forKey: InternalStore.localStorageKey)
         self.stickyDeviceExperiments = StatsigValuesCache.loadDictMigratingIfRequired(forKey: InternalStore.stickyDeviceExperimentsKey)
@@ -49,7 +51,7 @@ struct StatsigValuesCache {
         self.userCacheKey = UserCacheKey(v1: "null", v2: "null")
         self.userLastUpdateTime = 0
 
-        self.setUserCacheKeyAndValues(user, withBootstrapValues: initialValues)
+        self.setUserCacheKeyAndValues(user, withBootstrapValues: options.initializeValues)
         self.migrateLegacyStickyExperimentValues(user)
     }
 
@@ -237,7 +239,7 @@ struct StatsigValuesCache {
         _ user: StatsigUser,
         withBootstrapValues bootstrapValues: [String: Any]? = nil
     ) {
-        userCacheKey = UserCacheKey.from(user: user, sdkKey: self.sdkKey)
+        userCacheKey = UserCacheKey.from(options, user, sdkKey)
 
         migrateOldUserCacheKey()
 
@@ -362,7 +364,7 @@ class InternalStore {
     let storeQueue = DispatchQueue(label: storeQueueLabel, qos: .userInitiated, attributes: .concurrent)
 
     init(_ sdkKey: String, _ user: StatsigUser, options: StatsigOptions) {
-        cache = StatsigValuesCache(sdkKey, user, initialValues: options.initializeValues)
+        cache = StatsigValuesCache(sdkKey, user, options)
         localOverrides = StatsigUserDefaults.defaults.dictionarySafe(forKey: InternalStore.localOverridesKey)
         ?? InternalStore.getEmptyOverrides()
     }

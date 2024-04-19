@@ -46,7 +46,7 @@ class NetworkService {
             return
         }
 
-        let cacheKey = UserCacheKey.from(user: user, sdkKey: self.sdkKey)
+        let cacheKey = UserCacheKey.from(self.statsigOptions, user, self.sdkKey)
         let fullUserHash = user.getFullUserHash()
 
         makeAndSendRequest(.initialize, body: body) { [weak self] data, _, _ in
@@ -66,7 +66,7 @@ class NetworkService {
         previousDerivedFields: [String: String],
         completion: completionBlock
     ) {
-        let cacheKey = UserCacheKey.from(user: user, sdkKey: self.sdkKey)
+        let cacheKey = UserCacheKey.from(self.statsigOptions, user, self.sdkKey)
         if let inflight = inflightRequests[cacheKey.v2] {
             inflight.cancel()
         }

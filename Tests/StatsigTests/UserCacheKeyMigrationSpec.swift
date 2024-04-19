@@ -21,7 +21,7 @@ class UserCacheKeyMigrationSpec: BaseSpec {
                 userID: "a_user",
                 customIDs: ["groupID": "a_group", "teamID": "a_team"]
             )
-            let cacheKey = UserCacheKey.from(user: user, sdkKey: key)
+            let cacheKey = UserCacheKey.from(StatsigOptions(), user, key)
 
             var defaults: MockDefaults!
 
