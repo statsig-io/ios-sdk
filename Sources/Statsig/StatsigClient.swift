@@ -119,12 +119,12 @@ public class StatsigClient {
      - user: The new user
      - completion: A callback block called when the new values have been received. May be called with an error message string if the fetch fails.
      */
-    public func updateUser(_ user: StatsigUser, completion: completionBlock = nil) {
+    public func updateUser(_ user: StatsigUser, values: [String: Any]? = nil, completion: completionBlock = nil) {
         exposureDedupeQueue.async(flags: .barrier) { [weak self] in
             self?.loggedExposures.removeAll()
         }
 
-        self.updateUserImpl(user, completion: completion)
+        self.updateUserImpl(user, values: values, completion: completion)
     }
 
     /**
@@ -736,11 +736,16 @@ extension StatsigClient {
         }
     }
 
-    private func updateUserImpl(_ user: StatsigUser, completion: completionBlock = nil) {
+    private func updateUserImpl(_ user: StatsigUser, values: [String: Any]? = nil, completion: completionBlock = nil) {
         currentUser = StatsigClient.normalizeUser(user, options: statsigOptions)
-        store.updateUser(currentUser)
+        store.updateUser(currentUser, values: values)
         logger.user = currentUser
-
+        
+        if values != nil {
+            completion?(nil)
+            return
+        }
+        
         DispatchQueue.main.async { [weak self] in
             self?.fetchValuesFromNetwork { [weak self, completion] error in
                 guard let self = self else {

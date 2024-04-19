@@ -145,10 +145,10 @@ struct StatsigValuesCache {
         return [:]
     }
 
-    mutating func updateUser(_ newUser: StatsigUser) {
+    mutating func updateUser(_ newUser: StatsigUser, _ values: [String: Any]? = nil) {
         // when updateUser is called, state will be uninitialized until updated values are fetched or local cache is retrieved
         source = .Loading
-        setUserCacheKeyAndValues(newUser)
+        setUserCacheKeyAndValues(newUser, withBootstrapValues: values)
     }
 
     mutating func saveValues(_ values: [String: Any], _ cacheKey: UserCacheKey, _ userHash: String?) {
@@ -489,9 +489,9 @@ class InternalStore {
         }
     }
 
-    func updateUser(_ newUser: StatsigUser) {
+    func updateUser(_ newUser: StatsigUser, values: [String: Any]? = nil) {
         storeQueue.async(flags: .barrier) { [weak self] in
-            self?.cache.updateUser(newUser)
+            self?.cache.updateUser(newUser, values)
         }
     }
 

@@ -365,13 +365,15 @@ public class Statsig {
 
     /**
      Switches the user and pulls new values for that user from Statsig.
+     If `values` passed in, updates ther user using these values rather than fetching updates.
      Default values will be returned until the update is complete.
 
      Parameters:
      - user: The new user
-     - completion: A callback block called when the new values have been received. May be called with an error message string if the fetch fails.
+     - values: The updated values to be associated with the user.
+     - completion: A callback block called when the new values/update operation have been received. May be called with an error message string if the fetch fails.
      */
-    public static func updateUser(_ user: StatsigUser, completion: completionBlock = nil) {
+    public static func updateUser(_ user: StatsigUser, values: [String: Any]? = nil, completion: completionBlock = nil) {
         errorBoundary.capture("updateUser") { [weak client] in
             guard let client = client else {
                 print("[Statsig]: \(getUnstartedErrorMessage("updateUser")).")
@@ -379,7 +381,7 @@ public class Statsig {
                 return
             }
 
-            client.updateUser(user, completion: completion)
+            client.updateUser(user, values: values, completion: completion)
         }
     }
 
