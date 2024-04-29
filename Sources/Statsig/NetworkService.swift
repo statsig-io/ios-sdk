@@ -31,9 +31,9 @@ class NetworkService {
         for user: StatsigUser,
         lastSyncTimeForUser: UInt64,
         previousDerivedFields: [String: String],
-        completion: (() -> Void)?
+        completion: completionBlock
     ) {
-        let (body, _) = makeReqBody([
+        let (body, parseErr) = makeReqBody([
             "user": user.toDictionary(forLogging: false),
             "statsigMetadata": user.deviceEnvironment,
             "lastSyncTimeForUser": lastSyncTimeForUser,
@@ -42,21 +42,40 @@ class NetworkService {
 
         guard let body = body else {
             self.store.finalizeValues()
-            completion?()
+            completion?(parseErr?.localizedDescription)
             return
         }
 
         let cacheKey = UserCacheKey.from(self.statsigOptions, user, self.sdkKey)
         let fullUserHash = user.getFullUserHash()
 
-        makeAndSendRequest(.initialize, body: body) { [weak self] data, _, _ in
-            guard let dict = data?.json, dict["has_updates"] as? Bool == true else {
-                self?.store.finalizeValues()
-                completion?()
+        makeAndSendRequest(.initialize, body: body) { [weak self] data, response, error in
+            if let error {
+                completion?(error.localizedDescription)
+                return
+            }
+            
+            let statusCode = response?.status ?? 0
+
+            if !(200...299).contains(statusCode) {
+                completion?("An error occurred during fetching updated values for the user. \(statusCode)")
                 return
             }
 
-            self?.store.saveValues(dict, cacheKey, fullUserHash, completion)
+            guard let self = self else {
+                completion?("Failed to call NetworkService as it has been released")
+                return
+            }
+            
+            guard let dict = data?.json, dict["has_updates"] as? Bool == true else {
+                self.store.finalizeValues()
+                completion?("No updates when fetching updated values for user")
+                return
+            }
+
+            self.store.saveValues(dict, cacheKey, fullUserHash) {
+                completion?(nil)
+            }
         }
     }
 

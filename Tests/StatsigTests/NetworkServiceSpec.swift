@@ -76,7 +76,7 @@ class NetworkServiceSpec: BaseSpec {
                         for: StatsigUser(userID: "jkw"),
                         lastSyncTimeForUser: now,
                         previousDerivedFields: [:]
-                    ) {
+                    ) { _ in
                         done()
                     }
                 }
