@@ -230,6 +230,7 @@ class StatsigSpec: BaseSpec {
 
                 let gate1 = Statsig.checkGate(gateName1)
                 let gate2 = Statsig.checkGate(gateName2)
+                let featureGate1 = Statsig.getFeatureGateWithExposureLoggingDisabled(gateName1)
                 let nonExistentGate = Statsig.checkGate(nonExistentGateName)
 
                 let dc = Statsig.getConfig(configName)
@@ -239,6 +240,11 @@ class StatsigSpec: BaseSpec {
 
                 expect(gate1).to(beFalse())
                 expect(gate2).to(beTrue())
+                expect(featureGate1.value).to(beFalse())
+                expect(featureGate1.name).to(equal("gate_name_1"))
+                expect(featureGate1.ruleID).to(equal("rule_id_1"))
+                expect(featureGate1.evaluationDetails.reason).to(equal(EvaluationReason.Recognized))
+                expect(featureGate1.evaluationDetails.source).to(equal(EvaluationSource.Network))
                 expect(nonExistentGate).to(beFalse())
 
                 let expectedConfig = NSDictionary(dictionary: DynamicConfigSpec.TestMixedConfig["value"] as! [String: Any])

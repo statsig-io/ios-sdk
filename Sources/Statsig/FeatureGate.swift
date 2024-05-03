@@ -1,9 +1,9 @@
 public struct FeatureGate: Codable {
-    let name: String
-    let ruleID: String
-    let value: Bool
-    let secondaryExposures: [[String: String]]
-    let evaluationDetails: EvaluationDetails
+    public let name: String
+    public let ruleID: String
+    public let value: Bool
+    public let secondaryExposures: [[String: String]]
+    public let evaluationDetails: EvaluationDetails
 
     internal init(name: String, gateObj: [String: Any], evalDetails: EvaluationDetails) {
         self.name = name

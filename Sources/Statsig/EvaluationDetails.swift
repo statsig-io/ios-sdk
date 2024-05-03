@@ -1,11 +1,11 @@
 import Foundation
 
 public struct EvaluationDetails: Codable {
-    let source: EvaluationSource;
+    public let source: EvaluationSource;
 
-    var reason: EvaluationReason?;
-    var lcut: UInt64?
-    var receivedAt: UInt64?
+    public var reason: EvaluationReason?;
+    public var lcut: UInt64?
+    public var receivedAt: UInt64?
 
     init(
         source: EvaluationSource,
