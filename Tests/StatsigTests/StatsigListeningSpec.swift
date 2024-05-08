@@ -148,6 +148,57 @@ class StatsigListeningSpec: BaseSpec {
             }
         }
 
+        describe("listening to background sync callbacks") {
+            beforeEach {
+                goodStub()
+                let opts = StatsigOptions(
+                    enableAutoValueUpdate: true,
+                    autoValueUpdateIntervalSec: 1,
+                    api: "http://AutoUpdateSpec"
+                )
+
+                var initialized = false
+                Statsig.start(sdkKey: "client-key", options: opts) { _ in
+                    initialized = true
+                }
+                expect(initialized).toEventually(beTrue())
+            }
+
+            it("triggers the listener after auto-update interval") {
+                goodStub()
+                stub(condition: isHost("AutoUpdateSpec")) { req in
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
+                }
+
+                let listener = TestListener()
+                Statsig.addListener(listener)
+
+                // Wait for the auto-update interval to pass
+                let timeoutInSeconds = 5
+                sleep(UInt32(timeoutInSeconds))
+
+                expect(listener.onUserUpdatedCalled).toEventually(beTrue())
+                expect(listener.onUserUpdatedError).to(beNil())
+            }
+            
+            it("triggers the listener with error") {
+                goodStub()
+                stub(condition: isHost("AutoUpdateSpec")) { req in
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 500, headers: nil)
+                }
+
+                let listener = TestListener()
+                Statsig.addListener(listener)
+
+                // Wait for the auto-update interval to pass
+                let timeoutInSeconds = 5
+                sleep(UInt32(timeoutInSeconds))
+
+                expect(listener.onUserUpdatedCalled).toEventually(beTrue())
+                expect(listener.onUserUpdatedError).toEventually(contain("An error occurred during fetching values for the user. 500"))
+            }
+        }
+
         describe("listening to updateUser callbacks") {
             beforeEach {
                 goodStub()
@@ -180,6 +231,5 @@ class StatsigListeningSpec: BaseSpec {
                 expect(listener.onUserUpdatedError).to(beNil())
             }
         }
-
     }
 }

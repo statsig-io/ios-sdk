@@ -303,7 +303,7 @@ class InternalStoreSpec: BaseSpec {
                 values.replaceAtPath("dynamic_configs.\(hashedNonStickyExpKey).is_experiment_active", false)
 
                 userCacheKey = UserCacheKey.from(options, user, "")
-                store.saveValues(values, userCacheKey, user.getFullUserHash())
+                store.saveValues(values, userCacheKey, user.getFullUserHash()) 
 
                 exp = store.getExperiment(forName: expKey, keepDeviceValue: true)
                 deviceExp = store.getExperiment(forName: deviceExpKey, keepDeviceValue: true)
