@@ -126,6 +126,16 @@ public class StatsigClient {
 
         self.updateUserImpl(user, values: values, completion: completion)
     }
+    
+    /**
+     Manually triggered the refreshing process for the current user
+
+     Parameters:
+     - completion: A callback block called when the new values/update operation have been received. May be called with an error message string if the fetch fails.
+     */
+    public func refreshCache(_ completion: completionBlock = nil) {
+        self.updateUser(self.currentUser, completion: completion)
+    }
 
     /**
      Stops all Statsig activity and flushes any pending events.
@@ -751,11 +761,11 @@ extension StatsigClient {
                 guard let self = self else {
                     return
                 }
-
+                
                 if self.statsigOptions.enableAutoValueUpdate {
                     self.scheduleRepeatingSync()
                 }
-
+                
                 self.notifyOnUserUpdatedListeners(error)
                 completion?(error)
             }

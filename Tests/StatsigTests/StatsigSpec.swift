@@ -35,6 +35,30 @@ class StatsigSpec: BaseSpec {
         ],
         "has_updates": true
     ]
+    
+    static let configKey = "config"
+    static let hashConfigKey = configKey.sha256()
+    static let mockUpdatedUserValues: [String: Any] = [
+        "dynamic_configs": [
+            hashConfigKey: [
+                "rule_id": "default",
+                "value": ["key": "new_value"],
+                "is_user_in_experiment": true,
+                "is_experiment_active": true,
+            ],
+        ],
+        "feature_gates": [
+            "new_gate_name_1".sha256(): [
+                "value": true,
+                "rule_id": "rule_id_1",
+                "secondary_exposures": [
+                    ["gate": "employee", "gateValue": "true", "ruleID": "rule_id_employee"]
+                ]
+            ],
+            "new_gate_name_2".sha256(): ["value": true, "rule_id": "rule_id_2"]
+        ],
+        "has_updates": true
+    ]
 
     override func spec() {
         super.spec()
@@ -144,38 +168,15 @@ class StatsigSpec: BaseSpec {
             
             it("values are updated when update user with values called") {
                 _ = TestUtils.startWithResponseAndWait(StatsigSpec.mockUserValues, "client-api-key", StatsigUser(userID: "whd"))
-                let configKey = "config"
-                let hashConfigKey = configKey.sha256()
-    
-                let mockUpdatedUserValues: [String: Any] = [
-                    "dynamic_configs": [
-                        hashConfigKey: [
-                            "rule_id": "default",
-                            "value": ["key": "new_value"],
-                            "is_user_in_experiment": true,
-                            "is_experiment_active": true,
-                        ],
-                    ],
-                    "feature_gates": [
-                        "new_gate_name_1".sha256(): [
-                            "value": true,
-                            "rule_id": "rule_id_1",
-                            "secondary_exposures": [
-                                ["gate": "employee", "gateValue": "true", "ruleID": "rule_id_employee"]
-                            ]
-                        ],
-                        "new_gate_name_2".sha256(): ["value": true, "rule_id": "rule_id_2"]
-                    ]
-                ]
                 
-                var config = Statsig.getConfig(configKey)
+                var config = Statsig.getConfig(StatsigSpec.configKey)
                 expect(config.getValue(forKey: "key", defaultValue: "")).to(equal(""))
                 
                 expect(Statsig.checkGate("new_gate_name_1")).to(beFalse())
                 expect(Statsig.checkGate("new_gate_name_2")).to(beFalse())
                 
                 waitUntil { done in
-                    Statsig.updateUser(StatsigUser(userID: "whd", customIDs: ["companyID": "statsig"]), values: mockUpdatedUserValues) { _ in
+                    Statsig.updateUser(StatsigUser(userID: "whd", customIDs: ["companyID": "statsig"]), values: StatsigSpec.mockUpdatedUserValues) { _ in
                         done()
                     }
                 }
@@ -183,7 +184,33 @@ class StatsigSpec: BaseSpec {
                 expect(Statsig.checkGate("new_gate_name_1")).to(beTrue())
                 expect(Statsig.checkGate("new_gate_name_2")).to(beTrue())
                 
-                config = Statsig.getConfig(configKey)
+                config = Statsig.getConfig(StatsigSpec.configKey)
+                expect(config.getValue(forKey: "key", defaultValue: "")).to(equal("new_value"))
+            }
+            
+            it("values are updated for the current user if manual refresh triggered") {
+                _ = TestUtils.startWithResponseAndWait(StatsigSpec.mockUserValues, "client-api-key", StatsigUser(userID: "whd"))
+    
+                var config = Statsig.getConfig(StatsigSpec.configKey)
+                expect(config.getValue(forKey: "key", defaultValue: "")).to(equal(""))
+                
+                expect(Statsig.checkGate("new_gate_name_1")).to(beFalse())
+                expect(Statsig.checkGate("new_gate_name_2")).to(beFalse())
+                
+                stub(condition: isHost("api.statsig.com")) { request in
+                    return HTTPStubsResponse(jsonObject: StatsigSpec.mockUpdatedUserValues, statusCode: 200, headers: nil)
+                }
+                
+                waitUntil { done in
+                    Statsig.refreshCache() { _ in
+                        done()
+                    }
+                }
+                
+                expect(Statsig.checkGate("new_gate_name_1")).to(beTrue())
+                expect(Statsig.checkGate("new_gate_name_2")).to(beTrue())
+                
+                config = Statsig.getConfig(StatsigSpec.configKey)
                 expect(config.getValue(forKey: "key", defaultValue: "")).to(equal("new_value"))
             }
 

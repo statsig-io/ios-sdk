@@ -62,6 +62,9 @@ final class PublicFuncSpec: BaseSpec {
                     (t(Statsig.overrideLayer), t(client.overrideLayer)),
                     (t(Statsig.removeOverride), t(client.removeOverride)),
                     (t(Statsig.removeAllOverrides), t(client.removeAllOverrides)),
+                    
+                    // Manually Refresh Cache
+                    (t(Statsig.refreshCache()), t(client.refreshCache())),
 
                     // Log Event
                     (t(Statsig.logEvent as (String, [String: String]) -> Void), t(client.logEvent as (String, [String: String]) -> Void)),

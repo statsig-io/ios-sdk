@@ -384,6 +384,25 @@ public class Statsig {
             client.updateUser(user, values: values, completion: completion)
         }
     }
+    
+    /**
+     Manually triggered the refreshing process for the current user
+
+     Parameters:
+     - completion: A callback block called when the new values/update operation have been received. May be called with an error message string if the fetch fails.
+     */
+    public static func refreshCache(_ completion: completionBlock = nil) {
+        errorBoundary.capture("refreshCache") { [weak client] in
+            guard let client = client else {
+                let message = getUnstartedErrorMessage()
+                print("[Statsig]: \(message).")
+                completion?(message)
+                return
+            }
+
+            client.refreshCache(completion)
+        }
+    }
 
     /**
      Stops all Statsig activity and flushes any pending events.
