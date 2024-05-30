@@ -4,3 +4,4 @@ internal protocol ConfigProtocol {
     var isDeviceBased: Bool { get }
     var rawValue: [String: Any] { get }
 }
+

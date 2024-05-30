@@ -15,3 +15,5 @@ extension Double: StatsigDynamicConfigValue {}
 extension Int: StatsigDynamicConfigValue {}
 
 extension String: StatsigDynamicConfigValue {}
+
+extension String?: StatsigDynamicConfigValue {}

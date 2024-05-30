@@ -87,6 +87,8 @@ public struct DynamicConfig: ConfigProtocol {
         self.evaluationDetails = evalDetails
     }
 
+
+    
     /**
      Get the value for the given key, falling back to the defaultValue if it cannot be found or is of a different type.
 
@@ -95,16 +97,18 @@ public struct DynamicConfig: ConfigProtocol {
      - defaultValue: The fallback value if the key cannot be found
      */
     public func getValue<T: StatsigDynamicConfigValue>(forKey: String, defaultValue: T) -> T {
-        let result = value[forKey]
-        let typedResult = result as? T
-        if typedResult == nil {
-            if let result = result {
-                print("[Statsig]: \(forKey) exists in this Dynamic Config, but requested type was incorrect (Requested = \(type(of: defaultValue)), Actual = \(type(of: result))). Returning the defaultValue.")
-            } else {
-                print("[Statsig]: \(forKey) does not exist in this Dynamic Config. Returning the defaultValue.")
-            }
+        
+        guard let result = value[forKey] else {
+            print("[Statsig]: \(forKey) does not exist in this Dynamic Config. Returning the defaultValue.")
+            return defaultValue
         }
-        return typedResult ?? defaultValue
+        
+        guard let result = result as? T else {
+            print("[Statsig]: \(forKey) exists in this Dynamic Config, but requested type was incorrect (Requested = \(type(of: defaultValue)), Actual = \(type(of: result))). Returning the defaultValue.")
+            return defaultValue
+        }
+        
+        return result
     }
 }
 

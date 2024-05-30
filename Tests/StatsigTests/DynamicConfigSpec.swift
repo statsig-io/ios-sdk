@@ -28,6 +28,7 @@ class DynamicConfigSpec: BaseSpec {
         describe("dummy config works as expected") {
             it("only returns the default values") {
                 let dc = DynamicConfig(configName: "dummy", evalDetails: .init(source: .Network))
+                
                 expect(dc.getValue(forKey: "str", defaultValue: "1")) == "1"
                 expect(dc.getValue(forKey: "bool", defaultValue: true)) == true
                 expect(dc.getValue(forKey: "double", defaultValue: 1.1)) == 1.1

@@ -32,6 +32,10 @@ public final class LayerObjC: NSObject {
         return layer.getValue(forKey: forKey, defaultValue: defaultValue)
     }
 
+    @objc public func getNullableString(forKey: String, defaultValue: String?) -> String? {
+        return layer.getValue(forKey: forKey, defaultValue: defaultValue)
+    }
+
     @objc public func toData() -> Data? {
         let encoder = JSONEncoder()
         return try? encoder.encode(layer)

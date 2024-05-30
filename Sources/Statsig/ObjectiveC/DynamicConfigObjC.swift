@@ -35,6 +35,10 @@ public final class DynamicConfigObjC: NSObject {
     @objc public func getString(forKey: String, defaultValue: String) -> String {
         return config.getValue(forKey: forKey, defaultValue: defaultValue)
     }
+    
+    @objc public func getNullableString(forKey: String, defaultValue: String?) -> String? {
+        return config.getValue(forKey: forKey, defaultValue: defaultValue)
+    }
 
     @objc public func toData() -> Data? {
         let encoder = JSONEncoder()
