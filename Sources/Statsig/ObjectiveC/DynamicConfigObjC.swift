@@ -4,8 +4,38 @@ import Foundation
 public final class DynamicConfigObjC: NSObject {
     internal var config: DynamicConfig
 
+    @objc public var name: String {
+        config.name
+    }
+
     @objc public var value: [String: Any] {
         config.value
+    }
+
+    @objc public var ruleID: String {
+        config.ruleID
+    }
+
+    @objc public var groupName: String? {
+        config.groupName
+    }
+
+    @objc public var isUserInExperiment: Bool {
+        config.isUserInExperiment
+    }
+
+    @objc public var isExperimentActive: Bool {
+        config.isExperimentActive
+    }
+
+    @objc public var hashedName: String {
+        config.hashedName
+    }
+
+    @objc public var evaluationDetails: [String: String] {
+        var details = [String: String]()
+        config.evaluationDetails.addToDictionary(&details)
+        return details
     }
 
     init(withConfig: DynamicConfig) {

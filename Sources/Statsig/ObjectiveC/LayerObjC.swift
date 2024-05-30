@@ -3,6 +3,40 @@ import Foundation
 @objc(Layer)
 public final class LayerObjC: NSObject {
     internal var layer: Layer
+    
+    @objc public var name: String {
+        layer.name
+    }
+
+    @objc public var ruleID: String {
+        layer.ruleID
+    }
+
+    @objc public var groupName: String? {
+        layer.groupName
+    }
+
+    @objc public var isUserInExperiment: Bool {
+        layer.isUserInExperiment
+    }
+
+    @objc public var isExperimentActive: Bool {
+        layer.isExperimentActive
+    }
+
+    @objc public var hashedName: String {
+        layer.hashedName
+    }
+    
+    @objc public var allocatedExperimentName: String {
+        layer.allocatedExperimentName
+    }
+
+    @objc public var evaluationDetails: [String: String] {
+        var details = [String: String]()
+        layer.evaluationDetails.addToDictionary(&details)
+        return details
+    }
 
     init(_ layer: Layer) {
         self.layer = layer
