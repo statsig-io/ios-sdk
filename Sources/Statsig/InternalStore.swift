@@ -61,7 +61,7 @@ struct StatsigValuesCache {
             return createUnfoundGate(gateName)
         }
 
-        if let gateObj = gates[gateName.hashSpecName(hashUsed)] ?? gates[gateName] {
+        if let gateObj = gates[gateName] ?? gates[gateName.hashSpecName(hashUsed)]{
             return FeatureGate(
                 name: gateName,
                 gateObj: gateObj,
@@ -79,7 +79,7 @@ struct StatsigValuesCache {
             return createUnfoundDynamicConfig(configName)
         }
 
-        if let configObj = configs[configName.hashSpecName(hashUsed)] ?? configs[configName] {
+        if let configObj = configs[configName] ?? configs[configName.hashSpecName(hashUsed)] {
             return DynamicConfig(
                 configName: configName,
                 configObj: configObj,
@@ -96,7 +96,7 @@ struct StatsigValuesCache {
             return createUnfoundLayer(client, layerName)
         }
 
-        if let configObj = layers[layerName.hashSpecName(hashUsed)] ?? layers[layerName] {
+        if let configObj = layers[layerName] ?? layers[layerName.hashSpecName(hashUsed)] {
             return Layer(
                 client: client,
                 name: layerName,
