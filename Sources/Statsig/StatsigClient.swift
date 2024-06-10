@@ -537,6 +537,21 @@ extension StatsigClient {
     }
 }
 
+// MARK: Parameter Stores
+
+extension StatsigClient {
+    public func getParameterStore(_ storeName: String) -> ParameterStore {
+        logger.incrementNonExposedCheck(storeName)
+
+        let store = store.getParamStore(client: self, forName: storeName)
+        if let cb = statsigOptions.evaluationCallback {
+            cb(.parameterStore(store))
+        }
+        
+        return store
+    }
+}
+
 
 // MARK: Log Event
 extension StatsigClient {

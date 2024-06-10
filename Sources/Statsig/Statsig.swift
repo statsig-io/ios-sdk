@@ -251,6 +251,24 @@ public class Statsig {
     public static func getLayerWithExposureLoggingDisabled(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
         return getLayerImpl(layerName, keepDeviceValue: keepDeviceValue, withExposures: false, functionName: funcName())
     }
+    
+    /**
+     
+     */
+    public static func getParameterStore(_ storeName: String) -> ParameterStore {
+        let functionName = funcName()
+        var result = ParameterStore(name: storeName, evaluationDetails: .uninitialized())
+        
+        errorBoundary.capture(functionName) {
+            guard let client = client else {
+                print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning a dummy ParameterStore that will only return default values.")
+                return
+            }
+
+            result = client.getParameterStore(storeName)
+        }
+        return result
+    }
 
     /**
      Logs an exposure event for the given layer parameter. Only required if a related getLayerWithExposureLoggingDisabled call has been made.

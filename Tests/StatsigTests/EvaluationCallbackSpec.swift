@@ -54,6 +54,8 @@ final class EvaluationCallbackSpec: BaseSpec {
                         experimentNameResult = exp.name
                     case .layer(let layer):
                         layerNameResult = layer.name
+                    case .parameterStore(let _paramStore):
+                        break
                     }
                 }
 
