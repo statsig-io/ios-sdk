@@ -100,6 +100,12 @@ public class StatsigOptions {
      */
     public var customCacheKey: ((String, StatsigUser) -> String)?
     
+    /**
+     The URLSession to be used for network requests. By default, it is set to URLSession.shared.
+     This property can be customized to utilize URLSession instances with specific configurations, including certificate pinning, for enhanced security when communicating with servers.
+     */
+    public var urlSession: URLSession = .shared
+    
     internal var mainApiUrl: URL?
     internal var logEventApiUrl: URL?
     var environment: [String: String] = [:]
@@ -119,7 +125,8 @@ public class StatsigOptions {
                 eventLoggingApi: String? = nil,
                 evaluationCallback: ((EvaluationCallbackData) -> Void)? = nil,
                 userValidationCallback: ((StatsigUser) -> StatsigUser)? = nil,
-                customCacheKey: ((String, StatsigUser) -> String)? = nil
+                customCacheKey: ((String, StatsigUser) -> String)? = nil,
+                urlSession: URLSession? = nil
     )
     {
         if let initTimeout = initTimeout, initTimeout >= 0 {
@@ -175,6 +182,10 @@ public class StatsigOptions {
         
         if let customCacheKey = customCacheKey {
             self.customCacheKey = customCacheKey
+        }
+        
+        if let urlSession = urlSession {
+            self.urlSession = urlSession
         }
 
         self.overrideStableID = overrideStableID

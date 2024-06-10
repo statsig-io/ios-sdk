@@ -297,7 +297,7 @@ class NetworkService {
             marker?.start(attempt: currentAttempt)
 
 
-            let task = URLSession.shared.dataTask(with: request) {
+            let task = self?.statsigOptions.urlSession.dataTask(with: request) {
                 [weak self] responseData, response, error in
 
                 marker?.end(currentAttempt, responseData, response, error)
@@ -324,8 +324,11 @@ class NetworkService {
                 }
             }
 
-            taskCapture?(task)
-            task.resume()
+            if let taskCapture = taskCapture, let task = task {
+                taskCapture(task)
+            }
+
+            task?.resume()
         }
     }
 }
