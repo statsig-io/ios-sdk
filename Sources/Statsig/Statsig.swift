@@ -251,6 +251,29 @@ public class Statsig {
     public static func getLayerWithExposureLoggingDisabled(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
         return getLayerImpl(layerName, keepDeviceValue: keepDeviceValue, withExposures: false, functionName: funcName())
     }
+    
+    /**
+     
+     */
+    public static func getParameterStore(
+        _ storeName: String
+    ) -> ParameterStore {
+        return getParameterStoreImpl(
+            storeName,
+            withExposures: true,
+            functionName: funcName()
+        )
+    }
+    
+    public static func getParameterStoreWithExposureLoggingDisabled(
+        _ storeName: String
+    ) -> ParameterStore {
+        return getParameterStoreImpl(
+            storeName,
+            withExposures: false,
+            functionName: funcName()
+        )
+    }
 
     /**
      Logs an exposure event for the given layer parameter. Only required if a related getLayerWithExposureLoggingDisabled call has been made.
@@ -588,7 +611,12 @@ public class Statsig {
         return result
     }
 
-    private static func getLayerImpl(_ layerName: String, keepDeviceValue: Bool, withExposures: Bool, functionName: String) -> Layer {
+    private static func getLayerImpl(
+        _ layerName: String,
+        keepDeviceValue: Bool,
+        withExposures: Bool,
+        functionName: String
+    ) -> Layer {
         var result: Layer = Layer(client: nil, name: layerName, evalDetails: .uninitialized())
         errorBoundary.capture(functionName) {
             guard let client = client else {
@@ -601,6 +629,26 @@ public class Statsig {
             : client.getLayerWithExposureLoggingDisabled(layerName, keepDeviceValue: keepDeviceValue)
         }
         return result
+    }
+    
+    private static func getParameterStoreImpl(
+        _ storeName: String,
+        withExposures: Bool,
+        functionName: String
+    ) -> ParameterStore {
+        var result: ParameterStore? = nil
+        errorBoundary.capture(functionName) {
+            guard let client = client else {
+                print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning a dummy ParameterStore that will only return default values.")
+                return
+            }
+
+            result = withExposures ? client.getParameterStore(storeName) : client.getParameterStoreWithExposureLoggingDisabled(storeName)
+        }
+        return result ?? ParameterStore(
+            name: storeName,
+            evaluationDetails: .uninitialized()
+        )
     }
 
     private static func getEmptyConfig(_ name: String) -> DynamicConfig {

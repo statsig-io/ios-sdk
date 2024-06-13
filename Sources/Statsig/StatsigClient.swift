@@ -537,6 +537,33 @@ extension StatsigClient {
     }
 }
 
+// MARK: Parameter Stores
+
+extension StatsigClient {
+    public func getParameterStore(_ storeName: String) -> ParameterStore {
+        return getParameterStoreImpl(storeName, shouldExpose: true)
+    }
+    
+    public func getParameterStoreWithExposureLoggingDisabled(_ storeName: String) -> ParameterStore {
+        return getParameterStoreImpl(storeName, shouldExpose: false)
+    }
+    
+    private func getParameterStoreImpl(_ storeName: String, shouldExpose: Bool) -> ParameterStore {
+        logger.incrementNonExposedCheck(storeName)
+
+        var store = store.getParamStore(client: self, forName: storeName)
+        
+        store.shouldExpose = shouldExpose
+        
+        if let cb = statsigOptions.evaluationCallback {
+            cb(.parameterStore(store))
+        }
+        
+        return store
+    }
+    
+}
+
 
 // MARK: Log Event
 extension StatsigClient {

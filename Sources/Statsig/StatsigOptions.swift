@@ -11,6 +11,7 @@ public class StatsigOptions {
         case config (DynamicConfig)
         case experiment (DynamicConfig)
         case layer (Layer)
+        case parameterStore (ParameterStore)
     }
     
     /**

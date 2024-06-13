@@ -26,6 +26,7 @@ struct StatsigValuesCache {
     var gates: [String: [String: Any]]? = nil
     var configs: [String: [String: Any]]? = nil
     var layers: [String: [String: Any]]? = nil
+    var paramStores: [String: [String: Any]]? = nil
     var hashUsed: String? = nil
     var sdkKey: String
     var options: StatsigOptions
@@ -37,6 +38,7 @@ struct StatsigValuesCache {
             gates = userCache[InternalStore.gatesKey] as? [String: [String: Any]]
             configs = userCache[InternalStore.configsKey] as? [String: [String: Any]]
             layers = userCache[InternalStore.layerConfigsKey] as? [String: [String: Any]]
+            paramStores = userCache[InternalStore.paramStoresKey] as? [String: [String: Any]]
             hashUsed = userCache[InternalStore.hashUsedKey] as? String
         }
     }
@@ -100,12 +102,32 @@ struct StatsigValuesCache {
             return Layer(
                 client: client,
                 name: layerName,
-                configObj: configObj, evalDetails: getEvaluationDetails(.Recognized)
+                configObj: configObj, 
+                evalDetails: getEvaluationDetails(.Recognized)
             )
         }
 
         print("[Statsig]: The layer with name \(layerName) does not exist. Returning an empty Layer.")
         return createUnfoundLayer(client, layerName)
+    }
+    
+    func getParamStore(_ client: StatsigClient?, _ storeName: String) -> ParameterStore {
+        guard let stores = paramStores else {
+            print("[Statsig]: Failed to get parameter store with name \(storeName). Returning an empty ParameterStore.")
+            return createUnfoundParamStore(client, storeName)
+        }
+
+        if let config = stores[storeName] ?? stores[storeName.hashSpecName(hashUsed)] {
+            return ParameterStore(
+                name: storeName,
+                evaluationDetails: getEvaluationDetails(.Recognized),
+                client: client,
+                configuration: config
+            )
+        }
+
+        print("[Statsig]: The parameter store with name \(storeName) does not exist. Returning an empty ParameterStore.")
+        return createUnfoundParamStore(client, storeName)
     }
 
     func getStickyExperiment(_ expName: String) -> [String: Any]? {
@@ -159,6 +181,7 @@ struct StatsigValuesCache {
             cache[InternalStore.gatesKey] = values[InternalStore.gatesKey]
             cache[InternalStore.configsKey] = values[InternalStore.configsKey]
             cache[InternalStore.layerConfigsKey] = values[InternalStore.layerConfigsKey]
+            cache[InternalStore.paramStoresKey] = values[InternalStore.paramStoresKey]
             cache[InternalStore.lcutKey] = Time.parse(values[InternalStore.lcutKey])
             cache[InternalStore.evalTimeKey] = Time.now()
             cache[InternalStore.userHashKey] = userHash
@@ -336,6 +359,10 @@ struct StatsigValuesCache {
             evalDetails: getEvaluationDetails(.Unrecognized)
         )
     }
+    
+    private func createUnfoundParamStore(_ client: StatsigClient?, _ name: String) -> ParameterStore {
+        ParameterStore(name: name, evaluationDetails: getEvaluationDetails(.Unrecognized))
+    }
 }
 
 class InternalStore {
@@ -353,6 +380,7 @@ class InternalStore {
     static let configsKey = "dynamic_configs"
     static let stickyExpKey = "sticky_experiments"
     static let layerConfigsKey = "layer_configs"
+    static let paramStoresKey = "param_stores"
     static let lcutKey = "time"
     static let evalTimeKey = "evaluation_time"
     static let userHashKey = "user_hash"
@@ -452,6 +480,12 @@ class InternalStore {
                     evalDetails: cache.getEvaluationDetails(.Sticky)
                 )
             })
+    }
+    
+    func getParamStore(client: StatsigClient?, forName storeName: String) -> ParameterStore {
+        storeQueue.sync {
+            return cache.getParamStore(client, storeName)
+        }
     }
 
     func finalizeValues(completion: (() -> Void)? = nil) {

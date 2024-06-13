@@ -32,6 +32,7 @@ final class EvaluationCallbackSpec: BaseSpec {
             var configNameResult: String? = nil
             var experimentNameResult: String? = nil
             var layerNameResult: String? = nil
+            var paramStoreNameResult: String? = nil
 
             beforeEach {
                 // Setup Event Capture
@@ -54,6 +55,8 @@ final class EvaluationCallbackSpec: BaseSpec {
                         experimentNameResult = exp.name
                     case .layer(let layer):
                         layerNameResult = layer.name
+                    case .parameterStore(let paramStore):
+                        paramStoreNameResult = paramStore.name
                     }
                 }
 
@@ -92,6 +95,13 @@ final class EvaluationCallbackSpec: BaseSpec {
                 expect(layerNameResult).to(equal("a_layer"))
                 _ = Statsig.getLayerWithExposureLoggingDisabled("b_layer")
                 expect(layerNameResult).to(equal("b_layer"))
+            }
+
+            it("works with parameter stores") {
+                _ = Statsig.getParameterStore("a_param_store")
+                expect(paramStoreNameResult).to(equal("a_param_store"))
+                _ = Statsig.getParameterStoreWithExposureLoggingDisabled("b_param_store_layer")
+                expect(paramStoreNameResult).to(equal("b_param_store_layer"))
             }
         }
     }

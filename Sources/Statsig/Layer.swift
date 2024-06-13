@@ -45,7 +45,7 @@ public struct Layer: ConfigProtocol {
     public let allocatedExperimentName: String
 
     /**
-     (For debug purposes) Why did Statsig return this DynamicConfig
+     (For debug purposes) Why did Statsig return this Layer
      */
     public let evaluationDetails: EvaluationDetails
 
