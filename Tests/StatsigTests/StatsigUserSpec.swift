@@ -24,6 +24,17 @@ class StatsigUserSpec: BaseSpec {
                 expect(validEmptyUser.deviceEnvironment).toNot(beNil())
                 expect(validEmptyUser.customIDs).to(beNil())
             }
+            
+            it("only return sdk related medatada if opt out non sdk metadata") {
+                let validUserOptOutNonSdkMetadata = StatsigUser(optOutNonSdkMetadata: true)
+                
+                let deviceEnvironment = validUserOptOutNonSdkMetadata.deviceEnvironment
+                expect(deviceEnvironment["sdkVersion"]) == "1.44.0"
+                expect(deviceEnvironment["sdkType"]) == "ios-client"
+                expect(deviceEnvironment["sessionID"]).toNot(beNil())
+                expect(deviceEnvironment["stableID"]).toNot(beNil())
+                expect(deviceEnvironment.count) == 4
+            }
 
             it("is a valid user with ID provided") {
                 let validUserWithID = StatsigUser(userID: "12345")

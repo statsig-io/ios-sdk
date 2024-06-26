@@ -43,6 +43,12 @@ public struct StatsigUser {
      Any value you wish to use in evaluation, but not have logged with events can be stored in this field.
      */
     public let privateAttributes: [String: StatsigUserCustomTypeConvertible]?
+    
+    /**
+     Controls whether non-SDK-type SDK version metadata should be excluded or included.
+     Setting this option to `true` will exclude metadata related to non-SDK-type SDK versions. By default, this option is set to `false`, meaning all metadata is included.
+     */
+    public var optOutNonSdkMetadata: Bool?
 
     /**
      Any Custom IDs to associated with the user.
@@ -62,6 +68,7 @@ public struct StatsigUser {
                 appVersion: String? = nil,
                 custom: [String: StatsigUserCustomTypeConvertible]? = nil,
                 privateAttributes: [String: StatsigUserCustomTypeConvertible]? = nil,
+                optOutNonSdkMetadata: Bool? = false,
                 customIDs: [String: String]? = nil)
     {
         self.userID = userID
@@ -71,6 +78,7 @@ public struct StatsigUser {
         self.locale = locale
         self.appVersion = appVersion
         self.customIDs = customIDs
+        self.optOutNonSdkMetadata = optOutNonSdkMetadata
 
         if let custom = custom, JSONSerialization.isValidJSONObject(custom) {
             self.custom = custom
@@ -89,11 +97,20 @@ public struct StatsigUser {
             }
             self.privateAttributes = nil
         }
-        self.deviceEnvironment = DeviceEnvironment.get()
+        
+        if (self.optOutNonSdkMetadata ?? false) {
+            self.deviceEnvironment = DeviceEnvironment.getSDKMetadata()
+        } else {
+            self.deviceEnvironment = DeviceEnvironment.get()
+        }
     }
 
     mutating func setStableID(_ overrideStableID: String) {
-        self.deviceEnvironment = DeviceEnvironment.get(overrideStableID)
+        if (self.optOutNonSdkMetadata ?? false) {
+            self.deviceEnvironment = DeviceEnvironment.getSDKMetadata(overrideStableID)
+        } else {
+            self.deviceEnvironment = DeviceEnvironment.get(overrideStableID)
+        }
     }
 
     func toDictionary(forLogging: Bool) -> [String: Any?] {
