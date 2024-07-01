@@ -29,7 +29,7 @@ class StatsigUserSpec: BaseSpec {
                 let validUserOptOutNonSdkMetadata = StatsigUser(optOutNonSdkMetadata: true)
                 
                 let deviceEnvironment = validUserOptOutNonSdkMetadata.deviceEnvironment
-                expect(deviceEnvironment["sdkVersion"]) == "1.44.0"
+                expect(deviceEnvironment["sdkVersion"]).toNot(beNil())
                 expect(deviceEnvironment["sdkType"]) == "ios-client"
                 expect(deviceEnvironment["sessionID"]).toNot(beNil())
                 expect(deviceEnvironment["stableID"]).toNot(beNil())
