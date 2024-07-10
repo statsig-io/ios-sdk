@@ -14,7 +14,7 @@ class PlatformCompatibility
 {
     static let willResignActiveNotification = NSNotification.Name(rawValue: "test.willResignActiveNotification")
     static let willTerminateNotification = NSNotification.Name(rawValue:"test.willTerminateNotification")
-    static let willEnterForegroundNotification = NSNotification.Name(rawValue:"test.willEnterForegroundNotification")
+    static let didBecomeActiveNotification = NSNotification.Name(rawValue:"test.didBecomeActiveNotification")
 
     static let deviceInfo = DeviceInfo()
 
@@ -39,7 +39,7 @@ class PlatformCompatibility
 {
     static let willResignActiveNotification = WKExtension.applicationWillResignActiveNotification
     static let willTerminateNotification = NSNotification.Name(rawValue: "willTerminateNotification")
-    static let willEnterForegroundNotification = WKExtension.applicationWillEnterForegroundNotification
+    static let didBecomeActiveNotification = WKExtension.applicationDidBecomeActiveNotification
 
     static let deviceInfo = DeviceInfo()
 
@@ -64,8 +64,9 @@ struct DeviceInfo {
 class PlatformCompatibility
 {
     static let willResignActiveNotification = UIApplication.willResignActiveNotification
+    
     static let willTerminateNotification = UIApplication.willTerminateNotification
-    static let willEnterForegroundNotification = UIApplication.willEnterForegroundNotification
+    static let didBecomeActiveNotification = UIApplication.didBecomeActiveNotification
 
     static let deviceInfo = DeviceInfo()
 
@@ -95,7 +96,7 @@ class PlatformCompatibility
 {
     static let willResignActiveNotification = UIApplication.willResignActiveNotification
     static let willTerminateNotification = UIApplication.willTerminateNotification
-    static let willEnterForegroundNotification = UIApplication.willEnterForegroundNotification
+    static let didBecomeActiveNotification = UIApplication.didBecomeActiveNotification
 
     static let deviceInfo = DeviceInfo()
 
@@ -144,7 +145,7 @@ class PlatformCompatibility
 {
     static let willResignActiveNotification = NSApplication.willResignActiveNotification
     static let willTerminateNotification = NSApplication.willTerminateNotification
-    static let willEnterForegroundNotification = NSApplication.willBecomeActiveNotification
+    static let didBecomeActiveNotification = NSApplication.didBecomeActiveNotification
 
     static let deviceInfo = DeviceInfo()
 

@@ -2,22 +2,24 @@ import Foundation
 
 extension StatsigClient {
     internal func subscribeToApplicationLifecycle() {
-        NotificationCenter.default.addObserver(
+        let center = NotificationCenter.default
+        
+        center.addObserver(
             self,
             selector: #selector(appWillBackground),
             name: PlatformCompatibility.willResignActiveNotification,
             object: nil)
 
-        NotificationCenter.default.addObserver(
+        center.addObserver(
             self,
             selector: #selector(appWillTerminate),
             name: PlatformCompatibility.willTerminateNotification,
             object: nil)
 
-        NotificationCenter.default.addObserver(
+        center.addObserver(
             self,
-            selector: #selector(appWillForeground),
-            name: PlatformCompatibility.willEnterForegroundNotification,
+            selector: #selector(appDidBecomeActive),
+            name: PlatformCompatibility.didBecomeActiveNotification,
             object: nil)
     }
 
@@ -25,7 +27,7 @@ extension StatsigClient {
         NotificationCenter.default.removeObserver(self)
     }
 
-    @objc private func appWillForeground() {
+    @objc private func appDidBecomeActive() {
         logger.start()
     }
 
