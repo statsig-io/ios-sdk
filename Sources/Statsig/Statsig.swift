@@ -114,6 +114,18 @@ public class Statsig {
     }
 
     /**
+     Get the value for the given feature gate
+
+     Parameters:
+     - gateName: The name of the feature gate setup on console.statsig.com
+
+     SeeAlso [Gate Documentation](https://docs.statsig.com/feature-gates/working-with)
+     */
+    public static func getFeatureGate(_ gateName: String) -> FeatureGate {
+        return checkGateImpl(gateName, withExposures: true, functionName: funcName())
+    }
+
+    /**
      Get the value for the given feature gate. No exposure event will be logged.
 
      Parameters:
