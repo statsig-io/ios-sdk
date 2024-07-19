@@ -392,9 +392,11 @@ class InternalStore {
     let storeQueue = DispatchQueue(label: storeQueueLabel, qos: .userInitiated, attributes: .concurrent)
 
     init(_ sdkKey: String, _ user: StatsigUser, options: StatsigOptions) {
+        Diagnostics.mark?.initialize.readCache.start()
         cache = StatsigValuesCache(sdkKey, user, options)
         localOverrides = StatsigUserDefaults.defaults.dictionarySafe(forKey: InternalStore.localOverridesKey)
         ?? InternalStore.getEmptyOverrides()
+        Diagnostics.mark?.initialize.readCache.end(success: true)
     }
 
     func getLastUpdateTime(user: StatsigUser) -> UInt64 {
