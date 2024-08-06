@@ -1,14 +1,10 @@
 import Foundation
 
-#if canImport(StatsigInternalObjC)
-import StatsigInternalObjC
-#endif
 
 public typealias completionBlock = ((_ errorMessage: String?) -> Void)?
 
 public class Statsig {
     internal static var client: StatsigClient?
-    internal static var errorBoundary: ErrorBoundary = ErrorBoundary()
     internal static var pendingListeners: [StatsigListening] = []
 
     /**
@@ -37,14 +33,8 @@ public class Statsig {
         }
 
         func _initialize() {
-            errorBoundary = ErrorBoundary(
-                key: sdkKey, deviceEnvironment: DeviceEnvironment.explicitGet()
-            )
-
-            errorBoundary.capture("initialize") {
-                client = StatsigClient(sdkKey: sdkKey, user: user, options: options, completion: completion)
-                addPendingListeners()
-            }
+            client = StatsigClient(sdkKey: sdkKey, user: user, options: options, completion: completion)
+            addPendingListeners()
         }
 
         if options?.enableCacheByFile == true {
@@ -144,14 +134,12 @@ public class Statsig {
      - gateName: The name of the feature gate setup on console.statsig.com
      */
     public static func manuallyLogGateExposure(_ gateName: String) {
-        errorBoundary.capture("manuallyLogGateExposure") {
-            guard let client = client else {
-                print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogGateExposure")).")
-                return
-            }
-
-            client.manuallyLogGateExposure(gateName)
+        guard let client = client else {
+            print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogGateExposure")).")
+            return
         }
+
+        client.manuallyLogGateExposure(gateName)
     }
 
     /**
@@ -187,14 +175,12 @@ public class Statsig {
      - experimentName: The name of the experiment setup on console.statsig.com
      */
     public static func manuallyLogExperimentExposure(_ experimentName: String, keepDeviceValue: Bool = false) {
-        errorBoundary.capture("manuallyLogExperimentExposure") {
-            guard let client = client else {
-                print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogExperimentExposure")).")
-                return
-            }
-
-            client.manuallyLogExperimentExposure(experimentName, keepDeviceValue: keepDeviceValue)
+        guard let client = client else {
+            print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogExperimentExposure")).")
+            return
         }
+
+        client.manuallyLogExperimentExposure(experimentName, keepDeviceValue: keepDeviceValue)
     }
 
     /**
@@ -228,14 +214,12 @@ public class Statsig {
      - experimentName: The name of the experiment setup on console.statsig.com
      */
     public static func manuallyLogConfigExposure(_ configName: String) {
-        errorBoundary.capture("manuallyLogConfigExposure") {
-            guard let client = client else {
-                print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogConfigExposure")).")
-                return
-            }
-
-            client.manuallyLogConfigExposure(configName)
+        guard let client = client else {
+            print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogConfigExposure")).")
+            return
         }
+
+        client.manuallyLogConfigExposure(configName)
     }
 
     /**
@@ -295,14 +279,12 @@ public class Statsig {
      - parameterName: The name of the parameter that was checked.
      */
     public static func manuallyLogLayerParameterExposure(_ layerName: String, _ parameterName: String, keepDeviceValue: Bool = false) {
-        errorBoundary.capture("manuallyLogLayerParameterExposure") {
-            guard let client = client else {
-                print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogLayerParameterExposure")).")
-                return
-            }
-
-            client.manuallyLogLayerParameterExposure(layerName, parameterName, keepDeviceValue: keepDeviceValue)
+        guard let client = client else {
+            print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogLayerParameterExposure")).")
+            return
         }
+
+        client.manuallyLogLayerParameterExposure(layerName, parameterName, keepDeviceValue: keepDeviceValue)
     }
 
     /**
@@ -312,14 +294,12 @@ public class Statsig {
      - gate: The the feature gate class of a feature gate setup on console.statsig.com
      */
     public static func manuallyLogExposure(_ gate: FeatureGate) {
-        errorBoundary.capture("manuallyLogExposure:gate") {
-            guard let client = client else {
-                print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogExposure")).")
-                return
-            }
-
-            client.manuallyLogExposure(gate)
+        guard let client = client else {
+            print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogExposure")).")
+            return
         }
+
+        client.manuallyLogExposure(gate)
     }
 
     /**
@@ -329,14 +309,12 @@ public class Statsig {
      - config: The dynamic config class of an experiment, autotune, or dynamic config setup on console.statsig.com
      */
     public static func manuallyLogExposure(_ config: DynamicConfig) {
-        errorBoundary.capture("manuallyLogExposure:config") {
-            guard let client = client else {
-                print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogExposure")).")
-                return
-            }
-
-            client.manuallyLogExposure(config)
+        guard let client = client else {
+            print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogExposure")).")
+            return
         }
+
+        client.manuallyLogExposure(config)
     }
 
     /**
@@ -347,14 +325,12 @@ public class Statsig {
      - paramterName: The name of the layer parameter that was checked
      */
     public static func manuallyLogExposure(_ layer: Layer, parameterName: String) {
-        errorBoundary.capture("manuallyLogExposure:layer") {
-            guard let client = client else {
-                print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogExposure")).")
-                return
-            }
-
-            client.logLayerParameterExposureForLayer(layer, parameterName: parameterName, isManualExposure: true)
+        guard let client = client else {
+            print("[Statsig]: \(getUnstartedErrorMessage("manuallyLogExposure")).")
+            return
         }
+
+        client.logLayerParameterExposureForLayer(layer, parameterName: parameterName, isManualExposure: true)
     }
 
     /**
@@ -365,9 +341,7 @@ public class Statsig {
      - metadata: Any extra values to be logged with the event
      */
     public static func logEvent(_ withName: String, metadata: [String: String]? = nil) {
-        errorBoundary.capture("") {
-            client?.logEvent(withName, metadata: metadata)
-        }
+        client?.logEvent(withName, metadata: metadata)
     }
 
     /**
@@ -379,9 +353,7 @@ public class Statsig {
      - metadata: Any extra values to be logged with the event
      */
     public static func logEvent(_ withName: String, value: String, metadata: [String: String]? = nil) {
-        errorBoundary.capture("") {
-            client?.logEvent(withName, value: value, metadata: metadata)
-        }
+        client?.logEvent(withName, value: value, metadata: metadata)
     }
 
     /**
@@ -393,9 +365,7 @@ public class Statsig {
      - metadata: Any extra key/value pairs to be logged with the event
      */
     public static func logEvent(_ withName: String, value: Double, metadata: [String: String]? = nil) {
-        errorBoundary.capture("") {
-            client?.logEvent(withName, value: value, metadata: metadata)
-        }
+        client?.logEvent(withName, value: value, metadata: metadata)
     }
 
     /**
@@ -409,15 +379,13 @@ public class Statsig {
      - completion: A callback block called when the new values/update operation have been received. May be called with an error message string if the fetch fails.
      */
     public static func updateUser(_ user: StatsigUser, values: [String: Any]? = nil, completion: completionBlock = nil) {
-        errorBoundary.capture("updateUser") { [weak client] in
-            guard let client = client else {
-                print("[Statsig]: \(getUnstartedErrorMessage("updateUser")).")
-                completion?("\(getUnstartedErrorMessage("updateUser")).")
-                return
-            }
-
-            client.updateUser(user, values: values, completion: completion)
+        guard let client = client else {
+            print("[Statsig]: \(getUnstartedErrorMessage("updateUser")).")
+            completion?("\(getUnstartedErrorMessage("updateUser")).")
+            return
         }
+
+        client.updateUser(user, values: values, completion: completion)
     }
     
     /**
@@ -427,40 +395,34 @@ public class Statsig {
      - completion: A callback block called when the new values/update operation have been received. May be called with an error message string if the fetch fails.
      */
     public static func refreshCache(_ completion: completionBlock = nil) {
-        errorBoundary.capture("refreshCache") { [weak client] in
-            guard let client = client else {
-                let message = getUnstartedErrorMessage()
-                print("[Statsig]: \(message).")
-                completion?(message)
-                return
-            }
-
-            client.refreshCache(completion)
+        guard let client = client else {
+            let message = getUnstartedErrorMessage()
+            print("[Statsig]: \(message).")
+            completion?(message)
+            return
         }
+
+        client.refreshCache(completion)
     }
 
     /**
      Stops all Statsig activity and flushes any pending events.
      */
     public static func shutdown() {
-        errorBoundary.capture("shutdown") {
-            client?.shutdown()
-            client = nil
-        }
+        client?.shutdown()
+        client = nil
     }
 
     /**
      Manually triggers a flush of any queued events.
      */
     public static func flush() {
-        errorBoundary.capture("flush") {
-            guard let client = client else {
-                print("[Statsig]: \(getUnstartedErrorMessage()).")
-                return
-            }
-
-            client.flush()
+        guard let client = client else {
+            print("[Statsig]: \(getUnstartedErrorMessage()).")
+            return
         }
+
+        client.flush()
     }
 
     /**
@@ -468,9 +430,7 @@ public class Statsig {
      */
     public static func getStableID() -> String? {
         var result:String? = nil
-        errorBoundary.capture("getStableID") {
-            result = client?.getStableID()
-        }
+        result = client?.getStableID()
         return result
     }
 
@@ -482,9 +442,7 @@ public class Statsig {
      - value: The value that will be returned
      */
     public static func overrideGate(_ gateName: String, value: Bool) {
-        errorBoundary.capture("overrideGate") {
-            client?.overrideGate(gateName, value: value)
-        }
+        client?.overrideGate(gateName, value: value)
     }
 
     /**
@@ -495,9 +453,7 @@ public class Statsig {
      - value: The value that the resulting DynamicConfig will contain
      */
     public static func overrideConfig(_ configName: String, value: [String: Any]) {
-        errorBoundary.capture("overrideConfig") {
-            client?.overrideConfig(configName, value: value)
-        }
+        client?.overrideConfig(configName, value: value)
     }
 
     /**
@@ -508,9 +464,7 @@ public class Statsig {
      - value: The value that the resulting Layer will contain
      */
     public static func overrideLayer(_ layerName: String, value: [String: Any]) {
-        errorBoundary.capture("overrideLayer") {
-            client?.overrideLayer(layerName, value: value)
-        }
+        client?.overrideLayer(layerName, value: value)
     }
 
     /**
@@ -520,18 +474,14 @@ public class Statsig {
      - name: The name of the gate/dynamic config/experiment to clear
      */
     public static func removeOverride(_ name: String) {
-        errorBoundary.capture("removeOverride") {
-            client?.removeOverride(name)
-        }
+        client?.removeOverride(name)
     }
 
     /**
      Clears all overriden values.
      */
     public static func removeAllOverrides() {
-        errorBoundary.capture("removeAllOverrides") {
-            client?.removeAllOverrides()
-        }
+        client?.removeAllOverrides()
     }
 
     /**
@@ -539,9 +489,7 @@ public class Statsig {
      */
     public static func getAllOverrides() -> StatsigOverrides? {
         var result: StatsigOverrides? = nil
-        errorBoundary.capture("getAllOverrides") {
-            result = client?.getAllOverrides()
-        }
+        result = client?.getAllOverrides()
         return result
     }
 
@@ -549,9 +497,7 @@ public class Statsig {
      Presents a view of the current internal state of the SDK.
      */
     public static func openDebugView(_ callback: DebuggerCallback? = nil) {
-        errorBoundary.capture("openDebugView") {
-            client?.openDebugView(callback)
-        }
+        client?.openDebugView(callback)
     }
 
     /**
@@ -559,13 +505,11 @@ public class Statsig {
      */
     public static func getInitializeResponseJson() -> ExternalInitializeResponse {
         var result = ExternalInitializeResponse.uninitialized()
-        errorBoundary.capture("getInitializeResponseJson") {
-            guard let client = client else {
-                print("[Statsig]: \(getUnstartedErrorMessage()).")
-                return
-            }
-            result = client.getInitializeResponseJson()
+        guard let client = client else {
+            print("[Statsig]: \(getUnstartedErrorMessage()).")
+            return result
         }
+        result = client.getInitializeResponseJson()
         return result
     }
 
@@ -579,47 +523,42 @@ public class Statsig {
             value: false,
             ruleID: "",
             evalDetails: .uninitialized())
-        errorBoundary.capture(functionName) {
-            guard let client = client else {
-                print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning false as the default.")
-                return
-            }
-
-            result = withExposures
-            ? client.getFeatureGate(gateName)
-            : client.getFeatureGateWithExposureLoggingDisabled(gateName)
+     
+        guard let client = client else {
+            print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning false as the default.")
+            return result
         }
+
+        result = withExposures
+        ? client.getFeatureGate(gateName)
+        : client.getFeatureGateWithExposureLoggingDisabled(gateName)
         
         return result
     }
 
     private static func getExperimentImpl(_ experimentName: String, keepDeviceValue: Bool, withExposures: Bool, functionName: String) -> DynamicConfig {
         var result: DynamicConfig = getEmptyConfig(experimentName)
-        errorBoundary.capture(functionName) {
-            guard let client = client else {
-                print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning a dummy DynamicConfig that will only return default values.")
-                return
-            }
+        guard let client = client else {
+            print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning a dummy DynamicConfig that will only return default values.")
+            return result
+        }
 
-            result = withExposures
-            ? client.getExperiment(experimentName, keepDeviceValue: keepDeviceValue)
-            : client.getExperimentWithExposureLoggingDisabled(experimentName, keepDeviceValue: keepDeviceValue)
-        }        
+        result = withExposures
+        ? client.getExperiment(experimentName, keepDeviceValue: keepDeviceValue)
+        : client.getExperimentWithExposureLoggingDisabled(experimentName, keepDeviceValue: keepDeviceValue)
         return result
     }
 
     private static func getConfigImpl(_ configName: String, withExposures: Bool, functionName: String) -> DynamicConfig {
         var result: DynamicConfig = getEmptyConfig(configName)
-        errorBoundary.capture(functionName) {
-            guard let client = client else {
-                print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning a dummy DynamicConfig that will only return default values.")
-                return
-            }
+        guard let client = client else {
+            print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning a dummy DynamicConfig that will only return default values.")
+            return result
+        }
 
-            result = withExposures
-            ? client.getConfig(configName)
-            : client.getConfigWithExposureLoggingDisabled(configName)
-        }        
+        result = withExposures
+        ? client.getConfig(configName)
+        : client.getConfigWithExposureLoggingDisabled(configName)
         return result
     }
 
@@ -630,16 +569,14 @@ public class Statsig {
         functionName: String
     ) -> Layer {
         var result: Layer = Layer(client: nil, name: layerName, evalDetails: .uninitialized())
-        errorBoundary.capture(functionName) {
-            guard let client = client else {
-                print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning an empty Layer object")
-                return
-            }
-
-            result = withExposures
-            ? client.getLayer(layerName, keepDeviceValue: keepDeviceValue)
-            : client.getLayerWithExposureLoggingDisabled(layerName, keepDeviceValue: keepDeviceValue)
+        guard let client = client else {
+            print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning an empty Layer object")
+            return result
         }
+
+        result = withExposures
+        ? client.getLayer(layerName, keepDeviceValue: keepDeviceValue)
+        : client.getLayerWithExposureLoggingDisabled(layerName, keepDeviceValue: keepDeviceValue)
         return result
     }
     
@@ -648,19 +585,17 @@ public class Statsig {
         withExposures: Bool,
         functionName: String
     ) -> ParameterStore {
-        var result: ParameterStore? = nil
-        errorBoundary.capture(functionName) {
-            guard let client = client else {
-                print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning a dummy ParameterStore that will only return default values.")
-                return
-            }
-
-            result = withExposures ? client.getParameterStore(storeName) : client.getParameterStoreWithExposureLoggingDisabled(storeName)
-        }
-        return result ?? ParameterStore(
+        var result = ParameterStore(
             name: storeName,
             evaluationDetails: .uninitialized()
         )
+        guard let client = client else {
+            print("[Statsig]: \(getUnstartedErrorMessage(functionName)). Returning a dummy ParameterStore that will only return default values.")
+            return result
+        }
+        
+        result = withExposures ? client.getParameterStore(storeName) : client.getParameterStoreWithExposureLoggingDisabled(storeName)
+        return result
     }
 
     private static func getEmptyConfig(_ name: String) -> DynamicConfig {

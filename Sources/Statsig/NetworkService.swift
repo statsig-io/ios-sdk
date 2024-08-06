@@ -316,11 +316,7 @@ class NetworkService {
                         taskCapture: taskCapture
                     )
                 } else {
-                    Statsig.errorBoundary.capture("sendRequest:response") {
-                        completion(responseData, response, error)
-                    } withRecovery: {
-                        completion(nil, nil, StatsigError.unexpectedError("Response Handling"))
-                    }
+                    completion(responseData, response, error)
                 }
             }
 

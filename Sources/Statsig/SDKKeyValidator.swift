@@ -14,16 +14,6 @@ class SDKKeyValidator {
             return true
         }
 
-        let exception = NSException(
-            name: NSExceptionName("StatsigSDKKeyMismatchError"),
-            reason: "The SDK key provided does not match the one used to generate values.", userInfo: nil
-        )
-
-        Statsig.errorBoundary.logException(
-            "SDKKeyValidator",
-            exception: exception
-        )
-
         return false
     }
 }
