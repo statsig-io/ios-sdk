@@ -1,6 +1,7 @@
 import Foundation
 
-internal let ApiHost = "api.statsig.com"
+internal let ApiHost = "featureassets.org"
+internal let LogEventHost = "prodregistryv2.org"
 
 /**
  Configuration options for the StatsigSDK.
@@ -79,7 +80,7 @@ public class StatsigOptions {
     /**
      The API to use for log_event network requests. You should not need to override this (unless you have another API that implements the Statsig /v1/log_event endpoint)
      */
-    public var eventLoggingApi = "https://\(ApiHost)" {
+    public var eventLoggingApi = "https://\(LogEventHost)" {
         didSet {
             logEventApiUrl = URL(string: eventLoggingApi) ?? logEventApiUrl
         }
@@ -175,11 +176,12 @@ public class StatsigOptions {
             self.api = api
             self.mainApiUrl = URL(string: api)
         }
+        self.mainApiUrl = URL(string: self.api) ?? URL(string: "https://\(ApiHost)")
         
         if let eventLoggingApi = eventLoggingApi {
             self.eventLoggingApi = eventLoggingApi
-            self.logEventApiUrl = URL(string: eventLoggingApi)
         }
+        self.logEventApiUrl = URL(string: self.eventLoggingApi) ?? URL(string: "https://\(LogEventHost)")
         
         if let customCacheKey = customCacheKey {
             self.customCacheKey = customCacheKey

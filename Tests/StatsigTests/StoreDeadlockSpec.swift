@@ -27,7 +27,7 @@ class StoreDeadlockSpec: BaseSpec {
                             forName: UserDefaults.didChangeNotification,
                             object: UserDefaults.standard, queue: .main) { _ in }
 
-                stub(condition: isHost("api.statsig.com")) { req in
+                stub(condition: isHost(ApiHost)) { req in
                     let delay = Double.random(in: 0.1 ..< 1.0)
 
                     return HTTPStubsResponse(jsonObject: [

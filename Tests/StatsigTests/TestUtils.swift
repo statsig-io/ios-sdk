@@ -51,7 +51,7 @@ class TestUtils {
 
     static func startWithResponseAndWait(_ response: [String: Any], _ key: String = "client-api-key", _ user: StatsigUser? = nil, _ statusCode: Int32 = 200, options: StatsigOptions? = nil) -> URLRequest? {
         var result: URLRequest? = nil
-        let host = options?.mainApiUrl?.host ?? "api.statsig.com"
+        let host = options?.mainApiUrl?.host ?? ApiHost
         let handle = stub(condition: isHost(host)) { req in
             result = req
             return HTTPStubsResponse(jsonObject: response, statusCode: statusCode, headers: nil)
@@ -68,7 +68,7 @@ class TestUtils {
 
     static func startWithStatusAndWait(_ statusCode: Int32 = 200, _ key: String = "client-api-key", _ user: StatsigUser? = nil, options: StatsigOptions? = nil) -> URLRequest? {
         var result: URLRequest? = nil
-        stub(condition: isHost(options?.mainApiUrl?.host ?? "api.statsig.com")) { req in
+        stub(condition: isHost(options?.mainApiUrl?.host ?? ApiHost)) { req in
             result = req
             return HTTPStubsResponse(data: Data(), statusCode: statusCode, headers: nil)
         }
@@ -79,7 +79,7 @@ class TestUtils {
         return result
     }
 
-    static func captureLogs(host: String = "api.statsig.com",
+    static func captureLogs(host: String = LogEventHost,
                             removeDiagnostics: Bool = true,
                             onLog: @escaping ([String: Any]) -> Void) {
         stub(condition: isHost(host) && isPath("/v1/rgstr")) { request in

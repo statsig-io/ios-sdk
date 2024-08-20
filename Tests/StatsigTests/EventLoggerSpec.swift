@@ -18,13 +18,15 @@ class EventLoggerSpec: BaseSpec {
         describe("using EventLogger") {
             let sdkKey = "client-api-key"
             let opts = StatsigOptions()
+            
             let store = InternalStore(sdkKey, StatsigUser(userID: "jkw"), options: opts)
+            
             let ns = NetworkService(sdkKey: sdkKey, options: opts, store: store)
             let user = StatsigUser(userID: "jkw")
             let event1 = Event(user: user, name: "test_event1", value: 1, disableCurrentVCLogging: false)
             let event2 = Event(user: user, name: "test_event2", value: 2, disableCurrentVCLogging: false)
             let event3 = Event(user: user, name: "test_event3", value: "3", disableCurrentVCLogging: false)
-
+            print("What is the eventLoggingApi ? ", opts.logEventApiUrl)
             afterEach {
                 HTTPStubs.removeAllStubs()
                 EventLogger.deleteLocalStorage(sdkKey: "client-key")
@@ -39,7 +41,7 @@ class EventLoggerSpec: BaseSpec {
 
                 var actualRequest: URLRequest?
                 var actualRequestHttpBody: [String: Any]?
-                stub(condition: isHost("api.statsig.com")) { request in
+                stub(condition: isHost(LogEventHost)) { request in
                     actualRequest = request
                     actualRequestHttpBody = try! JSONSerialization.jsonObject(
                         with: request.ohhttpStubs_httpBody!,
@@ -57,7 +59,7 @@ class EventLoggerSpec: BaseSpec {
                 expect((actualRequestHttpBody?["events"] as? [Any])?.count).toEventually(equal(3))
                 expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).toEventually(equal(sdkKey))
                 expect(actualRequest?.httpMethod).toEventually(equal("POST"))
-                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/rgstr"))
+                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://prodregistryv2.org/v1/rgstr"))
             }
 
             it("should add events to internal queue and send once it passes max batch size") {
@@ -70,7 +72,7 @@ class EventLoggerSpec: BaseSpec {
                 var actualRequest: URLRequest?
                 var actualRequestHttpBody: [String: Any]?
 
-                stub(condition: isHost("api.statsig.com")) { request in
+                stub(condition: isHost(LogEventHost)) { request in
                     actualRequest = request
                     actualRequestHttpBody = try! JSONSerialization.jsonObject(
                         with: request.ohhttpStubs_httpBody!,
@@ -82,7 +84,7 @@ class EventLoggerSpec: BaseSpec {
                 expect((actualRequestHttpBody?["events"] as? [Any])?.count).toEventually(equal(3))
                 expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).toEventually(equal(sdkKey))
                 expect(actualRequest?.httpMethod).toEventually(equal("POST"))
-                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/rgstr"))
+                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://prodregistryv2.org/v1/rgstr"))
             }
 
             it("should send events with flush()") {
@@ -97,7 +99,7 @@ class EventLoggerSpec: BaseSpec {
                 var actualRequest: URLRequest?
                 var actualRequestHttpBody: [String: Any]?
 
-                stub(condition: isHost("api.statsig.com")) { request in
+                stub(condition: isHost(LogEventHost)) { request in
                     actualRequest = request
                     actualRequestHttpBody = try! JSONSerialization.jsonObject(
                         with: request.ohhttpStubs_httpBody!,
@@ -109,12 +111,12 @@ class EventLoggerSpec: BaseSpec {
                 expect((actualRequestHttpBody?["events"] as? [Any])?.count).toEventually(equal(3))
                 expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).toEventually(equal(sdkKey))
                 expect(actualRequest?.httpMethod).toEventually(equal("POST"))
-                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/rgstr"))
+                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://prodregistryv2.org/v1/rgstr"))
             }
 
             it("should save failed to send requests locally during shutdown, and load and resend local requests during startup") {
                 var isPendingRequest = true
-                stub(condition: isHost("api.statsig.com")) { request in
+                stub(condition: isHost(LogEventHost)) { request in
                     isPendingRequest = false
                     return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 403))
                 }
@@ -134,7 +136,7 @@ class EventLoggerSpec: BaseSpec {
                 let savedData = userDefaults.data[getFailedEventStorageKey("client-key")] as? [Data]
                 var resendData: [Data] = []
 
-                stub(condition: isHost("api.statsig.com")) { request in
+                stub(condition: isHost(LogEventHost)) { request in
                     resendData.append(request.ohhttpStubs_httpBody!)
                     return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 403))
                 }
@@ -147,7 +149,7 @@ class EventLoggerSpec: BaseSpec {
             }
 
             it("should limit file size save to user defaults") {
-                stub(condition: isHost("api.statsig.com")) { req in
+                stub(condition: isHost(LogEventHost)) { req in
                     return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 500))
                 }
 

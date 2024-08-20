@@ -30,7 +30,7 @@ final class MultiClientSupportSpec: BaseSpec {
         func stubInitOnce(_ response: [String: Any]) {
             var handle: HTTPStubsDescriptor?
 
-            handle = stub(condition: isHost("api.statsig.com")) { req in
+            handle = stub(condition: isHost(ApiHost)) { req in
                 HTTPStubs.removeStub(handle!)
                 return HTTPStubsResponse(jsonObject: response, statusCode: 200, headers: nil)
             }

@@ -20,7 +20,7 @@ class AsyncInitVsUpdateSpec: BaseSpec {
                 let userA = StatsigUser(userID: "user-a", customIDs: ["workID": "employee-a"])
                 let userB = StatsigUser(userID: "user-b", customIDs: ["workID": "employee-b"])
 
-                stub(condition: isHost("api.statsig.com")) { req in
+                stub(condition: isHost(ApiHost)) { req in
                     if ((req.url?.absoluteString.contains("/initialize") ?? false) == false) {
                         return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
                     }

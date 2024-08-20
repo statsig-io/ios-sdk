@@ -83,7 +83,7 @@ class StatsigSpec: BaseSpec {
 
             it("only makes 1 network request if start() is called multiple times") {
                 var requests = []
-                stub(condition: isHost("api.statsig.com")) { req in
+                stub(condition: isHost(ApiHost)) { req in
                     if req.url?.absoluteString.contains("/initialize") as? Bool == true {
                         requests.append(req)
                     }
@@ -197,7 +197,7 @@ class StatsigSpec: BaseSpec {
                 expect(Statsig.checkGate("new_gate_name_1")).to(beFalse())
                 expect(Statsig.checkGate("new_gate_name_2")).to(beFalse())
                 
-                stub(condition: isHost("api.statsig.com")) { request in
+                stub(condition: isHost(ApiHost)) { request in
                     return HTTPStubsResponse(jsonObject: StatsigSpec.mockUpdatedUserValues, statusCode: 200, headers: nil)
                 }
                 
@@ -223,7 +223,7 @@ class StatsigSpec: BaseSpec {
                 expect(Statsig.checkGate(gateName)).to(beTrue())
 
                 // the values are now cached for the first user. Now test when network is not available, and cache for the first user should NOT be used
-                stub(condition: isHost("api.statsig.com")) { _ in
+                stub(condition: isHost(ApiHost)) { _ in
                     let notConnectedError = NSError(domain: NSURLErrorDomain, code: 403)
                     return HTTPStubsResponse(error: notConnectedError)
                 }
@@ -538,7 +538,7 @@ class StatsigSpec: BaseSpec {
             }
 
             it("times out if the request took too long and responds early with default values, when there is no local cache") {
-                stub(condition: isHost("api.statsig.com")) { _ in
+                stub(condition: isHost(ApiHost)) { _ in
                     HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
                         .responseTime(0.2)
                 }
@@ -583,7 +583,7 @@ class StatsigSpec: BaseSpec {
             }
 
             it("times out and returns value from local cache") {
-                stub(condition: isHost("api.statsig.com")) { _ in
+                stub(condition: isHost(ApiHost)) { _ in
                     HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
                 }
 
@@ -597,7 +597,7 @@ class StatsigSpec: BaseSpec {
                 Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(disableDiagnostics: true)) { _ in
                     // shutdown client to call start() again, and makes response slow so we can test early timeout with cached return
                     Statsig.shutdown()
-                    stub(condition: isHost("api.statsig.com")) { _ in
+                    stub(condition: isHost(ApiHost)) { _ in
                         HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil).responseTime(3)
                     }
 

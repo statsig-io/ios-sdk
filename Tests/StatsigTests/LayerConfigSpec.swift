@@ -100,7 +100,7 @@ class LayerConfigSpec: BaseSpec {
             beforeEach {
                 TestUtils.clearStorage()
 
-                stub(condition: isHost("api.statsig.com")) { req in
+                stub(condition: isHost(ApiHost)) { req in
                     return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
                 }
 

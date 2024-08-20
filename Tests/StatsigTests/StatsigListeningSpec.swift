@@ -9,13 +9,13 @@ import OHHTTPStubsSwift
 @testable import Statsig
 
 func goodStub() {
-    stub(condition: isHost("api.statsig.com")) { req in
+    stub(condition: isHost(ApiHost)) { req in
         return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
     }
 }
 
 func badStub() {
-    stub(condition: isHost("api.statsig.com")) { req in
+    stub(condition: isHost(ApiHost)) { req in
         return HTTPStubsResponse(jsonObject: [:], statusCode: 500, headers: nil)
     }
 }

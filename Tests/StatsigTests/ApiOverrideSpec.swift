@@ -16,10 +16,9 @@ final class ApiOverrideSpec: BaseSpec {
 
         var request: URLRequest?
 
-
         describe("When Main API Overridden") {
             func start() {
-                let opts = StatsigOptions(api: "http://api.override.com")
+                let opts = StatsigOptions(api: "http://api.override.com", eventLoggingApi: "http://api.override.com")
                 request = TestUtils.startWithStatusAndWait(options: opts)
             }
 
@@ -48,13 +47,13 @@ final class ApiOverrideSpec: BaseSpec {
 
             it("calls initialize on the statsig api") {
                 start()
-                expect(request?.url?.absoluteString).to(equal("https://api.statsig.com/v1/initialize"))
+                expect(request?.url?.absoluteString).to(equal("https://featureassets.org/v1/initialize"))
             }
 
             it("calls log_event on the statsig api") {
                 start()
                 var hitLog = false
-                TestUtils.captureLogs(host: "api.statsig.com") { logs in
+                TestUtils.captureLogs(host: LogEventHost) { logs in
                     hitLog = true
                 }
 
@@ -72,7 +71,7 @@ final class ApiOverrideSpec: BaseSpec {
 
             it("calls initialize on the statsig api") {
                 start()
-                expect(request?.url?.absoluteString).to(equal("https://api.statsig.com/v1/initialize"))
+                expect(request?.url?.absoluteString).to(equal("https://featureassets.org/v1/initialize"))
             }
 
             it("calls log_event on the overridden api.log.co.nz api") {

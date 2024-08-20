@@ -36,7 +36,7 @@ class NullInitializeSpec: BaseSpec {
             beforeEach {
                 TestUtils.clearStorage()
 
-                stub(condition: isHost("api.statsig.com")) { _ in
+                stub(condition: isHost(ApiHost)) { _ in
                     HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil)
                 }
             }

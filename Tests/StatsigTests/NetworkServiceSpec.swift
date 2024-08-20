@@ -27,7 +27,7 @@ class NetworkServiceSpec: BaseSpec {
             it("should send the correct request data when calling fetchInitialValues()") {
                 var actualRequest: URLRequest?
                 var actualRequestHttpBody: [String: Any]?
-                stub(condition: isHost("api.statsig.com")) { request in
+                stub(condition: isHost(ApiHost)) { request in
                     actualRequest = request
                     actualRequestHttpBody = try! JSONSerialization.jsonObject(
                         with: request.ohhttpStubs_httpBody!,
@@ -53,13 +53,13 @@ class NetworkServiceSpec: BaseSpec {
                 expect(Double(actualRequest?.allHTTPHeaderFields?["STATSIG-CLIENT-TIME"] ?? "0")! / 1000)
                     .toEventually(beCloseTo(now, within: 1))
                 expect(actualRequest?.httpMethod).toEventually(equal("POST"))
-                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/initialize"))
+                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://featureassets.org/v1/initialize"))
             }
 
             it("should send the correct request data when calling fetchUpdatedValues()") {
                 var actualRequest: URLRequest?
                 var actualRequestHttpBody: [String: Any]?
-                stub(condition: isHost("api.statsig.com")) { request in
+                stub(condition: isHost(ApiHost)) { request in
                     actualRequest = request
                     actualRequestHttpBody = try! JSONSerialization.jsonObject(
                         with: request.ohhttpStubs_httpBody!,
@@ -84,7 +84,7 @@ class NetworkServiceSpec: BaseSpec {
                 expect(actualRequestHttpBody?.keys).to(contain("user", "statsigMetadata", "lastSyncTimeForUser"))
                 expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).to(equal(sdkKey))
                 expect(actualRequest?.httpMethod).to(equal("POST"))
-                expect(actualRequest?.url?.absoluteString).to(equal("https://api.statsig.com/v1/initialize"))
+                expect(actualRequest?.url?.absoluteString).to(equal("https://featureassets.org/v1/initialize"))
             }
 
             it("should send the correct request data when calling sendEvents(), and returns the request data back if request fails") {
@@ -94,7 +94,7 @@ class NetworkServiceSpec: BaseSpec {
                 var actualRequestData: Data?
                 var returnedRequestData: Data?
 
-                stub(condition: isHost("api.statsig.com")) { request in
+                stub(condition: isHost(LogEventHost)) { request in
                     actualRequest = request
                     actualRequestHttpBody = try! JSONSerialization.jsonObject(
                         with: request.ohhttpStubs_httpBody!,
@@ -117,7 +117,7 @@ class NetworkServiceSpec: BaseSpec {
                 expect(actualRequestHttpBody?.keys).toEventually(contain("user", "statsigMetadata", "events"))
                 expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).toEventually(equal(sdkKey))
                 expect(actualRequest?.httpMethod).toEventually(equal("POST"))
-                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/rgstr"))
+                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://prodregistryv2.org/v1/rgstr"))
                 expect(actualRequestData).toEventually(equal(returnedRequestData))
 
                 // make sure when logging we drop private attributes
@@ -132,7 +132,7 @@ class NetworkServiceSpec: BaseSpec {
                 var actualRequestData: [Data] = []
                 var returnedRequestData: [Data] = []
 
-                stub(condition: isHost("api.statsig.com")) { request in
+                stub(condition: isHost(LogEventHost)) { request in
                     actualRequest = request
                     actualRequestHttpBody = try! JSONSerialization.jsonObject(
                         with: request.ohhttpStubs_httpBody!,
@@ -165,7 +165,7 @@ class NetworkServiceSpec: BaseSpec {
                 expect(actualRequestHttpBody?.keys).toEventually(contain("user", "events"))
                 expect(actualRequest?.allHTTPHeaderFields!["STATSIG-API-KEY"]).toEventually(equal(sdkKey))
                 expect(actualRequest?.httpMethod).toEventually(equal("POST"))
-                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://api.statsig.com/v1/rgstr"))
+                expect(actualRequest?.url?.absoluteString).toEventually(equal("https://prodregistryv2.org/v1/rgstr"))
                 expect(actualRequestData.count).toEventually(equal(returnedRequestData.count))
             }
 
@@ -173,7 +173,7 @@ class NetworkServiceSpec: BaseSpec {
             it ("does not retry requests after timeout") {
                 var calls = 0
                 var timedout = false
-                stub(condition: isHost("api.statsig.com")) { request in
+                stub(condition: isHost(ApiHost)) { request in
                     calls += 1
 
                     while (timedout == false) {} // block until timeout

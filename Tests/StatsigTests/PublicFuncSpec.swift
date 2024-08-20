@@ -4,11 +4,12 @@ import XCTest
 import Nimble
 import OHHTTPStubs
 import Quick
-import Statsig
 
 #if !COCOAPODS
 import OHHTTPStubsSwift
 #endif
+
+@testable import Statsig
 
 final class PublicFuncSpec: BaseSpec {
     override func spec() {
@@ -16,7 +17,7 @@ final class PublicFuncSpec: BaseSpec {
 
         describe("PublicFunc") {
             lazy var client: StatsigClient = {
-                let handle = stub(condition: isHost("api.statsig.com")) { req in
+                let handle = stub(condition: isHost(ApiHost)) { req in
                     return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
                 }
 

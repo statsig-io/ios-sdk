@@ -257,7 +257,7 @@ class NetworkService {
         if let override = self.statsigOptions.mainApiUrl {
             urlComponents.applyOverride(override)
         }
-
+        
         if endpoint == .logEvent, let loggingApiOverride = self.statsigOptions.logEventApiUrl {
             urlComponents.applyOverride(loggingApiOverride)
         }
