@@ -31,7 +31,7 @@ public class StatsigOptions {
     public var enableAutoValueUpdate = false
     
     /**
-     Only applies if StatsigOptions.enableAutoValueUpdate is true. Controls how fequently calls to refresh the current users values are made. Time is in Secibds and defaults to 60 seconds.
+     Only applies if StatsigOptions.enableAutoValueUpdate is true. Controls how fequently calls to refresh the current users values are made. Time is in seconds and defaults to 60 seconds.
      */
     public var autoValueUpdateIntervalSec = 60.0
     
