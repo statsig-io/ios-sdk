@@ -7,10 +7,12 @@ fileprivate let MaxCachedUsers = 10
 public struct StatsigOverrides {
     public var gates: [String: Bool]
     public var configs: [String: [String: Any]]
+    public var params: [String: [String: Any]]
 
     init(_ overrides: [String: Any]) {
         gates = overrides[InternalStore.gatesKey] as? [String: Bool] ?? [:]
         configs = overrides[InternalStore.configsKey] as? [String: [String: Any]] ?? [:]
+        params = overrides[InternalStore.paramStoresKey] as? [String: [String: Any]] ?? [:]
     }
 }
 
@@ -486,6 +488,18 @@ class InternalStore {
     
     func getParamStore(client: StatsigClient?, forName storeName: String) -> ParameterStore {
         storeQueue.sync {
+            if let override = (localOverrides[InternalStore.paramStoresKey] as? [String: [String: StatsigDynamicConfigValue]])?[storeName] {
+                return ParameterStore(
+                    name: storeName,
+                    evaluationDetails: cache.getEvaluationDetails(.LocalOverride),
+                    client: client,
+                    configuration: override.mapValues {[
+                        "ref_type": "static",
+                        "param_type": getTypeOf($0),
+                        "value": $0
+                    ]}
+                )
+            }
             return cache.getParamStore(client, storeName)
         }
     }
@@ -563,11 +577,19 @@ class InternalStore {
         }
     }
 
+    func overrideParamStore(_ storeName: String, _ value: [String: Any]) {
+        storeQueue.async(flags: .barrier) { [weak self] in
+            self?.localOverrides[jsonDict: InternalStore.paramStoresKey]?[storeName] = value
+            self?.saveOverrides()
+        }
+    }
+
     func removeOverride(_ name: String) {
         storeQueue.async(flags: .barrier) { [weak self] in
             self?.localOverrides[jsonDict: InternalStore.gatesKey]?.removeValue(forKey: name)
             self?.localOverrides[jsonDict: InternalStore.configsKey]?.removeValue(forKey: name)
             self?.localOverrides[jsonDict: InternalStore.layerConfigsKey]?.removeValue(forKey: name)
+            self?.localOverrides[jsonDict: InternalStore.paramStoresKey]?.removeValue(forKey: name)
         }
     }
 
@@ -590,7 +612,12 @@ class InternalStore {
     }
 
     private static func getEmptyOverrides() -> [String: Any] {
-        return [InternalStore.gatesKey: [:], InternalStore.configsKey: [:], InternalStore.layerConfigsKey: [:]]
+        return [
+            InternalStore.gatesKey: [:],
+            InternalStore.configsKey: [:],
+            InternalStore.layerConfigsKey: [:],
+            InternalStore.paramStoresKey: [:]
+        ]
     }
 
     // Sticky Logic: https://gist.github.com/daniel-statsig/3d8dfc9bdee531cffc96901c1a06a402
