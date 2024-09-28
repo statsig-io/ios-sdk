@@ -34,11 +34,12 @@ class EventSpec: BaseSpec {
                     ruleID: "default",
                     secondaryExposures: [["gate": "employee", "gateValue": "true", "ruleID": "rule_id_employee"]],
                     evalDetails: EvaluationDetails(source: .Network, reason: .Recognized, lcut: 123456789, receivedAt: 43),
+                    bootstrapMetadata: BootstrapMetadata(),
                     disableCurrentVCLogging: false)
 
                 expect(gateExposure.name) == "statsig::gate_exposure"
                 expect(gateExposure.value).to(beNil())
-                expect(gateExposure.metadata) == ["gate": "show_coupon", "gateValue": String(true), "ruleID": "default", "reason": "Network:Recognized", "lcut": "123456789", "receivedAt": "43"]
+                expect(gateExposure.metadata) == ["gate": "show_coupon", "gateValue": String(true), "ruleID": "default", "reason": "Network:Recognized", "lcut": "123456789", "receivedAt": "43", "bootstrapMetadata": "{\n\n}"]
                 expect(gateExposure.secondaryExposures![0]).to(equal(["gate": "employee", "gateValue": "true", "ruleID": "rule_id_employee"]))
                 expect(Int(gateExposure.time / 1000)) == Int(Date().timeIntervalSince1970)
             }
@@ -50,11 +51,12 @@ class EventSpec: BaseSpec {
                     ruleID: "default",
                     secondaryExposures: [],
                     evalDetails: EvaluationDetails(source: .Network, reason: .Recognized, lcut: 123456789, receivedAt: 12),
+                    bootstrapMetadata: BootstrapMetadata(),
                     disableCurrentVCLogging: false)
 
                 expect(configExposure.name) == "statsig::config_exposure"
                 expect(configExposure.value).to(beNil())
-                expect(configExposure.metadata) == ["config": "my_config", "ruleID": "default", "reason": "Network:Recognized", "lcut": "123456789", "receivedAt": "12"]
+                expect(configExposure.metadata) == ["config": "my_config", "ruleID": "default", "reason": "Network:Recognized", "lcut": "123456789", "receivedAt": "12", "bootstrapMetadata": "{\n\n}"]
                 expect(configExposure.secondaryExposures).to(equal([]))
                 expect(Int(configExposure.time / 1000)) == Int(Date().timeIntervalSince1970)
             }

@@ -64,4 +64,5 @@ public enum EvaluationReason: String, Codable {
     case Unrecognized
     case Sticky
     case LocalOverride
+    case StableIDMismatch
 }

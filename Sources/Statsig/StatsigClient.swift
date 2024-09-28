@@ -308,6 +308,7 @@ extension StatsigClient {
                     ruleID: ruleID,
                     secondaryExposures: gate.secondaryExposures,
                     evalDetails: gate.evaluationDetails,
+                    bootstrapMetadata: store.getBootstrapMetadata(),
                     disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging)
                 .withManualExposureFlag(isManualExposure))
         }
@@ -389,6 +390,7 @@ extension StatsigClient {
                     ruleID: config.ruleID,
                     secondaryExposures: config.secondaryExposures,
                     evalDetails: config.evaluationDetails,
+                    bootstrapMetadata: store.getBootstrapMetadata(),
                     disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging)
                 .withManualExposureFlag(isManualExposure))
         }
@@ -530,7 +532,8 @@ extension StatsigClient {
                     allocatedExperimentName: allocatedExperiment,
                     parameterName: parameterName,
                     isExplicitParameter: isExplicit,
-                    evalDetails: layer.evaluationDetails
+                    evalDetails: layer.evaluationDetails,
+                    bootstrapMetadata: store.getBootstrapMetadata()
                 )
                 .withManualExposureFlag(isManualExposure))
         }

@@ -72,6 +72,7 @@ class Event {
         ruleID: String,
         secondaryExposures: [[String: String]],
         evalDetails: EvaluationDetails,
+        bootstrapMetadata: BootstrapMetadata?,
         disableCurrentVCLogging: Bool
     ) -> Event {
         var metadata = [
@@ -79,6 +80,10 @@ class Event {
             "gateValue": String(gateValue),
             "ruleID": ruleID
         ]
+        
+        if let bootstrapMetadata = bootstrapMetadata {
+            metadata["bootstrapMetadata"] = bootstrapMetadata.toString()
+        }
 
         evalDetails.addToDictionary(&metadata)
 
@@ -98,12 +103,17 @@ class Event {
         ruleID: String,
         secondaryExposures: [[String: String]],
         evalDetails: EvaluationDetails,
+        bootstrapMetadata: BootstrapMetadata?,
         disableCurrentVCLogging: Bool
     ) -> Event {
         var metadata = [
             "config": configName,
             "ruleID": ruleID,
         ]
+        
+        if let bootstrapMetadata = bootstrapMetadata {
+            metadata["bootstrapMetadata"] = bootstrapMetadata.toString()
+        }
 
         evalDetails.addToDictionary(&metadata)
 
@@ -126,7 +136,8 @@ class Event {
         allocatedExperimentName: String,
         parameterName: String,
         isExplicitParameter: Bool,
-        evalDetails: EvaluationDetails
+        evalDetails: EvaluationDetails,
+        bootstrapMetadata: BootstrapMetadata?
     ) -> Event {
         var metadata = [
             "config": configName,
@@ -135,6 +146,10 @@ class Event {
             "parameterName": parameterName,
             "isExplicitParameter": "\(isExplicitParameter)"
         ]
+        
+        if let bootstrapMetadata = bootstrapMetadata {
+            metadata["bootstrapMetadata"] = bootstrapMetadata.toString()
+        }
 
         evalDetails.addToDictionary(&metadata)
 

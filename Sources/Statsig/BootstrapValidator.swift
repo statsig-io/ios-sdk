@@ -16,7 +16,10 @@ class BootstrapValidator {
         BootstrapValidator.validate(userDict, evaluatedKeys)
     }
 
-    private static func validate(_ one: [String: Any]?, _ two: [String: Any]?) -> Bool {
+    private static func validate(
+        _ one: [String: Any]?,
+        _ two: [String: Any]?
+    ) -> Bool {
         guard let one = one, let two = two else {
             return one == nil && two == nil
         }
@@ -26,25 +29,29 @@ class BootstrapValidator {
                 continue
             }
 
-            guard let value2 = two[key] else {
+            guard let twoValue = two[key] else {
                 return false
             }
 
-            if value as? AnyHashable == value2 as? AnyHashable {
+            if let valueDict = value as? [String: Any], let twoValueDict = twoValue as? [String: Any] {
+                if !validate(valueDict, twoValueDict) {
+                    return false
+                }
+            } else if let valueString = value as? String, let twoValueString = twoValue as? String {
+                if valueString != twoValueString {
+                    return false
+                }
+            } else if value as? AnyHashable == twoValue as? AnyHashable {
                 return true
+            } else {
+                return false
             }
-
-            if let objectValue = value as? [String: Any], let objectValue2 = value2 as? [String: Any] {
-                return self.validate(objectValue, objectValue2)
-            }
-
-            // unexpected
-            return false
         }
 
         return true
     }
 
+    
     private static func copyObject(_ obj: [String: Any?]?) -> [String: Any]? {
         guard let obj = obj else {
             return nil

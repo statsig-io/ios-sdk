@@ -14,6 +14,42 @@ public struct StatsigOverrides {
     }
 }
 
+public struct BootstrapMetadata {
+    var generatorSDKInfo: [String: String]?
+    var lcut: Int?
+    var user: [String: Any]?
+    
+    func toDictionary() -> [String: Any] {
+        var dict = [String: Any]()
+
+        if let generatorSDKInfo = generatorSDKInfo {
+            dict["generatorSDKInfo"] = generatorSDKInfo
+        }
+
+        if let lcut = lcut {
+            dict["lcut"] = lcut
+        }
+
+        if let user = user {
+            dict["user"] = user
+        }
+
+        return dict
+    }
+    
+    // the log exposure metadata is in type of [String : String]
+    func toString() -> String {
+        let dictionary = toDictionary()
+        if let jsonData = try? JSONSerialization.data(withJSONObject: dictionary, options: [.prettyPrinted]),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            return jsonString
+        } else {
+            return "{}" // Return an empty JSON object if conversion fails
+        }
+    }
+}
+
+
 struct StatsigValuesCache {
     var cacheByID: [String: [String: Any]]
     var userCacheKey: UserCacheKey
@@ -30,6 +66,7 @@ struct StatsigValuesCache {
     var hashUsed: String? = nil
     var sdkKey: String
     var options: StatsigOptions
+    var bootstrapMetadata: BootstrapMetadata? = nil
 
     var userCache: [String: Any] {
         didSet {
@@ -40,6 +77,7 @@ struct StatsigValuesCache {
             layers = userCache[InternalStore.layerConfigsKey] as? [String: [String: Any]]
             paramStores = userCache[InternalStore.paramStoresKey] as? [String: [String: Any]]
             hashUsed = userCache[InternalStore.hashUsedKey] as? String
+            bootstrapMetadata = userCache[InternalStore.bootstrapMetadata] as? BootstrapMetadata
         }
     }
 
@@ -158,6 +196,10 @@ struct StatsigValuesCache {
 
         return 0
     }
+    
+    func getBootstrapMetadata() -> BootstrapMetadata? {
+        return userCache[InternalStore.bootstrapMetadata] as? BootstrapMetadata
+    }
 
     func getPreviousDerivedFields(user: StatsigUser) -> [String: String] {
         if (userCache[InternalStore.userHashKey] as? String == user.getFullUserHash()) {
@@ -269,10 +311,13 @@ struct StatsigValuesCache {
         if let bootstrapValues = bootstrapValues {
             cacheByID[userCacheKey.v2] = bootstrapValues
             userCache = bootstrapValues
+            let bootstrapMetadata = extractBootstrapMetadata(from: bootstrapValues)
+            userCache[InternalStore.bootstrapMetadata] = bootstrapMetadata
             receivedValuesAt = Time.now()
             source = BootstrapValidator.isValid(user, bootstrapValues)
-            ? .Bootstrap
-            : .InvalidBootstrap
+                ? .Bootstrap
+                : .InvalidBootstrap
+            
             return
         }
 
@@ -285,6 +330,24 @@ struct StatsigValuesCache {
         }
 
         userCache = cachedValues
+    }
+    
+    private func extractBootstrapMetadata(from bootstrapValues: [String: Any]) -> BootstrapMetadata {
+        var bootstrapMetadata = BootstrapMetadata()
+        
+        if let generatorSDKInfo = bootstrapValues["sdkInfo"] as? [String: String] {
+            bootstrapMetadata.generatorSDKInfo = generatorSDKInfo
+        }
+        
+        if let userMetadata = bootstrapValues["user"] as? [String: Any] {
+            bootstrapMetadata.user = userMetadata
+        }
+        
+        if let lcut = bootstrapValues["time"] as? Int {
+            bootstrapMetadata.lcut = lcut
+        }
+        
+        return bootstrapMetadata
     }
 
     private static func loadDictMigratingIfRequired(forKey key: String) -> [String: [String: Any]] {
@@ -386,6 +449,7 @@ class InternalStore {
     static let userHashKey = "user_hash"
     static let hashUsedKey = "hash_used"
     static let derivedFieldsKey = "derived_fields"
+    static let bootstrapMetadata = "bootstrap_metadata"
 
     var cache: StatsigValuesCache
     var localOverrides: [String: Any] = InternalStore.getEmptyOverrides()
@@ -397,6 +461,12 @@ class InternalStore {
         localOverrides = StatsigUserDefaults.defaults.dictionarySafe(forKey: InternalStore.localOverridesKey)
         ?? InternalStore.getEmptyOverrides()
         Diagnostics.mark?.initialize.readCache.end(success: true)
+    }
+    
+    func getBootstrapMetadata() -> BootstrapMetadata? {
+        storeQueue.sync {
+            return cache.getBootstrapMetadata()
+        }
     }
 
     func getLastUpdateTime(user: StatsigUser) -> UInt64 {
