@@ -31,7 +31,7 @@ public struct EvaluationDetails: Codable {
         return result
     }
 
-    func addToDictionary(_ dict: inout [String: String]) {
+    func addToDictionary(_ dict: inout [String: Any]) {
         dict["reason"] = getDetailedReason()
 
         if let lcut = lcut {

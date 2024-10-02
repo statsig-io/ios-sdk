@@ -22,7 +22,9 @@ class EventSpec: BaseSpec {
                                   metadata: ["item_name": "no_ads"], disableCurrentVCLogging: false)
                 expect(event.name) == "purchase"
                 expect(event.value as? Double).to(equal(1.23))
-                expect(event.metadata) == ["item_name": "no_ads"]
+                if let itemName = event.metadata?["item_name"] as? String {
+                    expect(itemName) == "no_ads"
+                }
                 expect(Int(event.time / 1000)) == Int(Date().timeIntervalSince1970)
             }
 
@@ -36,27 +38,89 @@ class EventSpec: BaseSpec {
                     evalDetails: EvaluationDetails(source: .Network, reason: .Recognized, lcut: 123456789, receivedAt: 43),
                     bootstrapMetadata: BootstrapMetadata(),
                     disableCurrentVCLogging: false)
+                
+                let expectedMetadata: [String: Any] = [
+                    "gate": "show_coupon",
+                    "gateValue": true,
+                    "ruleID": "default",
+                    "reason": "Network:Recognized",
+                    "lcut": "123456789",
+                    "receivedAt": "43",
+                    "bootstrapMetadata": "{}"
+                ]
+                let actualMetadata = gateExposure.metadata
 
                 expect(gateExposure.name) == "statsig::gate_exposure"
                 expect(gateExposure.value).to(beNil())
-                expect(gateExposure.metadata) == ["gate": "show_coupon", "gateValue": String(true), "ruleID": "default", "reason": "Network:Recognized", "lcut": "123456789", "receivedAt": "43", "bootstrapMetadata": "{\n\n}"]
+                expect(actualMetadata?["gate"] as? String) == "show_coupon"
+                expect(actualMetadata?["gateValue"] as? String) == "true"
+                expect(actualMetadata?["ruleID"] as? String) == "default"
+                expect(actualMetadata?["reason"] as? String) == "Network:Recognized"
+                expect(actualMetadata?["lcut"] as? String) == "123456789"
+                expect(actualMetadata?["receivedAt"] as? String) == "43"
+                if let bootstrapMetadata = actualMetadata?["bootstrapMetadata"] as? [String: Any] {
+                    expect(bootstrapMetadata.isEmpty).to(beTrue())
+                } else {
+                    fail("bootstrapMetadata is not present or is of the wrong type")
+                }
                 expect(gateExposure.secondaryExposures![0]).to(equal(["gate": "employee", "gateValue": "true", "ruleID": "rule_id_employee"]))
                 expect(Int(gateExposure.time / 1000)) == Int(Date().timeIntervalSince1970)
             }
-
-            it("has helper functions that create config exposure events correctly") {
+            
+            it("correctly parses config exposure metadata with bootstrapMetadata") {
+                let bootstrapMetadata = BootstrapMetadata(
+                    generatorSDKInfo: ["version": "1.0.0"],
+                    lcut: 123456,
+                    user: ["userID": "user_123"]
+                )
+                
                 let configExposure = Event.configExposure(
                     user: StatsigUser(),
                     configName: "my_config",
                     ruleID: "default",
                     secondaryExposures: [],
                     evalDetails: EvaluationDetails(source: .Network, reason: .Recognized, lcut: 123456789, receivedAt: 12),
-                    bootstrapMetadata: BootstrapMetadata(),
-                    disableCurrentVCLogging: false)
-
+                    bootstrapMetadata: bootstrapMetadata,
+                    disableCurrentVCLogging: false
+                )
+                
+                let expectedMetadata: [String: Any] = [
+                    "config": "my_config",
+                    "ruleID": "default",
+                    "reason": "Network:Recognized",
+                    "lcut": "123456789",
+                    "receivedAt": "12",
+                    "bootstrapMetadata": [
+                         "generatorSDKInfo": ["version": "1.0.0"],
+                         "lcut": 123456,
+                         "user": ["userID": "user_123"]
+                     ]
+                ]
+                let actualMetadata = configExposure.metadata
+                
                 expect(configExposure.name) == "statsig::config_exposure"
                 expect(configExposure.value).to(beNil())
-                expect(configExposure.metadata) == ["config": "my_config", "ruleID": "default", "reason": "Network:Recognized", "lcut": "123456789", "receivedAt": "12", "bootstrapMetadata": "{\n\n}"]
+                expect(actualMetadata?["config"] as? String) == "my_config"
+                expect(actualMetadata?["ruleID"] as? String) == "default"
+                expect(actualMetadata?["reason"] as? String) == "Network:Recognized"
+                expect(actualMetadata?["lcut"] as? String) == "123456789"
+                expect(actualMetadata?["receivedAt"] as? String) == "12"
+                
+                if let actualBootstrapMetadata = actualMetadata?["bootstrapMetadata"] as? [String: Any] {
+                    expect(actualBootstrapMetadata["generatorSDKInfo"] as? [String: String]) == ["version": "1.0.0"]
+                    expect(actualBootstrapMetadata["lcut"] as? Int) == 123456
+                    
+                    // Specifically handling [String: Any] comparison for user field
+                    if let actualUser = actualBootstrapMetadata["user"] as? [String: Any],
+                       let userID = actualUser["userID"] as? String {
+                        expect(userID) == "user_123"
+                    } else {
+                        fail("user field in bootstrapMetadata is either missing or has an unexpected type")
+                    }
+                } else {
+                    fail("bootstrapMetadata is not present or is of the wrong type")
+                }
+
                 expect(configExposure.secondaryExposures).to(equal([]))
                 expect(Int(configExposure.time / 1000)) == Int(Date().timeIntervalSince1970)
             }

@@ -36,17 +36,6 @@ public struct BootstrapMetadata {
 
         return dict
     }
-    
-    // the log exposure metadata is in type of [String : String]
-    func toString() -> String {
-        let dictionary = toDictionary()
-        if let jsonData = try? JSONSerialization.data(withJSONObject: dictionary, options: [.prettyPrinted]),
-           let jsonString = String(data: jsonData, encoding: .utf8) {
-            return jsonString
-        } else {
-            return "{}" // Return an empty JSON object if conversion fails
-        }
-    }
 }
 
 

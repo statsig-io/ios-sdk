@@ -33,9 +33,15 @@ public final class LayerObjC: NSObject {
     }
 
     @objc public var evaluationDetails: [String: String] {
-        var details = [String: String]()
-        layer.evaluationDetails.addToDictionary(&details)
-        return details
+        var internalDetails = [String: Any]()
+        layer.evaluationDetails.addToDictionary(&internalDetails)
+            
+        var externalDetails = [String: String]()
+        for (key, value) in internalDetails {
+            externalDetails[key] = "\(value)"
+        }
+        
+        return externalDetails
     }
 
     init(_ layer: Layer) {

@@ -4,7 +4,7 @@ import Foundation
 class Event {
     let name: String
     let value: Any?
-    let metadata: [String: String]?
+    let metadata: [String: Any]?
     let time: UInt64
     let userData: [String: Any?]
     let secondaryExposures: [[String: String]]?
@@ -22,7 +22,7 @@ class Event {
         user: StatsigUser?,
         name: String,
         value: Any? = nil,
-        metadata: [String: String]? = nil,
+        metadata: [String: Any]? = nil,
         secondaryExposures: [[String: String]]? = nil,
         disableCurrentVCLogging: Bool
     ) {
@@ -51,7 +51,7 @@ class Event {
         user: StatsigUser?,
         name: String,
         value: Any? = nil,
-        metadata: [String: String]? = nil,
+        metadata: [String: Any]? = nil,
         secondaryExposures: [[String: String]]? = nil,
         disableCurrentVCLogging: Bool = true // for internal events, default to not log the VC, other than for exposures
     ) -> Event {
@@ -75,14 +75,14 @@ class Event {
         bootstrapMetadata: BootstrapMetadata?,
         disableCurrentVCLogging: Bool
     ) -> Event {
-        var metadata = [
+        var metadata: [String: Any] = [
             "gate": gateName,
             "gateValue": String(gateValue),
             "ruleID": ruleID
         ]
         
         if let bootstrapMetadata = bootstrapMetadata {
-            metadata["bootstrapMetadata"] = bootstrapMetadata.toString()
+            metadata["bootstrapMetadata"] = bootstrapMetadata.toDictionary()
         }
 
         evalDetails.addToDictionary(&metadata)
@@ -106,13 +106,13 @@ class Event {
         bootstrapMetadata: BootstrapMetadata?,
         disableCurrentVCLogging: Bool
     ) -> Event {
-        var metadata = [
+        var metadata: [String: Any] = [
             "config": configName,
             "ruleID": ruleID,
         ]
         
         if let bootstrapMetadata = bootstrapMetadata {
-            metadata["bootstrapMetadata"] = bootstrapMetadata.toString()
+            metadata["bootstrapMetadata"] = bootstrapMetadata.toDictionary()
         }
 
         evalDetails.addToDictionary(&metadata)
@@ -139,7 +139,7 @@ class Event {
         evalDetails: EvaluationDetails,
         bootstrapMetadata: BootstrapMetadata?
     ) -> Event {
-        var metadata = [
+        var metadata: [String : Any] = [
             "config": configName,
             "ruleID": ruleID,
             "allocatedExperiment": allocatedExperimentName,
@@ -148,7 +148,7 @@ class Event {
         ]
         
         if let bootstrapMetadata = bootstrapMetadata {
-            metadata["bootstrapMetadata"] = bootstrapMetadata.toString()
+            metadata["bootstrapMetadata"] = bootstrapMetadata.toDictionary()
         }
 
         evalDetails.addToDictionary(&metadata)

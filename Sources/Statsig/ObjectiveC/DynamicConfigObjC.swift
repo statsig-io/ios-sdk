@@ -33,9 +33,15 @@ public final class DynamicConfigObjC: NSObject {
     }
 
     @objc public var evaluationDetails: [String: String] {
-        var details = [String: String]()
-        config.evaluationDetails.addToDictionary(&details)
-        return details
+        var internalDetails = [String: Any]()
+        config.evaluationDetails.addToDictionary(&internalDetails)
+            
+        var externalDetails = [String: String]()
+        for (key, value) in internalDetails {
+            externalDetails[key] = "\(value)"
+        }
+        
+        return externalDetails
     }
 
     init(withConfig: DynamicConfig) {
