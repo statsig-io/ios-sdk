@@ -74,6 +74,20 @@ class LocalOverridesSpec: BaseSpec {
                 }
             }
 
+            describe("parameter store overrides")  {
+                it("returns overridden parameter store values") {
+                    Statsig.overrideParamStore("overridden_param_store", value: ["key": "value"])
+                    let store = Statsig.getParameterStore("overridden_param_store")
+                    expect(store.getValue(forKey: "key", defaultValue: "default")).to(equal("value"))
+                }
+
+                it("clears overridden parameter store values") {
+                    Statsig.overrideParamStore("overridden_param_store", value: ["key": "value"])
+                    Statsig.removeOverride("overridden_param_store")
+                    expect(Statsig.getParameterStore("overridden_param_store").getValue(forKey: "key", defaultValue: "default")).to(equal("default"))
+                }
+            }
+
             describe("clearing all overrides") {
                 it("clears all") {
                     Statsig.overrideGate("overridden_gate", value: true)
