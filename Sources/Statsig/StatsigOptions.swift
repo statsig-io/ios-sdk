@@ -103,6 +103,13 @@ public class StatsigOptions {
     public var customCacheKey: ((String, StatsigUser) -> String)?
     
     /**
+        Provides a customizable storage mechanism for the SDK.
+        Users can pass an object that conforms to the `StorageProvider` protocol, allowing them to implement
+        their own caching strategy for reading from and writing to the cache (e.g., using an encrypted file on disk).
+    */
+    public var storageProvider: StorageProvider?
+    
+    /**
      The URLSession to be used for network requests. By default, it is set to URLSession.shared.
      This property can be customized to utilize URLSession instances with specific configurations, including certificate pinning, for enhanced security when communicating with servers.
      */
@@ -128,6 +135,7 @@ public class StatsigOptions {
                 evaluationCallback: ((EvaluationCallbackData) -> Void)? = nil,
                 userValidationCallback: ((StatsigUser) -> StatsigUser)? = nil,
                 customCacheKey: ((String, StatsigUser) -> String)? = nil,
+                storageProvider: StorageProvider? = nil,
                 urlSession: URLSession? = nil
     )
     {
@@ -171,6 +179,9 @@ public class StatsigOptions {
             self.autoValueUpdateIntervalSec = internval
         }
         
+        if let storageProvider = storageProvider {
+            self.storageProvider = storageProvider
+        }
         
         if let api = api {
             self.api = api

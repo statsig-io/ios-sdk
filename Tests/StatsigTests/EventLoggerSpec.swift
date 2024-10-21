@@ -26,7 +26,6 @@ class EventLoggerSpec: BaseSpec {
             let event1 = Event(user: user, name: "test_event1", value: 1, disableCurrentVCLogging: false)
             let event2 = Event(user: user, name: "test_event2", value: 2, disableCurrentVCLogging: false)
             let event3 = Event(user: user, name: "test_event3", value: "3", disableCurrentVCLogging: false)
-            print("What is the eventLoggingApi ? ", opts.logEventApiUrl)
             afterEach {
                 HTTPStubs.removeAllStubs()
                 EventLogger.deleteLocalStorage(sdkKey: "client-key")

@@ -1,52 +1,5 @@
 import Foundation
 
-protocol DefaultsLike {
-    func array(forKey defaultName: String) -> [Any]?
-    func string(forKey defaultName: String) -> String?
-    func dictionary(forKey defaultName: String) -> [String : Any]?
-    func data(forKey defaultName: String) -> Data?
-    func removeObject(forKey defaultName: String)
-    func setValue(_ value: Any?, forKey: String)
-    func set(_ value: Any?, forKey: String)
-    func synchronize() -> Bool
-    func keys() -> [String]
-
-    func setDictionarySafe(_ dict: [String: Any], forKey key: String)
-    func dictionarySafe(forKey key: String) -> [String: Any]?
-}
-
-extension UserDefaults: DefaultsLike {
-    func setDictionarySafe(_ dict: [String: Any], forKey key: String) {
-        guard JSONSerialization.isValidJSONObject(dict),
-              let json = try? JSONSerialization.data(withJSONObject: dict) else {
-            print("[Statsig]: Failed to save to cache")
-            return
-        }
-
-        self.set(json, forKey: key)
-    }
-
-    func dictionarySafe(forKey key: String) -> [String: Any]? {
-        do {
-            guard let data = self.data(forKey: key) else {
-                return nil
-            }
-
-            guard let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                return nil
-            }
-
-            return dict
-        } catch {
-            return nil
-        }
-    }
-
-    func keys() -> [String] {
-        return self.dictionaryRepresentation().keys.sorted()
-    }
-}
-
 private let FileBasedUserDefaultsQueue = "com.Statsig.FileBasedUserDefaults"
 
 class FileBasedUserDefaults: DefaultsLike {
@@ -68,8 +21,8 @@ class FileBasedUserDefaults: DefaultsLike {
         getValue(forKey: defaultName) as? String
     }
 
-    func dictionary(forKey defaultName: String) -> [String : Any]? {
-        getValue(forKey: defaultName) as? [String : Any]
+    func dictionary(forKey defaultName: String) -> [String: Any]? {
+        getValue(forKey: defaultName) as? [String: Any]
     }
 
     func data(forKey defaultName: String) -> Data? {
@@ -138,8 +91,4 @@ class FileBasedUserDefaults: DefaultsLike {
             return
         }
     }
-}
-
-class StatsigUserDefaults {
-    static var defaults: DefaultsLike = UserDefaults.standard
 }

@@ -57,6 +57,7 @@ class StoreDeadlockSpec: BaseSpec {
 
             afterEach {
                 HTTPStubs.removeAllStubs()
+                Statsig.shutdown()  // Ensure that Statsig is shut down
             }
 
             it("can execute many different operations") {
