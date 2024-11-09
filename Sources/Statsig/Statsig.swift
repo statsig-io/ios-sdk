@@ -43,10 +43,8 @@ public class Statsig {
                 _initialize()
             }
         } else if let storageProvider = options?.storageProvider {
-            DispatchQueue.main.async {
-                StatsigUserDefaults.defaults = StorageProviderBasedUserDefaults(storageProvider: storageProvider)
-                _initialize()
-            }
+            StatsigUserDefaults.defaults = StorageProviderBasedUserDefaults(storageProvider: storageProvider)
+            _initialize()
         } else {
             _initialize()
         }
