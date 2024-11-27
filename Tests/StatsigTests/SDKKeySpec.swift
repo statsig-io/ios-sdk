@@ -56,35 +56,35 @@ class SDKKeySpec: BaseSpec {
                     return HTTPStubsResponse(error: notConnectedError)
                 }
 
-                var error: String?
+                var errorMessage: String?
                 var gate: Bool?
                 var config: DynamicConfig?
                 waitUntil { done in
                     let opts = StatsigOptions(disableDiagnostics: true)
-                    Statsig.start(sdkKey: "invalid_sdk_key", options: opts) { errorMessage in
-                        error = errorMessage
+                    Statsig.initialize(sdkKey: "invalid_sdk_key", options: opts) { err in
+                        errorMessage = err?.message
                         gate = Statsig.checkGate("show_coupon")
                         config = Statsig.getConfig("my_config")
                         done()
                     }
                 }
 
-                expect(error).toEventually(contain("403"))
+                expect(errorMessage).toEventually(contain("403"))
                 expect(gate).toEventually(beFalse())
                 expect(NSDictionary(dictionary: config!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
                 expect(config!.evaluationDetails.reason).toEventually(equal(.Unrecognized))
             }
 
             it("works when provided server secret by returning default value") {
-                var error: String?
+                var errorCode: StatsigClientErrorCode?
                 var gate: Bool?
                 var config: DynamicConfig?
-                Statsig.start(sdkKey: "secret-key") { errorMessage in
-                    error = errorMessage
+                Statsig.initialize(sdkKey: "secret-key") { err in
+                    errorCode = err?.code
                     gate = Statsig.checkGate("show_coupon")
                     config = Statsig.getConfig("my_config")
                 }
-                expect(error).toEventually(equal("Must use a valid client SDK key."))
+                expect(errorCode).toEventually(equal(StatsigClientErrorCode.invalidClientSDKKey))
                 expect(gate).toEventually(beFalse())
                 expect(NSDictionary(dictionary: config!.value)).toEventually(equal(NSDictionary(dictionary: [:])))
                 expect(config!.evaluationDetails.source).toEventually(equal(.Uninitialized))

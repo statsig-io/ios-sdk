@@ -18,12 +18,12 @@ class ShowDebugViewController: UIViewController {
             "tags": ["cool", "rad", "neat"],
         ])
 
-        Statsig.start(sdkKey: Constants.CLIENT_SDK_KEY, user: user) { err in
+        Statsig.initialize(sdkKey: Constants.CLIENT_SDK_KEY, user: user) { [weak self] err in
             if let err = err {
-                print("Error \(err)")
+                print("Error \(err.message)")
             }
 
-            self.addButton()
+            self?.addButton()
         }
     }
 

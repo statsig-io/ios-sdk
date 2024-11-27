@@ -25,7 +25,7 @@ class TestUtils {
         var called = false
         waitUntil(timeout: .seconds(10)) { done in
             Statsig.client = nil
-            Statsig.start(sdkKey: key, user: user, options: options) { _ in
+            Statsig.initialize(sdkKey: key, user: user, options: options) { _ in
                 called = true
                 done()
             }

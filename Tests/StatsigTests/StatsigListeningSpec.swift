@@ -28,6 +28,12 @@ class StatsigListeningSpec: BaseSpec {
         var onUserUpdatedCalled = false
         var onUserUpdatedError: String?
 
+        var onInitializedWithResultCalled = false
+        var onInitializedWithResultError: StatsigClientError?
+
+        var onUserUpdatedWithResultCalled = false
+        var onUserUpdatedWithResultError: StatsigClientError?
+
         func onInitialized(_ error: String?) {
             onInitializedCalled = true
             onInitializedError = error
@@ -36,6 +42,16 @@ class StatsigListeningSpec: BaseSpec {
         func onUserUpdated(_ error: String?) {
             onUserUpdatedCalled = true
             onUserUpdatedError = error
+        }
+
+        func onInitializedWithResult(_ error: StatsigClientError?) {
+            onInitializedWithResultCalled = true
+            onInitializedWithResultError = error
+        }
+
+        func onUserUpdatedWithResult(_ error: StatsigClientError?) {
+            onUserUpdatedWithResultCalled = true
+            onUserUpdatedWithResultError = error
         }
     }
 
@@ -61,6 +77,19 @@ class StatsigListeningSpec: BaseSpec {
                 expect(Statsig.isInitialized()).to(beFalse())
                 var called = false
                 let opts = StatsigOptions(disableDiagnostics: true)
+                Statsig.initialize(sdkKey: "client-key", options: opts) { _ in
+                    called = true
+                }
+                expect(called).toEventually(beTrue())
+                expect(Statsig.isInitialized()).to(beTrue())
+            }
+
+            it("returns true when initialized with deprecated function") {
+                goodStub()
+
+                expect(Statsig.isInitialized()).to(beFalse())
+                var called = false
+                let opts = StatsigOptions(disableDiagnostics: true)
                 Statsig.start(sdkKey: "client-key", options: opts) { _ in
                     called = true
                 }
@@ -75,10 +104,11 @@ class StatsigListeningSpec: BaseSpec {
 
                 let listener = TestListener()
                 let opts = StatsigOptions(disableDiagnostics: true)
-                Statsig.start(sdkKey: "client-key", options: opts)
+                Statsig.initialize(sdkKey: "client-key", options: opts)
                 Statsig.addListener(listener)
 
                 expect(listener.onInitializedError).toEventually(contain("An error occurred during fetching values for the user. 500"))
+                expect(listener.onInitializedWithResultError?.message).toEventually(contain("An error occurred during fetching values for the user. 500"))
             }
 
             it("responds without errors") {
@@ -86,11 +116,13 @@ class StatsigListeningSpec: BaseSpec {
 
                 let listener = TestListener()
 
-                Statsig.start(sdkKey: "client-key", options: opts)
+                Statsig.initialize(sdkKey: "client-key", options: opts)
                 Statsig.addListener(listener)
 
                 expect(listener.onInitializedCalled).toEventually(beTrue())
+                expect(listener.onInitializedWithResultCalled).toEventually(beTrue())
                 expect(listener.onInitializedError).to(beNil())
+                expect(listener.onInitializedWithResultError).to(beNil())
             }
 
             it("notifies multiple users") {
@@ -99,18 +131,20 @@ class StatsigListeningSpec: BaseSpec {
                 let listener1 = TestListener()
                 let listener2 = TestListener()
 
-                Statsig.start(sdkKey: "client-key", options: opts)
+                Statsig.initialize(sdkKey: "client-key", options: opts)
                 Statsig.addListener(listener1)
                 Statsig.addListener(listener2)
 
                 expect(listener1.onInitializedCalled).toEventually(beTrue())
                 expect(listener2.onInitializedCalled).toEventually(beTrue())
+                expect(listener1.onInitializedWithResultCalled).toEventually(beTrue())
+                expect(listener2.onInitializedWithResultCalled).toEventually(beTrue())
             }
 
-            it("responds immediately if initialzing has previously completed") {
+            it("responds immediately if initializing has previously completed") {
                 goodStub()
                 var initialized = false
-                Statsig.start(sdkKey: "client-key", options: opts) { _ in
+                Statsig.initialize(sdkKey: "client-key", options: opts) { _ in
                     initialized = true
                 }
 
@@ -118,20 +152,23 @@ class StatsigListeningSpec: BaseSpec {
                 let listener = TestListener()
                 Statsig.addListener(listener)
                 expect(listener.onInitializedCalled).to(beTrue())
+                expect(listener.onInitializedWithResultCalled).to(beTrue())
             }
 
-            it("responds immediately with error if initialzing has previously completed") {
+            it("responds immediately with error if initializing has previously completed") {
                 badStub()
-                var error: String?
-                Statsig.start(sdkKey: "client-key", options: opts) { err in
-                    error = err
+                var errorMessage: String?
+                Statsig.initialize(sdkKey: "client-key", options: opts) { err in
+                    errorMessage = err?.message
                 }
 
-                expect(error).toEventuallyNot(beNil())
+                expect(errorMessage).toEventuallyNot(beNil())
                 let listener = TestListener()
                 Statsig.addListener(listener)
                 expect(listener.onInitializedCalled).to(beTrue())
-                expect(listener.onInitializedError).to(equal(error))
+                expect(listener.onInitializedWithResultCalled).to(beTrue())
+                expect(listener.onInitializedError).to(equal(errorMessage))
+                expect(listener.onInitializedWithResultError?.message).to(equal(errorMessage))
             }
 
             it("can add listeners before start is called") {
@@ -141,10 +178,12 @@ class StatsigListeningSpec: BaseSpec {
                 Statsig.addListener(listener)
 
 
-                Statsig.start(sdkKey: "client-key", options: opts)
+                Statsig.initialize(sdkKey: "client-key", options: opts)
 
                 expect(listener.onInitializedCalled).toEventually(beTrue())
+                expect(listener.onInitializedWithResultCalled).toEventually(beTrue())
                 expect(listener.onInitializedError).to(beNil())
+                expect(listener.onInitializedWithResultError).to(beNil())
             }
         }
 
@@ -158,7 +197,7 @@ class StatsigListeningSpec: BaseSpec {
                 )
 
                 var initialized = false
-                Statsig.start(sdkKey: "client-key", options: opts) { _ in
+                Statsig.initialize(sdkKey: "client-key", options: opts) { _ in
                     initialized = true
                 }
                 expect(initialized).toEventually(beTrue())
@@ -178,7 +217,9 @@ class StatsigListeningSpec: BaseSpec {
                 sleep(UInt32(timeoutInSeconds))
 
                 expect(listener.onUserUpdatedCalled).toEventually(beTrue())
+                expect(listener.onUserUpdatedWithResultCalled).toEventually(beTrue())
                 expect(listener.onUserUpdatedError).to(beNil())
+                expect(listener.onUserUpdatedWithResultError).to(beNil())
             }
             
             it("triggers the listener with error") {
@@ -195,16 +236,18 @@ class StatsigListeningSpec: BaseSpec {
                 sleep(UInt32(timeoutInSeconds))
 
                 expect(listener.onUserUpdatedCalled).toEventually(beTrue())
+                expect(listener.onUserUpdatedWithResultCalled).toEventually(beTrue())
                 expect(listener.onUserUpdatedError).toEventually(contain("An error occurred during fetching values for the user. 500"))
+                expect(listener.onUserUpdatedWithResultError?.message).toEventually(contain("An error occurred during fetching values for the user. 500"))
             }
         }
 
-        describe("listening to updateUser callbacks") {
+        describe("listening to updateUserWithResult callbacks") {
             beforeEach {
                 goodStub()
 
                 var initialized = false
-                Statsig.start(sdkKey: "client-key", options: opts) { _ in
+                Statsig.initialize(sdkKey: "client-key", options: opts) { _ in
                     initialized = true
                 }
                 expect(initialized).toEventually(beTrue())
@@ -215,9 +258,10 @@ class StatsigListeningSpec: BaseSpec {
 
                 let listener = TestListener()
                 Statsig.addListener(listener)
-                Statsig.updateUser(StatsigUser())
+                Statsig.updateUserWithResult(StatsigUser())
 
                 expect(listener.onUserUpdatedError).toEventually(contain("An error occurred during fetching values for the user. 500"))
+                expect(listener.onUserUpdatedWithResultError?.message).toEventually(contain("An error occurred during fetching values for the user. 500"))
             }
 
             it("responds without errors") {
@@ -225,10 +269,36 @@ class StatsigListeningSpec: BaseSpec {
 
                 let listener = TestListener()
                 Statsig.addListener(listener)
+                Statsig.updateUserWithResult(StatsigUser())
+
+                expect(listener.onUserUpdatedCalled).toEventually(beTrue())
+                expect(listener.onUserUpdatedWithResultCalled).toEventually(beTrue())
+                expect(listener.onUserUpdatedError).to(beNil())
+                expect(listener.onUserUpdatedWithResultError).to(beNil())
+            }
+
+            it("responds with errors") {
+                badStub()
+
+                let listener = TestListener()
+                Statsig.addListener(listener)
+                Statsig.updateUser(StatsigUser())
+
+                expect(listener.onUserUpdatedError).toEventually(contain("An error occurred during fetching values for the user. 500"))
+                expect(listener.onUserUpdatedWithResultError?.message).toEventually(contain("An error occurred during fetching values for the user. 500"))
+            }
+
+            it("responds without errors with deprecated function") {
+                goodStub()
+
+                let listener = TestListener()
+                Statsig.addListener(listener)
                 Statsig.updateUser(StatsigUser())
 
                 expect(listener.onUserUpdatedCalled).toEventually(beTrue())
+                expect(listener.onUserUpdatedWithResultCalled).toEventually(beTrue())
                 expect(listener.onUserUpdatedError).to(beNil())
+                expect(listener.onUserUpdatedWithResultError).to(beNil())
             }
         }
     }

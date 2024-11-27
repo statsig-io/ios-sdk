@@ -45,7 +45,7 @@ class StoreDeadlockSpec: BaseSpec {
                 }
 
                 waitUntil { done in
-                    Statsig.start(sdkKey: "client-key") { err in done() }
+                    Statsig.initialize(sdkKey: "client-key") { err in done() }
                 }
 
                 if (queues.isEmpty) {
@@ -69,7 +69,7 @@ class StoreDeadlockSpec: BaseSpec {
                     queue.async { 
                         let user = StatsigUser(userID: "user_\(Int.random(in: 1...100))_\(j)")
 
-                        Statsig.updateUser(user) { err in
+                        Statsig.updateUserWithResult(user) { err in
                             i += 1
                         }
                         _ = Statsig.checkGate("a_gate")

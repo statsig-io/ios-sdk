@@ -31,7 +31,7 @@ class NetworkService {
         for user: StatsigUser,
         lastSyncTimeForUser: UInt64,
         previousDerivedFields: [String: String],
-        completion: completionBlock
+        completion: ResultCompletionBlock?
     ) {
         let (body, parseErr) = makeReqBody([
             "user": user.toDictionary(forLogging: false),
@@ -42,7 +42,11 @@ class NetworkService {
 
         guard let body = body else {
             self.store.finalizeValues()
-            completion?(parseErr?.localizedDescription ?? "Failed to serialize request body ")
+            completion?(StatsigClientError(
+                .failedToFetchValues,
+                message: parseErr?.localizedDescription ?? "Failed to serialize request body ",
+                cause: parseErr
+            ))
             return
         }
 
@@ -51,19 +55,19 @@ class NetworkService {
 
         makeAndSendRequest(.initialize, body: body) { [weak self] data, response, error in
             if let error {
-                completion?(error.localizedDescription)
+                completion?(StatsigClientError(.failedToFetchValues, cause: error))
                 return
             }
             
             let statusCode = response?.status ?? 0
 
             if !(200...299).contains(statusCode) {
-                completion?("An error occurred during fetching values for the user. \(statusCode)")
+                completion?(StatsigClientError(.failedToFetchValues, message: "An error occurred during fetching values for the user. \(statusCode)"))
                 return
             }
 
             guard let self = self else {
-                completion?("Failed to call NetworkService as it has been released")
+                completion?(StatsigClientError(.failedToFetchValues, message: "Failed to call NetworkService as it has been released"))
                 return
             }
             
@@ -81,7 +85,7 @@ class NetworkService {
         for user: StatsigUser,
         sinceTime: UInt64,
         previousDerivedFields: [String: String],
-        completion: completionBlock
+        completion: ResultCompletionBlock?
     ) {
         let cacheKey = UserCacheKey.from(self.statsigOptions, user, self.sdkKey)
         if let inflight = inflightRequests[cacheKey.v2] {
@@ -95,8 +99,8 @@ class NetworkService {
         var task: URLSessionDataTask?
         var completed = false
         let lock = NSLock()
-        
-        let done: (String?) -> Void = { [weak self] err in
+
+        let done: (StatsigClientError?) -> Void = { [weak self] err in
             // Ensures the completion is invoked only once
             lock.lock()
             defer { lock.unlock() }
@@ -117,7 +121,7 @@ class NetworkService {
 
         if statsigOptions.initTimeout > 0 {
             DispatchQueue.main.asyncAfter(deadline: .now() + statsigOptions.initTimeout) {
-                done("initTimeout Expired")
+                done(StatsigClientError(.initTimeoutExpired))
             }
         }
 
@@ -130,7 +134,7 @@ class NetworkService {
         ])
 
         guard let body = body else {
-            done(parseErr?.localizedDescription)
+            done(StatsigClientError(.failedToFetchValues, cause: parseErr))
             return
         }
 
@@ -142,19 +146,19 @@ class NetworkService {
             marker: Diagnostics.mark?.initialize.network
         ) { [weak self] data, response, error in
             if let error = error {
-                done(error.localizedDescription)
+                done(StatsigClientError(.failedToFetchValues, cause: error))
                 return
             }
 
             let statusCode = response?.status ?? 0
 
             if !(200...299).contains(statusCode) {
-                done("An error occurred during fetching values for the user. \(statusCode)")
+                done(StatsigClientError(.failedToFetchValues, message: "An error occurred during fetching values for the user. \(statusCode)"))
                 return
             }
 
             guard let self = self else {
-                done("Failed to call NetworkService as it has been released")
+                done(StatsigClientError(.failedToFetchValues, message: "Failed to call NetworkService as it has been released"))
                 return
             }
 
@@ -168,7 +172,7 @@ class NetworkService {
 
             guard let values = values else {
                 Diagnostics.mark?.initialize.process.end(success: false)
-                done("No values returned with initialize response")
+                done(StatsigClientError(.failedToFetchValues, message: "No values returned with initialize response"))
                 return
             }
 

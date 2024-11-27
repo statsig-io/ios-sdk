@@ -1,7 +1,8 @@
 import Foundation
 
-
-public typealias completionBlock = ((_ errorMessage: String?) -> Void)?
+@available(*, deprecated, message: "Use `ResultCompletionBlock` instead")
+public typealias completionBlock = ((_ error: String?) -> Void)?
+public typealias ResultCompletionBlock = ((_ error: StatsigClientError?) -> Void)
 
 public class Statsig {
     internal static var client: StatsigClient?
@@ -15,25 +16,25 @@ public class Statsig {
      - sdkKey: The client SDK key copied from console.statsig.com
      - user: The user to check values against
      - options: Configuration options for the Statsig SDK
-     - completion: A callback function for when initialization completes. If an error occurred during initialization, a error message string will be passed to the callback.
+     - completion: A callback function for when initialization completes. If an error occurred during initialization, a `StatsigClientError` object will be passed to the callback.
 
      SeeAlso: [Initialization Documentation](https://docs.statsig.com/client/iosClientSDK#step-3---initialize-the-sdk)
      */
-    public static func start(sdkKey: String, user: StatsigUser? = nil, options: StatsigOptions? = nil,
-                             completion: completionBlock = nil)
+    public static func initialize(sdkKey: String, user: StatsigUser? = nil, options: StatsigOptions? = nil,
+                             completion: ResultCompletionBlock? = nil)
     {
         if client != nil {
-            completion?("Statsig has already started!")
+            completion?(StatsigClientError(.alreadyStarted))
             return
         }
 
         if sdkKey.isEmpty || sdkKey.starts(with: "secret-") {
-            completion?("Must use a valid client SDK key.")
+            completion?(StatsigClientError(.invalidClientSDKKey))
             return
         }
 
         func _initialize() {
-            client = StatsigClient(sdkKey: sdkKey, user: user, options: options, completion: completion)
+            client = StatsigClient(sdkKey: sdkKey, user: user, options: options, completionWithResult: completion)
             addPendingListeners()
         }
 
@@ -379,33 +380,33 @@ public class Statsig {
      Parameters:
      - user: The new user
      - values: The updated values to be associated with the user.
-     - completion: A callback block called when the new values/update operation have been received. May be called with an error message string if the fetch fails.
+     - completion: A callback block called when the new values/update operation have been received. May be called with a `StatsigClientError` object if the fetch fails.
      */
-    public static func updateUser(_ user: StatsigUser, values: [String: Any]? = nil, completion: completionBlock = nil) {
+    public static func updateUserWithResult(_ user: StatsigUser, values: [String: Any]? = nil, completion: ResultCompletionBlock? = nil) {
         guard let client = client else {
             print("[Statsig]: \(getUnstartedErrorMessage("updateUser")).")
-            completion?("\(getUnstartedErrorMessage("updateUser")).")
+            completion?(StatsigClientError(.clientUnstarted, message: "\(getUnstartedErrorMessage("updateUser"))."))
             return
         }
 
-        client.updateUser(user, values: values, completion: completion)
+        client.updateUserWithResult(user, values: values, completion: completion)
     }
-    
+
     /**
      Manually triggered the refreshing process for the current user
 
      Parameters:
-     - completion: A callback block called when the new values/update operation have been received. May be called with an error message string if the fetch fails.
+     - completion: A callback block called when the new values/update operation have been received. May be called with a `StatsigClientError` object if the fetch fails.
      */
-    public static func refreshCache(_ completion: completionBlock = nil) {
-        guard let client = client else {
+    public static func refreshCacheWithResult(_ completion: ResultCompletionBlock? = nil) {
+        guard let client: StatsigClient = client else {
             let message = getUnstartedErrorMessage()
             print("[Statsig]: \(message).")
-            completion?(message)
+            completion?(StatsigClientError(.clientUnstarted, message: message))
             return
         }
 
-        client.refreshCache(completion)
+        client.refreshCacheWithResult(completion)
     }
 
     /**
@@ -618,5 +619,58 @@ public class Statsig {
 
     private static func getUnstartedErrorMessage(_ functionName: String = #function) -> String {
         return "Must start Statsig first and wait for it to complete before calling \(functionName)"
+    }
+
+    // MARK: Deprecated
+
+    /**
+     Initializes the Statsig SDK. Fetching latest values from Statsig.
+     Default values will be returned until initialization is compelete.
+
+     Parameters:
+     - sdkKey: The client SDK key copied from console.statsig.com
+     - user: The user to check values against
+     - options: Configuration options for the Statsig SDK
+     - completion: A callback function for when initialization completes. If an error occurred during initialization, a error message string will be passed to the callback.
+
+     SeeAlso: [Initialization Documentation](https://docs.statsig.com/client/iosClientSDK#step-3---initialize-the-sdk)
+     */
+    @available(*, deprecated, message: "Use `Statsig.initialize` instead")
+    public static func start(sdkKey: String, user: StatsigUser? = nil, options: StatsigOptions? = nil,
+                             completion: completionBlock = nil)
+    {
+        return initialize(sdkKey: sdkKey, user: user, options: options) { error in
+            completion?(error?.message)
+        }
+    }
+
+    /**
+     Switches the user and pulls new values for that user from Statsig.
+     If `values` passed in, updates ther user using these values rather than fetching updates.
+     Default values will be returned until the update is complete.
+
+     Parameters:
+     - user: The new user
+     - values: The updated values to be associated with the user.
+     - completion: A callback block called when the new values/update operation have been received. May be called with an error message string if the fetch fails.
+     */
+    @available(*, deprecated, message: "Use `Statsig.updateUserWithResult` instead")
+    public static func updateUser(_ user: StatsigUser, values: [String: Any]? = nil, completion: completionBlock = nil) {
+        Statsig.updateUserWithResult(user, values: values) { error in
+            completion?(error?.message)
+        }
+    }
+    
+    /**
+     Manually triggered the refreshing process for the current user
+
+     Parameters:
+     - completion: A callback block called when the new values/update operation have been received. May be called with an error message string if the fetch fails.
+     */
+    @available(*, deprecated, message: "Use `Statsig.refreshCacheWithResult` instead")
+    public static func refreshCache(_ completion: completionBlock = nil) {
+        Statsig.refreshCacheWithResult { error in
+            completion?(error?.message)
+        }
     }
 }

@@ -48,7 +48,7 @@ class NotAwaitingInitCallsSpec: BaseSpec {
 
                 expect(Statsig.client).toEventually(beNil(), timeout: .seconds(1000))
 
-                Statsig.start(sdkKey: "client-key", user: userA, options: options) { err in
+                Statsig.initialize(sdkKey: "client-key", user: userA, options: options) { err in
                     DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
                         isInitialized = true
                     }
@@ -65,7 +65,7 @@ class NotAwaitingInitCallsSpec: BaseSpec {
                 ).to(equal("user_a_value"))
 
                 var isUpdated = false
-                Statsig.updateUser(userB) { err in
+                Statsig.updateUserWithResult(userB) { err in
                     isUpdated = true
                 }
 

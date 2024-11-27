@@ -14,9 +14,9 @@ class BasicViewController: UIViewController {
             "tags": ["cool", "rad", "neat"],
         ])
 
-        Statsig.start(sdkKey: Constants.CLIENT_SDK_KEY, user: user) { err in
+        Statsig.initialize(sdkKey: Constants.CLIENT_SDK_KEY, user: user) { err in
             if let err = err {
-                print("Error \(err)")
+                print("Error \(err.message)")
             }
 
             let result = Statsig.checkGate("a_gate")

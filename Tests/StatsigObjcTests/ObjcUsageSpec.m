@@ -12,6 +12,7 @@
     StatsigUser *_user;
     StatsigOptions *_options;
     void (^_completion)(NSString * _Nullable);
+    void (^_completionWithResult)(StatsigClientError * _Nullable);
 }
 
 - (void)setUp {
@@ -28,6 +29,7 @@
 
     _options = [[StatsigOptions alloc] initWithArgs:@{@"initTimeout": @2}];
     _completion = ^(NSString * _Nullable err) {};
+    _completionWithResult = ^(StatsigClientError * _Nullable err) {};
 }
 
 - (void)tearDown {
@@ -71,6 +73,46 @@
 
 - (void)testStartWithKeyUserOptionsCompletion {
     [Statsig startWithSDKKey:@"client-" user:_user options:_options completion:_completion];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testInitializeWithKey {
+    [Statsig initializeWithSDKKey:@"client-"];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testInitializeWithKeyOptions {
+    [Statsig initializeWithSDKKey:@"client-" options:_options];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testInitializeWithKeyCompletion {
+    [Statsig initializeWithSDKKey:@"client-" completion:_completionWithResult];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testInitializeWithKeyUser {
+    [Statsig initializeWithSDKKey:@"client-" user:_user];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testInitializeWithKeyUserCompletion {
+    [Statsig initializeWithSDKKey:@"client-" user:_user completion:_completionWithResult];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testInitializeWithKeyUserOptions {
+    [Statsig initializeWithSDKKey:@"client-" user:_user options:_options];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testInitializeWithKeyOptionsCompletion {
+    [Statsig initializeWithSDKKey:@"client-" options:_options completion:_completionWithResult];
+    [self waitForExpectations:@[_requestExpectation] timeout:1];
+}
+
+- (void)testInitializeWithKeyUserOptionsCompletion {
+    [Statsig initializeWithSDKKey:@"client-" user:_user options:_options completion:_completionWithResult];
     [self waitForExpectations:@[_requestExpectation] timeout:1];
 }
 

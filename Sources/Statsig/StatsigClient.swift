@@ -14,7 +14,8 @@ public class StatsigClient {
     private var loggedExposures: [String: TimeInterval]
     private var listeners: [() -> StatsigListening?] = []
     private var hasInitialized: Bool = false
-    private var lastInitializeError: String?
+    private var lastInitializeError: StatsigClientError?
+    private var completionWithResult: ResultCompletionBlock? = nil
 
     private let exposureDedupeQueue = DispatchQueue(label: exposureDedupeQueueLabel, qos: .userInitiated, attributes: .concurrent)
 
@@ -28,7 +29,8 @@ public class StatsigClient {
      - sdkKey: The client SDK key copied from console.statsig.com
      - user: The user to check values against
      - options: Configuration options for the Statsig SDK
-     - completion: A callback function for when initialization completes. If an error occurred during initialization, a error message string will be passed to the callback.
+     - completionWithResult: A callback function for when initialization completes. If an error occurred during initialization, a `StatsigClientError` object will be passed to the callback.
+     - completion (deprecated. use completionWithResult): A callback function for when initialization completes. If an error occurred during initialization, an error message string will be passed to the callback.
 
      SeeAlso: [Initialization Documentation](https://docs.statsig.com/client/iosClientSDK#step-3---initialize-the-sdk)
      */
@@ -36,7 +38,8 @@ public class StatsigClient {
         sdkKey: String,
         user: StatsigUser? = nil,
         options: StatsigOptions? = nil,
-        completion: completionBlock = nil
+        completionWithResult: ResultCompletionBlock? = nil,
+        completion: ((_ error: String?) -> Void)? = nil
     ) {
         Diagnostics.boot(options)
         Diagnostics.mark?.overall.start();
@@ -53,7 +56,7 @@ public class StatsigClient {
         subscribeToApplicationLifecycle()
 
         let capturedUser = self.currentUser
-        let _onComplete: (String?) -> Void = { [weak self, completion] error in
+        let _onComplete: (StatsigClientError?) -> Void = { [weak self, completionWithResult, completion] error in
             guard let self = self else {
                 return
             }
@@ -69,11 +72,12 @@ public class StatsigClient {
             Diagnostics.mark?.overall.end(
                 success: error == nil,
                 details: self.store.cache.getEvaluationDetails(),
-                errorMessage: error
+                errorMessage: error?.message
             )
             Diagnostics.log(self.logger, user: capturedUser, context: .initialize)
 
-            completion?(error)
+            completionWithResult?(error)
+            completion?(error?.message)
         }
 
         if (options?.initializeValues != nil) {
@@ -106,7 +110,8 @@ public class StatsigClient {
      */
     public func addListener(_ listener: StatsigListening) {
         if (hasInitialized) {
-            listener.onInitialized(lastInitializeError)
+            listener.onInitializedWithResult(lastInitializeError)
+            (listener as StatsigListeningInternal).onInitialized(lastInitializeError?.message)
         }
         listeners.append({ [weak listener] in return listener })
     }
@@ -117,9 +122,9 @@ public class StatsigClient {
 
      Parameters:
      - user: The new user
-     - completion: A callback block called when the new values have been received. May be called with an error message string if the fetch fails.
+     - completion: A callback block called when the new values have been received. May be called with a `StatsigClientError` object if the fetch fails.
      */
-    public func updateUser(_ user: StatsigUser, values: [String: Any]? = nil, completion: completionBlock = nil) {
+    public func updateUserWithResult(_ user: StatsigUser, values: [String: Any]? = nil, completion: ResultCompletionBlock? = nil) {
         exposureDedupeQueue.async(flags: .barrier) { [weak self] in
             self?.loggedExposures.removeAll()
         }
@@ -131,10 +136,10 @@ public class StatsigClient {
      Manually triggered the refreshing process for the current user
 
      Parameters:
-     - completion: A callback block called when the new values/update operation have been received. May be called with an error message string if the fetch fails.
+     - completion: A callback block called when the new values/update operation have been received. May be called with a `StatsigClientError` object if the fetch fails.
      */
-    public func refreshCache(_ completion: completionBlock = nil) {
-        self.updateUser(self.currentUser, completion: completion)
+    public func refreshCacheWithResult(_ completion: ResultCompletionBlock? = nil) {
+        self.updateUserWithResult(self.currentUser, completion: completion)
     }
 
     /**
@@ -704,23 +709,23 @@ extension StatsigClient {
 
 // MARK: Misc Private
 extension StatsigClient {
-    private func fetchValuesFromNetwork(completion: completionBlock) {
+    private func fetchValuesFromNetwork(completion: ResultCompletionBlock?) {
         let currentUser = self.currentUser
         let sinceTime = self.store.getLastUpdateTime(user: currentUser)
         let previousDerivedFields = self.store.getPreviousDerivedFields(user: currentUser)
 
-        networkService.fetchInitialValues(for: currentUser, sinceTime: sinceTime, previousDerivedFields: previousDerivedFields) { [weak self] errorMessage in
+        networkService.fetchInitialValues(for: currentUser, sinceTime: sinceTime, previousDerivedFields: previousDerivedFields) { [weak self] error in
             if let self = self {
-                if let errorMessage = errorMessage {
+                if let error = error {
                     self.logger.log(Event.statsigInternalEvent(
                         user: self.currentUser,
                         name: "fetch_values_failed",
                         value: nil,
-                        metadata: ["error": errorMessage]))
+                        metadata: ["error": error.message]))
                 }
             }
 
-            completion?(errorMessage)
+            completion?(error)
         }
     }
 
@@ -776,7 +781,7 @@ extension StatsigClient {
         }
     }
 
-    private func updateUserImpl(_ user: StatsigUser, values: [String: Any]? = nil, completion: completionBlock = nil) {
+    private func updateUserImpl(_ user: StatsigUser, values: [String: Any]? = nil, completion: ResultCompletionBlock? = nil) {
         currentUser = StatsigClient.normalizeUser(user, options: statsigOptions)
         store.updateUser(currentUser, values: values)
         logger.user = currentUser
@@ -802,15 +807,50 @@ extension StatsigClient {
         }
     }
 
-    private func notifyOnInitializedListeners(_ error: String?) {
+    private func notifyOnInitializedListeners(_ error: StatsigClientError?) {
         for listener in listeners {
-            listener()?.onInitialized(error)
+            listener()?.onInitializedWithResult(error)
+            (listener() as StatsigListeningInternal?)?.onInitialized(error?.message)
         }
     }
 
-    private func notifyOnUserUpdatedListeners(_ error: String?) {
+    private func notifyOnUserUpdatedListeners(_ error: StatsigClientError?) {
         for listener in listeners {
-            listener()?.onUserUpdated(error)
+            listener()?.onUserUpdatedWithResult(error)
+            (listener() as StatsigListeningInternal?)?.onUserUpdated(error?.message)
         }
+    }
+}
+
+// MARK: Deprecated
+extension StatsigClient {
+    /**
+     Switches the user and pulls new values for that user from Statsig.
+     Default values will be returned until the update is complete.
+
+     Parameters:
+     - user: The new user
+     - completion: A callback block called when the new values have been received. May be called with an error message string if the fetch fails.
+     */
+    @available(*, deprecated, message: "Use `StatsigClient.updateUserWithResult` instead")
+    public func updateUser(_ user: StatsigUser, values: [String: Any]? = nil, completion: completionBlock = nil) {
+        exposureDedupeQueue.async(flags: .barrier) { [weak self] in
+            self?.loggedExposures.removeAll()
+        }
+
+        self.updateUserImpl(user, values: values) { error in 
+            completion?(error?.message)
+        }
+    }
+    
+    /**
+     Manually triggered the refreshing process for the current user
+
+     Parameters:
+     - completion: A callback block called when the new values/update operation have been received. May be called with an error message string if the fetch fails.
+     */
+    @available(*, deprecated, message: "Use `StatsigClient.refreshCacheWithResult` instead")
+    public func refreshCache(_ completion: completionBlock = nil) {
+        self.updateUser(self.currentUser, completion: completion)
     }
 }

@@ -65,7 +65,7 @@ final class PublicFuncSpec: BaseSpec {
                     (t(Statsig.removeAllOverrides), t(client.removeAllOverrides)),
                     
                     // Manually Refresh Cache
-                    (t(Statsig.refreshCache()), t(client.refreshCache())),
+                    (t(Statsig.refreshCacheWithResult()), t(client.refreshCacheWithResult())),
 
                     // Log Event
                     (t(Statsig.logEvent as (String, [String: String]) -> Void), t(client.logEvent as (String, [String: String]) -> Void)),
@@ -76,11 +76,15 @@ final class PublicFuncSpec: BaseSpec {
                     (t(Statsig.shutdown), t(client.shutdown)),
                     (t(Statsig.flush), t(client.flush)),
                     (t(Statsig.getInitializeResponseJson), t(client.getInitializeResponseJson)),
-                    (t(Statsig.updateUser), t(client.updateUser)),
+                    (t(Statsig.updateUserWithResult), t(client.updateUserWithResult)),
                     (t(Statsig.getStableID), t(client.getStableID)),
                     (t(Statsig.isInitialized), t(client.isInitialized)),
                     (t(Statsig.addListener), t(client.addListener)),
                     (t(Statsig.openDebugView), t(client.openDebugView)),
+
+                    // Deprecated
+                    (t(Statsig.updateUser), t(client.updateUser)),
+                    (t(Statsig.refreshCache()), t(client.refreshCache())),
                 ]
 
                 for (instance, interface) in pairs {

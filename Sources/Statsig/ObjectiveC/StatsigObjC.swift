@@ -4,54 +4,66 @@ import Foundation
 public final class StatsigObjC: NSObject {
 
     //
-    // MARK: - Start
+    // MARK: - Initialize
     //
-    @objc public static func start(withSDKKey: String) {
-        Statsig.start(sdkKey: withSDKKey)
+
+    @objc public static func initialize(withSDKKey: String) {
+        Statsig.initialize(sdkKey: withSDKKey)
     }
 
-    @objc public static func start(withSDKKey: String, user: StatsigUserObjC) {
-        Statsig.start(sdkKey: withSDKKey, user: user.user)
+    @objc public static func initialize(withSDKKey: String, user: StatsigUserObjC) {
+        Statsig.initialize(sdkKey: withSDKKey, user: user.user)
     }
 
-    @objc public static func start(withSDKKey: String, options: StatsigOptionsObjC) {
-        Statsig.start(sdkKey: withSDKKey, options: options.optionsInternal)
+    @objc public static func initialize(withSDKKey: String, options: StatsigOptionsObjC) {
+        Statsig.initialize(sdkKey: withSDKKey, options: options.optionsInternal)
     }
 
-    @objc public static func start(withSDKKey: String, completion: completionBlock) {
-        Statsig.start(sdkKey: withSDKKey, completion: completion)
+    @objc public static func initialize(withSDKKey: String, completion: ResultCompletionBlock?) {
+        Statsig.initialize(sdkKey: withSDKKey, completion: completion)
     }
 
-    @objc public static func start(withSDKKey: String, user: StatsigUserObjC, completion: completionBlock) {
-        Statsig.start(sdkKey: withSDKKey, user: user.user, completion: completion)
+    @objc public static func initialize(withSDKKey: String, user: StatsigUserObjC, completion: ResultCompletionBlock?) {
+        Statsig.initialize(sdkKey: withSDKKey, user: user.user, completion: completion)
     }
 
-    @objc public static func start(withSDKKey: String, user: StatsigUserObjC, options: StatsigOptionsObjC) {
-        Statsig.start(sdkKey: withSDKKey, user: user.user, options: options.optionsInternal)
+    @objc public static func initialize(withSDKKey: String, user: StatsigUserObjC, options: StatsigOptionsObjC) {
+        Statsig.initialize(sdkKey: withSDKKey, user: user.user, options: options.optionsInternal)
     }
 
-    @objc public static func start(withSDKKey: String, options: StatsigOptionsObjC, completion: completionBlock) {
-        Statsig.start(sdkKey: withSDKKey, options: options.optionsInternal, completion: completion)
+    @objc public static func initialize(withSDKKey: String, options: StatsigOptionsObjC, completion: ResultCompletionBlock?) {
+        Statsig.initialize(sdkKey: withSDKKey, options: options.optionsInternal, completion: completion)
     }
 
-    @objc public static func start(withSDKKey: String, user: StatsigUserObjC, options: StatsigOptionsObjC,
-                                   completion: completionBlock)
+    @objc public static func initialize(withSDKKey: String, user: StatsigUserObjC, options: StatsigOptionsObjC,
+                                   completion: ResultCompletionBlock?)
     {
-        Statsig.start(sdkKey: withSDKKey, user: user.user, options: options.optionsInternal, completion: completion)
+        Statsig.initialize(sdkKey: withSDKKey, user: user.user, options: options.optionsInternal, completion: completion)
     }
 
     //
     // MARK: - Update User
     //
 
-    @objc public static func updateUser(newUser: StatsigUserObjC) {
-        Statsig.updateUser(newUser.user, completion: nil)
+    @objc public static func updateUserWithResult(newUser: StatsigUserObjC) {
+        Statsig.updateUserWithResult(newUser.user, completion: nil)
     }
 
-    @objc public static func updateUser(newUser: StatsigUserObjC, completion: completionBlock) {
-        Statsig.updateUser(newUser.user, completion: completion)
+    @objc public static func updateUserWithResult(newUser: StatsigUserObjC, completion: ResultCompletionBlock?) {
+        Statsig.updateUserWithResult(newUser.user, completion: completion)
     }
 
+    //
+    // MARK: - Refresh Cache
+    //
+
+    @objc public static func refreshCacheWithResult() {
+        Statsig.refreshCacheWithResult()
+    }
+
+    @objc public static func refreshCacheWithResult(completion: ResultCompletionBlock?) {
+        Statsig.refreshCacheWithResult(completion)
+    }
 
     //
     // MARK: - Shutdown
@@ -88,7 +100,6 @@ public final class StatsigObjC: NSObject {
     @objc public static func getConfigWithExposureLoggingDisabled(_ configName: String) -> DynamicConfigObjC {
         return DynamicConfigObjC(withConfig: Statsig.getConfigWithExposureLoggingDisabled(configName))
     }
-
 
 
     //
@@ -256,5 +267,68 @@ public final class StatsigObjC: NSObject {
 
     @objc public static func openDebugView() {
         Statsig.openDebugView()
+    }
+
+    //
+    // MARK: - Deprecated
+    //
+
+    @available(*, deprecated, message: "Implement `initialize` instead")
+    @objc public static func start(withSDKKey: String) {
+        Statsig.start(sdkKey: withSDKKey)
+    }
+
+    
+    @available(*, deprecated, message: "Implement `initialize` instead")
+    @objc public static func start(withSDKKey: String, user: StatsigUserObjC) {
+        Statsig.start(sdkKey: withSDKKey, user: user.user)
+    }
+
+    
+    @available(*, deprecated, message: "Implement `initialize` instead")
+    @objc public static func start(withSDKKey: String, options: StatsigOptionsObjC) {
+        Statsig.start(sdkKey: withSDKKey, options: options.optionsInternal)
+    }
+
+    
+    @available(*, deprecated, message: "Implement `initialize` instead")
+    @objc public static func start(withSDKKey: String, completion: completionBlock) {
+        Statsig.start(sdkKey: withSDKKey, completion: completion)
+    }
+
+    
+    @available(*, deprecated, message: "Implement `initialize` instead")
+    @objc public static func start(withSDKKey: String, user: StatsigUserObjC, completion: completionBlock) {
+        Statsig.start(sdkKey: withSDKKey, user: user.user, completion: completion)
+    }
+
+    
+    @available(*, deprecated, message: "Implement `initialize` instead")
+    @objc public static func start(withSDKKey: String, user: StatsigUserObjC, options: StatsigOptionsObjC) {
+        Statsig.start(sdkKey: withSDKKey, user: user.user, options: options.optionsInternal)
+    }
+
+    
+    @available(*, deprecated, message: "Implement `initialize` instead")
+    @objc public static func start(withSDKKey: String, options: StatsigOptionsObjC, completion: completionBlock) {
+        Statsig.start(sdkKey: withSDKKey, options: options.optionsInternal, completion: completion)
+    }
+
+    
+    @available(*, deprecated, message: "Implement `initialize` instead")
+    @objc public static func start(withSDKKey: String, user: StatsigUserObjC, options: StatsigOptionsObjC,
+                                   completion: completionBlock)
+    {
+        Statsig.start(sdkKey: withSDKKey, user: user.user, options: options.optionsInternal, completion: completion)
+    }
+
+    @available(*, deprecated, message: "Implement `updateUserWithResult` instead")
+    @objc public static func updateUser(newUser: StatsigUserObjC) {
+        Statsig.updateUser(newUser.user, completion: nil)
+    }
+
+    @available(*, deprecated, message: "Implement `updateUserWithResult` instead")
+    @objc public static func updateUser(newUser: StatsigUserObjC, completion: completionBlock) {
+        Statsig.updateUser(newUser.user, completion: completion)
     }
 }

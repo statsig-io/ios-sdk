@@ -21,7 +21,7 @@ static NSString * const CellIdentifier = @"Cell";
     [self setupCollectionView];
 
     [Statsig
-     startWithSDKKey:Constants.CLIENT_SDK_KEY completion:^(NSString * _Nullable error) {
+     startWithSDKKey:Constants.CLIENT_SDK_KEY completion:^(StatsigClientError * _Nullable error) {
         if (error != nil) {
             NSLog(@"Error %@", error);
         }

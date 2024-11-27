@@ -26,18 +26,18 @@ class CompletionCallbackRaceSpec: BaseSpec {
 
             it("invalidates previous timers") {
                 for _ in 0..<10 {
-                    var message: String?
+                    var errorCode: StatsigClientErrorCode?
                     var calls = 0
                     waitUntil { done in
-                        client = StatsigClient(sdkKey: "client-key", user: user, options: opts) { errorMessage in
-                            message = errorMessage
+                        client = StatsigClient(sdkKey: "client-key", user: user, options: opts) { error in
+                            errorCode = error?.code
                             calls += 1
                             done()
                         }
                     }
 
                     expect(client).toNot(beNil())
-                    expect(message).to(equal("initTimeout Expired"))
+                    expect(errorCode).to(equal(StatsigClientErrorCode.initTimeoutExpired))
                     expect(calls).toEventually(equal(1))
                 }
 

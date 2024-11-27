@@ -16,7 +16,7 @@ struct ContentView: View {
             VStack {
                 Button {
                     user = getRandomUser()
-                    Statsig.updateUser(user)
+                    Statsig.updateUserWithResult(user)
                 } label: {
                     Text("Update User")
                 }
@@ -30,7 +30,7 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            Statsig.start(sdkKey: Self.sdkKey, user: user)
+            Statsig.initialize(sdkKey: Self.sdkKey, user: user)
 
             NotificationCenter.default
                 .addObserver(forName: UserDefaults.didChangeNotification, object: UserDefaults.standard, queue: .main) { _ in }

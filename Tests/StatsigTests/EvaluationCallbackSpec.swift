@@ -61,7 +61,7 @@ final class EvaluationCallbackSpec: BaseSpec {
                 }
 
                 let opts = StatsigOptions(evaluationCallback: callback)
-                Statsig.start(sdkKey: "client-api-key", options: opts)
+                Statsig.initialize(sdkKey: "client-api-key", options: opts)
             }
 
             afterEach {

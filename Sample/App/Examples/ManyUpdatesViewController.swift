@@ -13,13 +13,13 @@ class ManyUpdatesViewController: UIViewController {
         let user = StatsigUser(userID: "a-user")
         let opts = StatsigOptions(enableCacheByFile: true)
 
-        Statsig.start(
+        Statsig.initialize(
             sdkKey: Constants.CLIENT_SDK_KEY,
             user: user,
             options: opts
         ) { [weak self] err in
             if let err = err {
-                print("Error \(err)")
+                print("Error \(err.message)")
             }
 
             self?.addButton()
@@ -49,7 +49,7 @@ class ManyUpdatesViewController: UIViewController {
             queue.async {
                 let user = self.getRandomUser()
                 print("Updating user \(user.userID ?? "")...")
-                Statsig.updateUser(user) { err in
+                Statsig.updateUserWithResult(user) { err in
                     print("Updated user \(user.userID ?? "")")
                     print("Gate check \(Statsig.checkGate("partial_gate"))")
                 }

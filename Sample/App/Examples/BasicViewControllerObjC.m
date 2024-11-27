@@ -28,7 +28,7 @@
     [Statsig
      startWithSDKKey:Constants.CLIENT_SDK_KEY
      user:user
-     completion:^(NSString * _Nullable error) {
+     completion:^(StatsigClientError * _Nullable error) {
         if (error != nil) {
             NSLog(@"Error %@", error);
             return;

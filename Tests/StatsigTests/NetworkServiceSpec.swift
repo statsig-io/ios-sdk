@@ -191,7 +191,7 @@ class NetworkServiceSpec: BaseSpec {
                 waitUntil { done in
                     ns.fetchInitialValues(for: user, sinceTime: 0, previousDerivedFields: [:]) { err in
                         expected = calls
-                        expect(err).to(equal("initTimeout Expired"))
+                        expect(err?.code).to(equal(StatsigClientErrorCode.initTimeoutExpired))
                         timedout = true;
                         done()
                     }

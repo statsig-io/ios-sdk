@@ -43,10 +43,10 @@ class AsyncInitVsUpdateSpec: BaseSpec {
                 var didInitializeUserB = false
 
                 // Call initialize then immediately call updateUser
-                let client = StatsigClient(sdkKey: "client-key", user: userA, options: StatsigOptions(initTimeout: 99999, disableDiagnostics: true)) { errorMessage in
+                let client = StatsigClient(sdkKey: "client-key", user: userA, options: StatsigOptions(initTimeout: 99999, disableDiagnostics: true)) { _ in
                     didInitializeUserA = true
                 }
-                client.updateUser(userB) { errorMessage in
+                client.updateUserWithResult(userB) { _ in
                     didInitializeUserB = true
                 }
 
@@ -77,7 +77,7 @@ class AsyncInitVsUpdateSpec: BaseSpec {
 
 
                 var updated = false
-                client.updateUser(userB) { errorMessage in
+                client.updateUserWithResult(userB) { errorMessage in
                     updated = true
                 }
 

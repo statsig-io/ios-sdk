@@ -63,7 +63,7 @@ class StatsigSpec: BaseSpec {
     override func spec() {
         super.spec()
 
-        describe("starting Statsig") {
+        describe("initializing Statsig") {
             beforeEach {
                 TestUtils.clearStorage()
             }
@@ -92,9 +92,9 @@ class StatsigSpec: BaseSpec {
                 }
 
                 let opts = StatsigOptions(disableDiagnostics: true)
-                Statsig.start(sdkKey: "client-api-key", options: opts)
-                Statsig.start(sdkKey: "client-api-key", options: opts)
-                Statsig.start(sdkKey: "client-api-key", options: opts)
+                Statsig.initialize(sdkKey: "client-api-key", options: opts)
+                Statsig.initialize(sdkKey: "client-api-key", options: opts)
+                Statsig.initialize(sdkKey: "client-api-key", options: opts)
 
                 expect(requests.count).toEventually(equal(1))
             }
@@ -121,7 +121,7 @@ class StatsigSpec: BaseSpec {
                     disableDiagnostics: true
                 )
                 opts.mainApiUrl = URL(string: "http://api.statsig.enableAutoValueUpdateTest")
-                Statsig.start(sdkKey: "client-api-key", options: opts)
+                Statsig.initialize(sdkKey: "client-api-key", options: opts)
 
                 // first request, "lastSyncTimeForUser" field should not be present in the request body
                 expect(requestCount).toEventually(equal(1), timeout: .milliseconds(200))
@@ -151,7 +151,7 @@ class StatsigSpec: BaseSpec {
                     return HTTPStubsResponse(jsonObject: ["time": dummyLcut, "has_updates": true], statusCode: 200, headers: nil)
                 }
 
-                Statsig.start(sdkKey: "client-api-key", options: opts)
+                Statsig.initialize(sdkKey: "client-api-key", options: opts)
 
                 self.wait(for: [requestExpectation], timeout: 0.05)
                 requestExpectation = self.expectation(description: "Request Made Twice")
@@ -176,6 +176,28 @@ class StatsigSpec: BaseSpec {
                 expect(Statsig.checkGate("new_gate_name_2")).to(beFalse())
                 
                 waitUntil { done in
+                    Statsig.updateUserWithResult(StatsigUser(userID: "whd", customIDs: ["companyID": "statsig"]), values: StatsigSpec.mockUpdatedUserValues) { _ in
+                        done()
+                    }
+                }
+                
+                expect(Statsig.checkGate("new_gate_name_1")).to(beTrue())
+                expect(Statsig.checkGate("new_gate_name_2")).to(beTrue())
+                
+                config = Statsig.getConfig(StatsigSpec.configKey)
+                expect(config.getValue(forKey: "key", defaultValue: "")).to(equal("new_value"))
+            }
+            
+            it("values are updated when update user with values called with the deprecated method") {
+                _ = TestUtils.startWithResponseAndWait(StatsigSpec.mockUserValues, "client-api-key", StatsigUser(userID: "whd"))
+                
+                var config = Statsig.getConfig(StatsigSpec.configKey)
+                expect(config.getValue(forKey: "key", defaultValue: "")).to(equal(""))
+                
+                expect(Statsig.checkGate("new_gate_name_1")).to(beFalse())
+                expect(Statsig.checkGate("new_gate_name_2")).to(beFalse())
+                
+                waitUntil { done in
                     Statsig.updateUser(StatsigUser(userID: "whd", customIDs: ["companyID": "statsig"]), values: StatsigSpec.mockUpdatedUserValues) { _ in
                         done()
                     }
@@ -189,6 +211,32 @@ class StatsigSpec: BaseSpec {
             }
             
             it("values are updated for the current user if manual refresh triggered") {
+                _ = TestUtils.startWithResponseAndWait(StatsigSpec.mockUserValues, "client-api-key", StatsigUser(userID: "whd"))
+    
+                var config = Statsig.getConfig(StatsigSpec.configKey)
+                expect(config.getValue(forKey: "key", defaultValue: "")).to(equal(""))
+                
+                expect(Statsig.checkGate("new_gate_name_1")).to(beFalse())
+                expect(Statsig.checkGate("new_gate_name_2")).to(beFalse())
+                
+                stub(condition: isHost(ApiHost)) { request in
+                    return HTTPStubsResponse(jsonObject: StatsigSpec.mockUpdatedUserValues, statusCode: 200, headers: nil)
+                }
+                
+                waitUntil { done in
+                    Statsig.refreshCacheWithResult() { _ in
+                        done()
+                    }
+                }
+                
+                expect(Statsig.checkGate("new_gate_name_1")).to(beTrue())
+                expect(Statsig.checkGate("new_gate_name_2")).to(beTrue())
+                
+                config = Statsig.getConfig(StatsigSpec.configKey)
+                expect(config.getValue(forKey: "key", defaultValue: "")).to(equal("new_value"))
+            }
+            
+            it("values are updated for the current user if manual refresh triggered with the deprecated method") {
                 _ = TestUtils.startWithResponseAndWait(StatsigSpec.mockUserValues, "client-api-key", StatsigUser(userID: "whd"))
     
                 var config = Statsig.getConfig(StatsigSpec.configKey)
@@ -229,7 +277,7 @@ class StatsigSpec: BaseSpec {
                 }
 
                 waitUntil { done in
-                    Statsig.updateUser(StatsigUser(userID: "jkw", customIDs: ["companyID": "statsig"])) { _ in
+                    Statsig.updateUserWithResult(StatsigUser(userID: "jkw", customIDs: ["companyID": "statsig"])) { _ in
                         done()
                     }
                 }
@@ -237,7 +285,7 @@ class StatsigSpec: BaseSpec {
                 expect(Statsig.checkGate(gateName)).to(beFalse())
 
                 waitUntil { done in
-                    Statsig.updateUser(StatsigUser()) { _ in
+                    Statsig.updateUserWithResult(StatsigUser()) { _ in
                         done()
                     }
                 }
@@ -245,7 +293,7 @@ class StatsigSpec: BaseSpec {
 
                 // back to the original user, cache should now be used
                 waitUntil { done in
-                    Statsig.updateUser(StatsigUser(userID: "jkw")) { _ in
+                    Statsig.updateUserWithResult(StatsigUser(userID: "jkw")) { _ in
                         done()
                     }
                 }
@@ -543,15 +591,15 @@ class StatsigSpec: BaseSpec {
                         .responseTime(0.2)
                 }
 
-                var error: String?
+                var errorCode: StatsigClientErrorCode?
                 var gate: Bool?
                 var dc: DynamicConfig?
                 let timeBefore = CFAbsoluteTimeGetCurrent()
                 var timeDiff = 0.0
 
                 let initTimeoutExpect = self.expectation(description: "Init Timeout")
-                Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(initTimeout: 0.1, disableDiagnostics: true)) { errorMessage in
-                    error = errorMessage
+                Statsig.initialize(sdkKey: "client-api-key", options: StatsigOptions(initTimeout: 0.1, disableDiagnostics: true)) { err in
+                    errorCode = err?.code
                     gate = Statsig.checkGate(gateName2)
                     dc = Statsig.getConfig(configName)
                     timeDiff = CFAbsoluteTimeGetCurrent() - timeBefore
@@ -561,7 +609,7 @@ class StatsigSpec: BaseSpec {
                 self.wait(for: [initTimeoutExpect], timeout: 0.11)
 
                 // check the values immediately following the completion block from start() assignments
-                expect(error).to(equal("initTimeout Expired"))
+                expect(errorCode).to(equal(StatsigClientErrorCode.initTimeoutExpired))
                 expect(gate).to(beFalse())
                 expect(NSDictionary(dictionary: dc!.value)).to(equal(NSDictionary(dictionary: [:])))
                 expect(dc!.evaluationDetails.reason).to(equal(.Unrecognized))
@@ -575,7 +623,7 @@ class StatsigSpec: BaseSpec {
                 }
 
                 // check the same gate and config >0.01 seconds later should return the original results
-                expect(error).to(equal("initTimeout Expired"))
+                expect(errorCode).to(equal(StatsigClientErrorCode.initTimeoutExpired))
                 expect(gate).to(beFalse())
                 expect(NSDictionary(dictionary: dc!.value)).to(equal(NSDictionary(dictionary: [:])))
                 expect(dc!.evaluationDetails.reason).to(equal(.Unrecognized))
@@ -593,15 +641,15 @@ class StatsigSpec: BaseSpec {
                 var exp: DynamicConfig?
                 var nonExistentDC: DynamicConfig?
 
-                // First call start() to fetch and store values in local storage
-                Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(disableDiagnostics: true)) { _ in
-                    // shutdown client to call start() again, and makes response slow so we can test early timeout with cached return
+                // First call initialize() to fetch and store values in local storage
+                Statsig.initialize(sdkKey: "client-api-key", options: StatsigOptions(disableDiagnostics: true)) { _ in
+                    // shutdown client to call initialize() again, and makes response slow so we can test early timeout with cached return
                     Statsig.shutdown()
                     stub(condition: isHost(ApiHost)) { _ in
                         HTTPStubsResponse(jsonObject: StatsigSpec.mockUserValues, statusCode: 200, headers: nil).responseTime(3)
                     }
 
-                    Statsig.start(sdkKey: "client-api-key", options: StatsigOptions(initTimeout: 0.1, disableDiagnostics: true)) { _ in
+                    Statsig.initialize(sdkKey: "client-api-key", options: StatsigOptions(initTimeout: 0.1, disableDiagnostics: true)) { _ in
                         gate = Statsig.checkGate(gateName2)
                         nonExistentGate = Statsig.checkGate(nonExistentGateName)
                         dc = Statsig.getConfig(configName)
@@ -643,7 +691,7 @@ class StatsigSpec: BaseSpec {
                 var exp: DynamicConfig?
                 var stableID: String?
                 waitUntil { done in
-                    Statsig.start(sdkKey: "client-api-key",
+                    Statsig.initialize(sdkKey: "client-api-key",
                                   user: StatsigUser(userID: "123", email: "123@statsig.com"),
                                   options: StatsigOptions(overrideStableID: "custom_stable_id", disableDiagnostics: true))
                     { err in
@@ -667,7 +715,7 @@ class StatsigSpec: BaseSpec {
                         // Event 4
                         Statsig.logEvent("test_event_3", metadata: ["key": "value3"])
 
-                        Statsig.updateUser(StatsigUser(userID: "123", email: "123@statsig.com")) { errorMessage in
+                        Statsig.updateUserWithResult(StatsigUser(userID: "123", email: "123@statsig.com")) { error in
                             // Event 5
                             _ = Statsig.checkGate(gateName2) // should create an exposure, no longer dedupe after updating user
                             Statsig.shutdown()
@@ -804,6 +852,19 @@ class StatsigSpec: BaseSpec {
                 expect(stableID).to(equal("custom_stable_id"))
             }
 
+            it("correctly initializes when using the deprecated Statsig.start") {
+                var initialized = false;
+                stub(condition: isHost(ApiHost)) { req in
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
+                }
+
+                let opts = StatsigOptions(disableDiagnostics: true)
+                Statsig.start(sdkKey: "client-api-key", options: opts) { _ in
+                    initialized = Statsig.isInitialized()
+                }
+
+                expect(initialized).toEventually(beTrue())
+            }
 
         }
     }
