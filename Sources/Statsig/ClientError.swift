@@ -1,9 +1,9 @@
 import Foundation
 
-@objc public class StatsigClientError : NSObject, LocalizedError {
-    let code: StatsigClientErrorCode
-    let message: String
-    let cause: (any Error)?
+@objcMembers public class StatsigClientError : NSObject, LocalizedError {
+    public let code: StatsigClientErrorCode
+    public let message: String
+    public let cause: (any Error)?
 
     init(_ code: StatsigClientErrorCode, message: String? = nil, cause: (any Error)? = nil) {
         self.code = code

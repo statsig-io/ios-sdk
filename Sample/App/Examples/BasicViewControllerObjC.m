@@ -26,12 +26,11 @@
      privateAttributes:nil];
 
     [Statsig
-     startWithSDKKey:Constants.CLIENT_SDK_KEY
+     initializeWithSDKKey:Constants.CLIENT_SDK_KEY
      user:user
      completion:^(StatsigClientError * _Nullable error) {
         if (error != nil) {
-            NSLog(@"Error %@", error);
-            return;
+            NSLog(@"Error %@", error.message);
         }
 
         Boolean gate = [Statsig checkGateForName:@"a_gate"];
