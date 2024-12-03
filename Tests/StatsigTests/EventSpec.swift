@@ -39,15 +39,6 @@ class EventSpec: BaseSpec {
                     bootstrapMetadata: BootstrapMetadata(),
                     disableCurrentVCLogging: false)
                 
-                let expectedMetadata: [String: Any] = [
-                    "gate": "show_coupon",
-                    "gateValue": true,
-                    "ruleID": "default",
-                    "reason": "Network:Recognized",
-                    "lcut": "123456789",
-                    "receivedAt": "43",
-                    "bootstrapMetadata": "{}"
-                ]
                 let actualMetadata = gateExposure.metadata
 
                 expect(gateExposure.name) == "statsig::gate_exposure"
@@ -73,29 +64,22 @@ class EventSpec: BaseSpec {
                     lcut: 123456,
                     user: ["userID": "user_123"]
                 )
+
+                let config = DynamicConfig(
+                        configName: "my_config",
+                        value: [:],
+                        ruleID: "default",
+                        evalDetails: EvaluationDetails(source: .Network, reason: .Recognized, lcut: 123456789, receivedAt: 12)
+                    )
                 
                 let configExposure = Event.configExposure(
                     user: StatsigUser(),
                     configName: "my_config",
-                    ruleID: "default",
-                    secondaryExposures: [],
-                    evalDetails: EvaluationDetails(source: .Network, reason: .Recognized, lcut: 123456789, receivedAt: 12),
+                    config: config,
                     bootstrapMetadata: bootstrapMetadata,
                     disableCurrentVCLogging: false
                 )
-                
-                let expectedMetadata: [String: Any] = [
-                    "config": "my_config",
-                    "ruleID": "default",
-                    "reason": "Network:Recognized",
-                    "lcut": "123456789",
-                    "receivedAt": "12",
-                    "bootstrapMetadata": [
-                         "generatorSDKInfo": ["version": "1.0.0"],
-                         "lcut": 123456,
-                         "user": ["userID": "user_123"]
-                     ]
-                ]
+
                 let actualMetadata = configExposure.metadata
                 
                 expect(configExposure.name) == "statsig::config_exposure"
@@ -105,6 +89,7 @@ class EventSpec: BaseSpec {
                 expect(actualMetadata?["reason"] as? String) == "Network:Recognized"
                 expect(actualMetadata?["lcut"] as? String) == "123456789"
                 expect(actualMetadata?["receivedAt"] as? String) == "12"
+                expect(actualMetadata?["rulePassed"] as? Bool) == false
                 
                 if let actualBootstrapMetadata = actualMetadata?["bootstrapMetadata"] as? [String: Any] {
                     expect(actualBootstrapMetadata["generatorSDKInfo"] as? [String: String]) == ["version": "1.0.0"]

@@ -41,6 +41,11 @@ public struct DynamicConfig: ConfigProtocol {
     public let isExperimentActive: Bool
 
     /**
+     Whether the user passed or failed the rule evaluation
+     */
+    public let didPassRule: Bool
+
+    /**
      The SHA256 hash of this configs name
      */
     public let hashedName: String
@@ -68,6 +73,7 @@ public struct DynamicConfig: ConfigProtocol {
         self.isDeviceBased = configObj["is_device_based"] as? Bool ?? false
         self.isUserInExperiment = configObj["is_user_in_experiment"] as? Bool ?? false
         self.isExperimentActive = configObj["is_experiment_active"] as? Bool ?? false
+        self.didPassRule = configObj["passed"] as? Bool ?? false
         self.rawValue = configObj
 
         self.evaluationDetails = evalDetails
@@ -83,6 +89,7 @@ public struct DynamicConfig: ConfigProtocol {
 
         self.isExperimentActive = false
         self.isUserInExperiment = false
+        self.didPassRule = false
 
         self.evaluationDetails = evalDetails
     }
@@ -120,6 +127,7 @@ extension DynamicConfig: Codable {
         case groupName
         case evaluationDetails
         case secondaryExposures
+        case didPassRule
     }
 
     public init(from decoder: Decoder) throws {
@@ -135,6 +143,7 @@ extension DynamicConfig: Codable {
         self.groupName = try container.decodeIfPresent(String.self, forKey: .groupName)
         self.secondaryExposures = try container.decode([[String: String]].self, forKey: .secondaryExposures)
         self.evaluationDetails = try container.decode(EvaluationDetails.self, forKey: .evaluationDetails)
+        self.didPassRule = try container.decode(Bool.self, forKey: .didPassRule)
 
         self.hashedName = ""
         self.isExperimentActive = false
@@ -153,5 +162,6 @@ extension DynamicConfig: Codable {
         try container.encodeIfPresent(groupName, forKey: .groupName)
         try container.encode(secondaryExposures, forKey: .secondaryExposures)
         try container.encode(evaluationDetails, forKey: .evaluationDetails)
+        try container.encode(didPassRule, forKey: .didPassRule)
     }
 }

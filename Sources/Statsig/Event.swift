@@ -100,12 +100,14 @@ class Event {
     static func configExposure(
         user: StatsigUser,
         configName: String,
-        ruleID: String,
-        secondaryExposures: [[String: String]],
-        evalDetails: EvaluationDetails,
+        config: DynamicConfig,
         bootstrapMetadata: BootstrapMetadata?,
         disableCurrentVCLogging: Bool
     ) -> Event {
+        let ruleID = config.ruleID;
+        let secondaryExposures = config.secondaryExposures;
+        let evalDetails = config.evaluationDetails;
+
         var metadata: [String: Any] = [
             "config": configName,
             "ruleID": ruleID,
@@ -114,6 +116,8 @@ class Event {
         if let bootstrapMetadata = bootstrapMetadata {
             metadata["bootstrapMetadata"] = bootstrapMetadata.toDictionary()
         }
+
+        metadata["rulePassed"] = config.didPassRule;
 
         evalDetails.addToDictionary(&metadata)
 

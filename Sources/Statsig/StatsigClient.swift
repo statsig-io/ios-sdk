@@ -392,9 +392,7 @@ extension StatsigClient {
                 Event.configExposure(
                     user: currentUser,
                     configName: configName,
-                    ruleID: config.ruleID,
-                    secondaryExposures: config.secondaryExposures,
-                    evalDetails: config.evaluationDetails,
+                    config: config,
                     bootstrapMetadata: store.getBootstrapMetadata(),
                     disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging)
                 .withManualExposureFlag(isManualExposure))
