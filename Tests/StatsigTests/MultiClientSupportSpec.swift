@@ -57,7 +57,7 @@ final class MultiClientSupportSpec: BaseSpec {
                 // Initialize Client Instance A
                 stubInitOnce(baseResponse)
                 waitUntil { done in
-                    clientA = StatsigClient(sdkKey: "client-key-a") { err in done() }
+                    clientA = StatsigClient(sdkKey: "client-key-a", completion: { err in done() })
                 }
 
                 // Initialize Client Instance B
@@ -69,7 +69,7 @@ final class MultiClientSupportSpec: BaseSpec {
                 ]
                 stubInitOnce(updatedResponse)
                 waitUntil { done in
-                    clientB = StatsigClient(sdkKey: "client-key-b") { err in done() }
+                    clientB = StatsigClient(sdkKey: "client-key-b", completion: { err in done() })
                 }
             }
 

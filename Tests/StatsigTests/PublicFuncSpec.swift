@@ -23,7 +23,7 @@ final class PublicFuncSpec: BaseSpec {
 
                 var c: StatsigClient? = nil
                 waitUntil { done in
-                    c = StatsigClient(sdkKey: "client-key") { err in done() }
+                    c = StatsigClient(sdkKey: "client-key", completion: { err in done() })
                 }
 
                 HTTPStubs.removeStub(handle)

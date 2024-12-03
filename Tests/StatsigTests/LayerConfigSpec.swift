@@ -106,9 +106,9 @@ class LayerConfigSpec: BaseSpec {
 
                 waitUntil { done in
                     let opts = StatsigOptions(disableDiagnostics: true)
-                    client = StatsigClient(sdkKey: "", user: nil, options: opts) { err in
+                    client = StatsigClient(sdkKey: "", user: nil, options: opts, completion: { err in
                         done()
-                    }
+                    })
                 }
 
                 let options = StatsigOptions()

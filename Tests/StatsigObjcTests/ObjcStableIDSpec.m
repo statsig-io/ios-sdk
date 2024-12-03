@@ -25,7 +25,7 @@ static inline void CheckStringEqual(NSString *left, NSString *right) {
 - (void)testOverridingStableID {
     StatsigOptions *opts = [[StatsigOptions alloc]
                             initWithArgs:@{@"overrideStableID": @"custom_stable_id"}];
-    [Statsig startWithSDKKey:@"client-key" options:opts];
+    [Statsig initializeWithSDKKey:@"client-key" options:opts];
 
     CheckStringEqual([Statsig getStableID], @"custom_stable_id");
 }
@@ -33,10 +33,10 @@ static inline void CheckStringEqual(NSString *left, NSString *right) {
 - (void)testPersistingOverShutdown {
     StatsigOptions *opts = [[StatsigOptions alloc]
                             initWithArgs:@{@"overrideStableID": @"persisted_stable_id"}];
-    [Statsig startWithSDKKey:@"client-key" options:opts];
+    [Statsig initializeWithSDKKey:@"client-key" options:opts];
 
     [Statsig shutdown];
-    [Statsig startWithSDKKey:@"client-key"];
+    [Statsig initializeWithSDKKey:@"client-key"];
     CheckStringEqual([Statsig getStableID], @"persisted_stable_id");
 }
 
