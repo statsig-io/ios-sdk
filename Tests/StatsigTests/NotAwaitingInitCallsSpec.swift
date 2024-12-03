@@ -20,7 +20,7 @@ class NotAwaitingInitCallsSpec: BaseSpec {
         describe("Not Awaiting Init Calls") {
 
             beforeEach {
-                options.mainApiUrl = URL(string: "http://NotAwaitingInitCallsSpec")
+                NetworkService.defaultInitializationUrl = URL(string: "http://NotAwaitingInitCallsSpec/v1/initialize")
 
                 TestUtils.clearStorage()
 
@@ -41,6 +41,10 @@ class NotAwaitingInitCallsSpec: BaseSpec {
 
                     return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 500))
                 }
+            }
+
+            afterEach {
+                TestUtils.resetDefaultUrls()
             }
 
             it("gets the expected values") {

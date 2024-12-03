@@ -18,9 +18,9 @@ class CodableSpec: BaseSpec {
 
         describe("Codable") {
             let opts = StatsigOptions(disableDiagnostics: true)
-            opts.mainApiUrl = URL(string: "http://CodableSpec")
 
             beforeEach {
+                NetworkService.defaultInitializationUrl = URL(string: "http://CodableSpec/v1/initialize")
                 _ = TestUtils.startWithResponseAndWait([
                     "feature_gates": [
                         "a_gate".sha256(): [
@@ -45,6 +45,7 @@ class CodableSpec: BaseSpec {
             afterEach {
                 Statsig.client?.shutdown()
                 Statsig.client = nil
+                TestUtils.resetDefaultUrls()
             }
 
 

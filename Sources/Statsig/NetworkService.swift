@@ -1,6 +1,6 @@
 import Foundation
 
-fileprivate enum Endpoint: String {
+internal enum Endpoint: String {
     case initialize = "/v1/initialize"
     case logEvent = "/v1/rgstr"
 }
@@ -18,6 +18,16 @@ class NetworkService {
     let statsigOptions: StatsigOptions
     var store: InternalStore
     var inflightRequests = AtomicDictionary<URLSessionTask>(label: "com.Statsig.InFlightRequests")
+
+    /**
+     Default URL used to initialize the SDK. Used for tests.
+     */
+    internal static var defaultInitializationUrl = URL(string: "https://\(ApiHost)\(Endpoint.initialize.rawValue)")
+
+    /**
+     Default URL used for log_event network requests. Used for tests.
+     */
+    internal static var defaultEventLoggingUrl = URL(string: "https://\(LogEventHost)\(Endpoint.logEvent.rawValue)")
 
     private final let networkRetryErrorCodes = [408, 500, 502, 503, 504, 522, 524, 599]
 
@@ -245,6 +255,13 @@ class NetworkService {
         return (nil, StatsigError.invalidJSONParam("requestBody"))
     }
 
+    private func urlForEndpoint(_ endpoint: Endpoint) -> URL? {
+        return switch endpoint {
+            case .initialize: self.statsigOptions.initializationUrl ?? NetworkService.defaultInitializationUrl
+            case .logEvent: self.statsigOptions.eventLoggingUrl ?? NetworkService.defaultEventLoggingUrl
+        }
+    }
+
     private func makeAndSendRequest(
         _ endpoint: Endpoint,
         body: Data,
@@ -253,20 +270,7 @@ class NetworkService {
         taskCapture: TaskCaptureHandler = nil
     )
     {
-        var urlComponents = URLComponents()
-        urlComponents.scheme = "https"
-        urlComponents.host = ApiHost
-        urlComponents.path = endpoint.rawValue
-
-        if let override = self.statsigOptions.mainApiUrl {
-            urlComponents.applyOverride(override)
-        }
-        
-        if endpoint == .logEvent, let loggingApiOverride = self.statsigOptions.logEventApiUrl {
-            urlComponents.applyOverride(loggingApiOverride)
-        }
-
-        guard let requestURL = urlComponents.url else {
+        guard let requestURL = urlForEndpoint(endpoint) else {
             completion(nil, nil, StatsigError.invalidRequestURL("\(endpoint)"))
             return
         }
@@ -330,13 +334,5 @@ class NetworkService {
 
             task?.resume()
         }
-    }
-}
-
-extension URLComponents {
-    mutating func applyOverride(_ url: URL) {
-        scheme = url.scheme
-        host = url.host
-        port = url.port
     }
 }

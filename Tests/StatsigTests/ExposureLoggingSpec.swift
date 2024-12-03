@@ -15,10 +15,10 @@ class ExposureLoggingSpec: BaseSpec {
         
         describe("ExposureLogging") {
             let opts = StatsigOptions(disableDiagnostics: true)
-            opts.logEventApiUrl = URL(string: "http://ExposureLoggingSpec")
 
             var logs: [[String: Any]] = []
             beforeEach {
+                NetworkService.defaultEventLoggingUrl = URL(string: "http://ExposureLoggingSpec/v1/rgstr")
                 _ = TestUtils.startWithResponseAndWait([
                     "feature_gates": [
                         "a_gate".sha256(): [
@@ -54,6 +54,7 @@ class ExposureLoggingSpec: BaseSpec {
             afterEach {
                 Statsig.client?.shutdown()
                 Statsig.client = nil
+                TestUtils.resetDefaultUrls()
             }
 
             describe("standard use") {

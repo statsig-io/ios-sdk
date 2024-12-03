@@ -18,7 +18,7 @@ final class AppLifecycleSpec: BaseSpec {
 
         func startAndLog(shutdownOnBackground: Bool, tag: String) {
             let opts = StatsigOptions(shutdownOnBackground: shutdownOnBackground)
-            opts.mainApiUrl = URL(string: "http://AppLifecycleSpec::\(tag)")
+            NetworkService.defaultInitializationUrl = URL(string: "http://AppLifecycleSpec::\(tag)/v1/initialize")
 
             _ = TestUtils.startWithStatusAndWait(options: opts)
 
@@ -32,6 +32,11 @@ final class AppLifecycleSpec: BaseSpec {
             Statsig.logEvent("my_event")
         }
 
+        afterEach {
+            Statsig.shutdown()
+            TestUtils.resetDefaultUrls()
+        }
+
 
         it("shuts down the logger on app background when shutdownOnBackground is true") {
             startAndLog(shutdownOnBackground: true, tag: "Shutdown")
@@ -43,8 +48,6 @@ final class AppLifecycleSpec: BaseSpec {
 
             expect(logger.timesShutdownCalled).toEventually(equal(1))
             expect(logger.timesFlushCalled).to(equal(0))
-
-            Statsig.shutdown()
         }
 
 
@@ -58,8 +61,6 @@ final class AppLifecycleSpec: BaseSpec {
 
             expect(logger.timesFlushCalled).toEventually(equal(1))
             expect(logger.timesShutdownCalled).to(equal(0))
-
-            Statsig.shutdown()
         }
     }
 }

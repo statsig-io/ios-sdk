@@ -38,6 +38,7 @@ class BaseSpec: QuickSpec {
 
             BaseSpec.resetUserDefaults()
             HTTPStubs.removeAllStubs()
+            TestUtils.resetDefaultUrls()
         }
     }
 
