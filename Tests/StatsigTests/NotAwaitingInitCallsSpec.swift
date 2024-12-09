@@ -20,7 +20,7 @@ class NotAwaitingInitCallsSpec: BaseSpec {
         describe("Not Awaiting Init Calls") {
 
             beforeEach {
-                NetworkService.defaultInitializationUrl = URL(string: "http://NotAwaitingInitCallsSpec/v1/initialize")
+                NetworkService.defaultInitializationURL = URL(string: "http://NotAwaitingInitCallsSpec/v1/initialize")
 
                 TestUtils.clearStorage()
 
@@ -44,7 +44,7 @@ class NotAwaitingInitCallsSpec: BaseSpec {
             }
 
             afterEach {
-                TestUtils.resetDefaultUrls()
+                TestUtils.resetDefaultURLs()
             }
 
             it("gets the expected values") {

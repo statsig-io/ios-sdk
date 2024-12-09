@@ -24,10 +24,10 @@
     id classMock = OCMClassMock([NSURLSession class]);
     OCMStub([classMock sharedSession]).andReturn(classMock);
 
-    id mockUrlResponse = OCMClassMock([NSHTTPURLResponse class]);
-    OCMStub([mockUrlResponse statusCode]).andReturn(200);
+    id mockURLResponse = OCMClassMock([NSHTTPURLResponse class]);
+    OCMStub([mockURLResponse statusCode]).andReturn(200);
 
-    id autoInvokeCompletion = [OCMArg invokeBlockWithArgs:data, mockUrlResponse, [NSNull null], nil];
+    id autoInvokeCompletion = [OCMArg invokeBlockWithArgs:data, mockURLResponse, [NSNull null], nil];
     id dataArg = [OCMArg checkWithBlock:^BOOL(NSURLRequest *obj) {
         if ([obj.URL.absoluteString containsString:@"/v1/rgstr"]) {
             id dict = [NSJSONSerialization JSONObjectWithData:obj.HTTPBody options:0 error:nil];

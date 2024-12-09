@@ -22,12 +22,12 @@ class NetworkService {
     /**
      Default URL used to initialize the SDK. Used for tests.
      */
-    internal static var defaultInitializationUrl = URL(string: "https://\(ApiHost)\(Endpoint.initialize.rawValue)")
+    internal static var defaultInitializationURL = URL(string: "https://\(ApiHost)\(Endpoint.initialize.rawValue)")
 
     /**
      Default URL used for log_event network requests. Used for tests.
      */
-    internal static var defaultEventLoggingUrl = URL(string: "https://\(LogEventHost)\(Endpoint.logEvent.rawValue)")
+    internal static var defaultEventLoggingURL = URL(string: "https://\(LogEventHost)\(Endpoint.logEvent.rawValue)")
 
     private final let networkRetryErrorCodes = [408, 500, 502, 503, 504, 522, 524, 599]
 
@@ -257,8 +257,8 @@ class NetworkService {
 
     private func urlForEndpoint(_ endpoint: Endpoint) -> URL? {
         return switch endpoint {
-            case .initialize: self.statsigOptions.initializationUrl ?? NetworkService.defaultInitializationUrl
-            case .logEvent: self.statsigOptions.eventLoggingUrl ?? NetworkService.defaultEventLoggingUrl
+            case .initialize: self.statsigOptions.initializationURL ?? NetworkService.defaultInitializationURL
+            case .logEvent: self.statsigOptions.eventLoggingURL ?? NetworkService.defaultEventLoggingURL
         }
     }
 

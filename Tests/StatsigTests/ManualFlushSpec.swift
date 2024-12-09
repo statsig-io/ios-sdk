@@ -17,7 +17,7 @@ final class ManualFlushSpec: BaseSpec {
     
         it("flushes the logger") {
             let opts = StatsigOptions()
-            NetworkService.defaultEventLoggingUrl = URL(string: "http://ManualFlushSpec/v1/rgstr")
+            NetworkService.defaultEventLoggingURL = URL(string: "http://ManualFlushSpec/v1/rgstr")
 
             _ = TestUtils.startWithResponseAndWait([:], options: opts)
             Statsig.logEvent("my_event")
@@ -32,7 +32,7 @@ final class ManualFlushSpec: BaseSpec {
             expect(logs[0]["eventName"]as? String).to(equal("my_event"))
 
             Statsig.shutdown()
-            TestUtils.resetDefaultUrls()
+            TestUtils.resetDefaultURLs()
         }
     }
 }

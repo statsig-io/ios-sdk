@@ -3,7 +3,7 @@ import Foundation
 private let FileBasedUserDefaultsQueue = "com.Statsig.FileBasedUserDefaults"
 
 class FileBasedUserDefaults: DefaultsLike {
-    private let cacheUrl = FileManager
+    private let cacheURL = FileManager
         .default.urls(for: .cachesDirectory, in: .userDomainMask)
         .first?.appendingPathComponent("statsig-cache-data")
 
@@ -66,7 +66,7 @@ class FileBasedUserDefaults: DefaultsLike {
     }
 
     private func writeToDisk() -> Bool {
-        guard let url = cacheUrl else {
+        guard let url = cacheURL else {
             return false
         }
 
@@ -80,7 +80,7 @@ class FileBasedUserDefaults: DefaultsLike {
     }
 
     private func readFromDisk() {
-        guard let url = cacheUrl else {
+        guard let url = cacheURL else {
             return
         }
 

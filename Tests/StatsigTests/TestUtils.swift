@@ -51,7 +51,7 @@ class TestUtils {
 
     static func startWithResponseAndWait(_ response: [String: Any], _ key: String = "client-api-key", _ user: StatsigUser? = nil, _ statusCode: Int32 = 200, options: StatsigOptions? = nil) -> URLRequest? {
         var result: URLRequest? = nil
-        let host = options?.initializationUrl?.host ?? NetworkService.defaultInitializationUrl?.host ?? ApiHost
+        let host = options?.initializationURL?.host ?? NetworkService.defaultInitializationURL?.host ?? ApiHost
         let handle = stub(condition: isHost(host)) { req in
             result = req
             return HTTPStubsResponse(jsonObject: response, statusCode: statusCode, headers: nil)
@@ -68,7 +68,7 @@ class TestUtils {
 
     static func startWithStatusAndWait(_ statusCode: Int32 = 200, _ key: String = "client-api-key", _ user: StatsigUser? = nil, options: StatsigOptions? = nil) -> URLRequest? {
         var result: URLRequest? = nil
-        stub(condition: isHost(options?.initializationUrl?.host ?? NetworkService.defaultInitializationUrl?.host ?? ApiHost)) { req in
+        stub(condition: isHost(options?.initializationURL?.host ?? NetworkService.defaultInitializationURL?.host ?? ApiHost)) { req in
             result = req
             return HTTPStubsResponse(data: Data(), statusCode: statusCode, headers: nil)
         }
@@ -117,9 +117,9 @@ class TestUtils {
         ]
     }
 
-    static func resetDefaultUrls() {
-        NetworkService.defaultInitializationUrl = URL(string: "https://\(ApiHost)\(Endpoint.initialize.rawValue)")
-        NetworkService.defaultEventLoggingUrl = URL(string: "https://\(LogEventHost)\(Endpoint.logEvent.rawValue)")
+    static func resetDefaultURLs() {
+        NetworkService.defaultInitializationURL = URL(string: "https://\(ApiHost)\(Endpoint.initialize.rawValue)")
+        NetworkService.defaultEventLoggingURL = URL(string: "https://\(LogEventHost)\(Endpoint.logEvent.rawValue)")
     }
 }
 

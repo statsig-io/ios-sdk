@@ -18,7 +18,7 @@ final class AppLifecycleSpec: BaseSpec {
 
         func startAndLog(shutdownOnBackground: Bool, tag: String) {
             let opts = StatsigOptions(shutdownOnBackground: shutdownOnBackground)
-            NetworkService.defaultInitializationUrl = URL(string: "http://AppLifecycleSpec::\(tag)/v1/initialize")
+            NetworkService.defaultInitializationURL = URL(string: "http://AppLifecycleSpec::\(tag)/v1/initialize")
 
             _ = TestUtils.startWithStatusAndWait(options: opts)
 
@@ -34,7 +34,7 @@ final class AppLifecycleSpec: BaseSpec {
 
         afterEach {
             Statsig.shutdown()
-            TestUtils.resetDefaultUrls()
+            TestUtils.resetDefaultURLs()
         }
 
 

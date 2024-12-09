@@ -22,13 +22,13 @@ final class ApiOverrideSpec: BaseSpec {
                 request = TestUtils.startWithStatusAndWait(options: opts)
             }
 
-            func startWithUrls() {
-                let opts = StatsigOptions(initializationUrl: URL(string: "http://api.override.com/setup"), eventLoggingUrl: URL(string: "http://api.override.com/st"))
+            func startWithURLs() {
+                let opts = StatsigOptions(initializationURL: URL(string: "http://api.override.com/setup"), eventLoggingURL: URL(string: "http://api.override.com/st"))
                 request = TestUtils.startWithStatusAndWait(options: opts)
             }
 
             afterSuite {
-               TestUtils.resetDefaultUrls()
+               TestUtils.resetDefaultURLs()
             }
 
             it("calls initialize on the overridden api") {
@@ -49,12 +49,12 @@ final class ApiOverrideSpec: BaseSpec {
             }
 
             it("calls initialize on the overridden api using URLs") {
-                startWithUrls()
+                startWithURLs()
                 expect(request?.url?.absoluteString).to(equal("http://api.override.com/setup"))
             }
 
             it("calls log_event on the overridden api using URLs") {
-                startWithUrls()
+                startWithURLs()
                 var hitLog = false
                 TestUtils.captureLogs(host: "api.override.com", path: "/st") { logs in
                     hitLog = true
@@ -95,8 +95,8 @@ final class ApiOverrideSpec: BaseSpec {
                 request = TestUtils.startWithStatusAndWait(options: opts)
             }
 
-            func startWithUrls() {
-                let opts = StatsigOptions(eventLoggingUrl: URL(string: "http://api.log.co.nz/st"))
+            func startWithURLs() {
+                let opts = StatsigOptions(eventLoggingURL: URL(string: "http://api.log.co.nz/st"))
                 request = TestUtils.startWithStatusAndWait(options: opts)
             }
 
@@ -118,12 +118,12 @@ final class ApiOverrideSpec: BaseSpec {
             }
 
             it("calls initialize on the statsig api using URLs") {
-                startWithUrls()
+                startWithURLs()
                 expect(request?.url?.absoluteString).to(equal("https://featureassets.org/v1/initialize"))
             }
 
             it("calls log_event on the overridden api.log.co.nz api using URLs") {
-                startWithUrls()
+                startWithURLs()
                 var hitLog = false
                 TestUtils.captureLogs(host: "api.log.co.nz", path: "/st") { logs in
                     hitLog = true
@@ -141,8 +141,8 @@ final class ApiOverrideSpec: BaseSpec {
                 request = TestUtils.startWithStatusAndWait(options: opts)
             }
 
-            func startWithUrls() {
-                let opts = StatsigOptions(initializationUrl: URL(string: "http://main.api/setup"), eventLoggingUrl: URL(string: "http://api.log.co.nz/st"))
+            func startWithURLs() {
+                let opts = StatsigOptions(initializationURL: URL(string: "http://main.api/setup"), eventLoggingURL: URL(string: "http://api.log.co.nz/st"))
                 request = TestUtils.startWithStatusAndWait(options: opts)
             }
 
@@ -164,12 +164,12 @@ final class ApiOverrideSpec: BaseSpec {
             }
 
             it("calls initialize on the overridden api using URLs") {
-                startWithUrls()
+                startWithURLs()
                 expect(request?.url?.absoluteString).to(equal("http://main.api/setup"))
             }
 
             it("calls log_event on the overridden api.log.co.nz api using URLs") {
-                startWithUrls()
+                startWithURLs()
                 var hitLog = false
                 TestUtils.captureLogs(host: "api.log.co.nz", path: "/st") { logs in
                     hitLog = true

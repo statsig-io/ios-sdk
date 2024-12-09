@@ -71,24 +71,24 @@ public class StatsigOptions {
     /**
      The URL used to initialize the SDK. You should not need to override this (unless you have another endpoint that implements the Statsig initialization endpoint)
      */
-    public var initializationUrl: URL? = nil
+    public var initializationURL: URL? = nil
 
     /**
      The URL used for log_event network requests. You should not need to override this (unless you have another API that implements the Statsig /v1/rgstr endpoint)
      */
-    public var eventLoggingUrl: URL? = nil
+    public var eventLoggingURL: URL? = nil
 
     /**
-     The API to use for initialization network requests. Any path will be replaced with /v1/initialize. If you need a custom path, set the full URL to initializationUrl.
+     The API to use for initialization network requests. Any path will be replaced with /v1/initialize. If you need a custom path, set the full URL to initializationURL.
      You should not need to override this (unless you have another API that implements the Statsig API endpoints)
      */
     public var api: String {
         get {
-            return initializationUrl?.ignoringPath?.absoluteString ?? "https://\(ApiHost)"
+            return initializationURL?.ignoringPath?.absoluteString ?? "https://\(ApiHost)"
         }
         set {
-            if let apiUrl = URL(string: newValue)?.ignoringPath {
-                self.initializationUrl = apiUrl.appendingPathComponent(Endpoint.initialize.rawValue, isDirectory: false)
+            if let apiURL = URL(string: newValue)?.ignoringPath {
+                self.initializationURL = apiURL.appendingPathComponent(Endpoint.initialize.rawValue, isDirectory: false)
             } else {
                 print("[Statsig]: Failed to create URL with StatsigOptions.api. Please check if it's a valid URL")
             }
@@ -96,16 +96,16 @@ public class StatsigOptions {
     }
 
     /**
-     The API to use for log_event network requests. Any path will be replaced with /v1/rgstr. If you need a custom path, set the full URL to eventLoggingUrl.
+     The API to use for log_event network requests. Any path will be replaced with /v1/rgstr. If you need a custom path, set the full URL to eventLoggingURL.
      You should not need to override this (unless you have another API that implements the Statsig /v1/rgstr endpoint)
      */
     public var eventLoggingApi: String {
         get {
-            return eventLoggingUrl?.ignoringPath?.absoluteString ?? "https://\(LogEventHost)"
+            return eventLoggingURL?.ignoringPath?.absoluteString ?? "https://\(LogEventHost)"
         }
         set {
-            if let apiUrl = URL(string: newValue)?.ignoringPath {
-                self.eventLoggingUrl = apiUrl.appendingPathComponent(Endpoint.logEvent.rawValue, isDirectory: false)
+            if let apiURL = URL(string: newValue)?.ignoringPath {
+                self.eventLoggingURL = apiURL.appendingPathComponent(Endpoint.logEvent.rawValue, isDirectory: false)
             } else {
                 print("[Statsig]: Failed to create URL with StatsigOptions.eventLoggingApi. Please check if it's a valid URL")
             }
@@ -156,8 +156,8 @@ public class StatsigOptions {
                 shutdownOnBackground: Bool? = true,
                 api: String? = nil,
                 eventLoggingApi: String? = nil,
-                initializationUrl: URL? = nil,
-                eventLoggingUrl: URL? = nil,
+                initializationURL: URL? = nil,
+                eventLoggingURL: URL? = nil,
                 evaluationCallback: ((EvaluationCallbackData) -> Void)? = nil,
                 userValidationCallback: ((StatsigUser) -> StatsigUser)? = nil,
                 customCacheKey: ((String, StatsigUser) -> String)? = nil,
@@ -209,19 +209,19 @@ public class StatsigOptions {
             self.storageProvider = storageProvider
         }
 
-        if let initializationUrl = initializationUrl {
-            self.initializationUrl = initializationUrl
+        if let initializationURL = initializationURL {
+            self.initializationURL = initializationURL
             if api != nil {
-                print("[Statsig]: StatsigOptions.api is being ignored because StatsigOptions.initializationUrl is also being set.")
+                print("[Statsig]: StatsigOptions.api is being ignored because StatsigOptions.initializationURL is also being set.")
             }
         } else if let api = api {
             self.api = api
         }
         
-        if let eventLoggingUrl = eventLoggingUrl {
-            self.eventLoggingUrl = eventLoggingUrl
+        if let eventLoggingURL = eventLoggingURL {
+            self.eventLoggingURL = eventLoggingURL
             if eventLoggingApi != nil {
-                print("[Statsig]: StatsigOptions.eventLoggingApi is being ignored because StatsigOptions.eventLoggingUrl is also being set.")
+                print("[Statsig]: StatsigOptions.eventLoggingApi is being ignored because StatsigOptions.eventLoggingURL is also being set.")
             }
         } else if let eventLoggingApi = eventLoggingApi {
             self.eventLoggingApi = eventLoggingApi

@@ -14,7 +14,7 @@ final class PerformanceSpec: XCTestCase {
 
     override func setUpWithError() throws {
         let opts = StatsigOptions(disableDiagnostics: true)
-        NetworkService.defaultInitializationUrl = URL(string: "http://PerformanceSpec/v1/initialize")
+        NetworkService.defaultInitializationURL = URL(string: "http://PerformanceSpec/v1/initialize")
 
         _ = TestUtils.startWithResponseAndWait([
             "feature_gates": [
@@ -40,7 +40,7 @@ final class PerformanceSpec: XCTestCase {
     override func tearDownWithError() throws {
         Statsig.client?.shutdown()
         Statsig.client = nil
-        TestUtils.resetDefaultUrls()
+        TestUtils.resetDefaultURLs()
     }
 
     func testCheckGatePerformance() throws {

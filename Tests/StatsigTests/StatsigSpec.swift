@@ -72,7 +72,7 @@ class StatsigSpec: BaseSpec {
                 HTTPStubs.removeAllStubs()
                 Statsig.shutdown()
                 TestUtils.clearStorage()
-                TestUtils.resetDefaultUrls()
+                TestUtils.resetDefaultURLs()
             }
 
             let gateName1 = "gate_name_1"
@@ -121,7 +121,7 @@ class StatsigSpec: BaseSpec {
                     autoValueUpdateIntervalSec: 0.1,
                     disableDiagnostics: true
                 )
-                NetworkService.defaultInitializationUrl = URL(string: "http://api.statsig.enableAutoValueUpdateTest/v1/initialize")
+                NetworkService.defaultInitializationURL = URL(string: "http://api.statsig.enableAutoValueUpdateTest/v1/initialize")
                 Statsig.initialize(sdkKey: "client-api-key", options: opts)
 
                 // first request, "lastSyncTimeForUser" field should not be present in the request body
@@ -139,7 +139,7 @@ class StatsigSpec: BaseSpec {
                     autoValueUpdateIntervalSec: 0.1,
                     disableDiagnostics: true
                 )
-                NetworkService.defaultInitializationUrl = URL(string: "http://StatsigSpec.enableAutoValueUpdateEQtrue/v1/initialize")
+                NetworkService.defaultInitializationURL = URL(string: "http://StatsigSpec.enableAutoValueUpdateEQtrue/v1/initialize")
 
                 var requestExpectation = self.expectation(description: "Request Made Once")
                 stub(condition: isHost("StatsigSpec.enableAutoValueUpdateEQtrue")) { request in
