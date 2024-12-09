@@ -1,6 +1,6 @@
 import Foundation
 
-@objcMembers public class StatsigClientError : NSObject, LocalizedError {
+@objcMembers public class StatsigClientError : NSObject, Error {
     public let code: StatsigClientErrorCode
     public let message: String
     public let cause: (any Error)?
