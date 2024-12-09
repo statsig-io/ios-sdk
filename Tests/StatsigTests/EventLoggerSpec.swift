@@ -130,6 +130,8 @@ class EventLoggerSpec: BaseSpec {
                 logger.stop()
 
                 expect(isPendingRequest).toEventually(beFalse())
+                expect(userDefaults.data[getFailedEventStorageKey("client-key")] as? [Data]).toEventuallyNot(beNil())
+
                 isPendingRequest = true
 
                 let savedData = userDefaults.data[getFailedEventStorageKey("client-key")] as? [Data]

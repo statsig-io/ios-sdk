@@ -72,7 +72,7 @@ class EventLogger {
         }
     }
 
-    func start(flushInterval: Double = 60) {
+    func start(flushInterval: TimeInterval = 60) {
         DispatchQueue.main.async { [weak self] in
             self?.flushTimer?.invalidate()
             self?.flushTimer = Timer.scheduledTimer(withTimeInterval: flushInterval, repeats: true) { [weak self] _ in

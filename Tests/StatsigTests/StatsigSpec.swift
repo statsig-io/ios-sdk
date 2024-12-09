@@ -741,7 +741,7 @@ class StatsigSpec: BaseSpec {
 
                 var event = events[0]
                 var user = event["user"] as! [String: Any]
-                var metadata = event["metadata"] as! [String: String]?
+                var metadata = event["metadata"] as! [String: Any]?
                 var secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
                 var value = event["value"]
 
@@ -764,7 +764,7 @@ class StatsigSpec: BaseSpec {
 
                 event = events[1]
                 user = event["user"] as! [String: Any]
-                metadata = event["metadata"] as! [String: String]?
+                metadata = event["metadata"] as! [String: Any]?
                 secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
                 value = event["value"]
 
@@ -777,7 +777,8 @@ class StatsigSpec: BaseSpec {
                         "ruleID": "default",
                         "reason": "Network:Recognized",
                         "lcut": "0",
-                        "receivedAt": metadata!["receivedAt"]!
+                        "receivedAt": metadata!["receivedAt"]!,
+                        "rulePassed": false
                     ]))
                 )
                 expect(secondaryExposures).to(equal([]))
@@ -786,7 +787,7 @@ class StatsigSpec: BaseSpec {
 
                 event = events[2]
                 user = event["user"] as! [String: Any]
-                metadata = event["metadata"] as! [String: String]?
+                metadata = event["metadata"] as! [String: Any]?
                 secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
                 value = event["value"]
 
@@ -800,7 +801,7 @@ class StatsigSpec: BaseSpec {
 
                 event = events[3]
                 user = event["user"] as! [String: Any]
-                metadata = event["metadata"] as! [String: String]?
+                metadata = event["metadata"] as! [String: Any]?
                 secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
                 value = event["value"]
 
@@ -814,7 +815,7 @@ class StatsigSpec: BaseSpec {
 
                 event = events[4]
                 user = event["user"] as! [String: Any]
-                metadata = event["metadata"] as! [String: String]?
+                metadata = event["metadata"] as! [String: Any]?
                 secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
                 value = event["value"]
 
@@ -827,7 +828,7 @@ class StatsigSpec: BaseSpec {
 
                 event = events[5]
                 user = event["user"] as! [String: Any]
-                metadata = event["metadata"] as! [String: String]?
+                metadata = event["metadata"] as! [String: Any]?
                 secondaryExposures = event["secondaryExposures"] as! [[String: String]]?
                 value = event["value"]
 

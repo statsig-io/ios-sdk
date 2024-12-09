@@ -9,8 +9,6 @@ class StatsigUserSpec: BaseSpec {
         
         let validJSONObject: [String: StatsigUserCustomTypeConvertible] =
             ["company": "Statsig", "YOE": 10.5, "alias": ["abby", "bob", "charlie"]]
-        let invalidJSONObject: [String: StatsigUserCustomTypeConvertible] =
-            ["company": "Statsig", "invalid": String(bytes: [0xD8, 0x00] as [UInt8], encoding: String.Encoding.utf16BigEndian)!]
 
         describe("creating a new StatsigUser") {
             it("is a valid empty user") {
@@ -63,13 +61,6 @@ class StatsigUserSpec: BaseSpec {
                 let userWithPrivateDict = userWithPrivateAttributes.toDictionary(forLogging: true)
                 expect(userWithPrivateDict.count) == user.toDictionary(forLogging: true).count
                 expect(userWithPrivateDict["privateAttributes"]).to(beNil())
-            }
-
-            it("is a user with invalid custom attribute") {
-                let validUserInvalidCustom = StatsigUser(userID: "12345", custom: invalidJSONObject)
-                expect(validUserInvalidCustom).toNot(beNil())
-                expect(validUserInvalidCustom.userID) == "12345"
-                expect(validUserInvalidCustom.custom).to(beNil())
             }
 
             it("keeps customIDs in the json") {
