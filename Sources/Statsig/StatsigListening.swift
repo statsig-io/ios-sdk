@@ -5,8 +5,8 @@ import Foundation
  A protocol used to suppress deprecation warnings internally
  */
 @objc public protocol StatsigListeningInternal {
-    func onInitialized(_ error: String?)
-    func onUserUpdated(_ error: String?)
+    @objc optional func onInitialized(_ error: String?)
+    @objc optional func onUserUpdated(_ error: String?)
 }
 
 /**
@@ -24,11 +24,11 @@ import Foundation
 
  */
 @objc public protocol StatsigListening: AnyObject, StatsigListeningInternal {
-    func onInitializedWithResult(_ error: StatsigClientError?)
-    func onUserUpdatedWithResult(_ error: StatsigClientError?)
+    @objc optional func onInitializedWithResult(_ error: StatsigClientError?)
+    @objc optional func onUserUpdatedWithResult(_ error: StatsigClientError?)
 
     @available(*, deprecated, message: "Implement `onInitializedWithResult` instead")
-    func onInitialized(_ error: String?)
+    @objc optional func onInitialized(_ error: String?)
     @available(*, deprecated, message: "Implement `onUserUpdatedWithResult` instead")
-    func onUserUpdated(_ error: String?)
+    @objc optional func onUserUpdated(_ error: String?)
 }

@@ -55,6 +55,43 @@ class StatsigListeningSpec: BaseSpec {
         }
     }
 
+    class PartialDeprecatedTestListener: StatsigListening {
+        var onInitializedCalled = false
+        var onInitializedError: String?
+
+        var onUserUpdatedCalled = false
+        var onUserUpdatedError: String?
+
+        func onInitialized(_ error: String?) {
+            onInitializedCalled = true
+            onInitializedError = error
+        }
+
+        func onUserUpdated(_ error: String?) {
+            onUserUpdatedCalled = true
+            onUserUpdatedError = error
+        }
+    }
+
+    class PartialWithResultTestListener: StatsigListening {
+
+        var onInitializedWithResultCalled = false
+        var onInitializedWithResultError: StatsigClientError?
+
+        var onUserUpdatedWithResultCalled = false
+        var onUserUpdatedWithResultError: StatsigClientError?
+
+        func onInitializedWithResult(_ error: StatsigClientError?) {
+            onInitializedWithResultCalled = true
+            onInitializedWithResultError = error
+        }
+
+        func onUserUpdatedWithResult(_ error: StatsigClientError?) {
+            onUserUpdatedWithResultCalled = true
+            onUserUpdatedWithResultError = error
+        }
+    }
+
     override func spec() {
         super.spec()
 
@@ -139,6 +176,20 @@ class StatsigListeningSpec: BaseSpec {
                 expect(listener2.onInitializedCalled).toEventually(beTrue())
                 expect(listener1.onInitializedWithResultCalled).toEventually(beTrue())
                 expect(listener2.onInitializedWithResultCalled).toEventually(beTrue())
+            }
+
+            it("accepts partial listeners") {
+                goodStub()
+
+                let deprecatedListener = PartialDeprecatedTestListener()
+                let resultListener = PartialWithResultTestListener()
+
+                Statsig.initialize(sdkKey: "client-key", options: opts)
+                Statsig.addListener(deprecatedListener)
+                Statsig.addListener(resultListener)
+
+                expect(deprecatedListener.onInitializedCalled).toEventually(beTrue())
+                expect(resultListener.onInitializedWithResultCalled).toEventually(beTrue())
             }
 
             it("responds immediately if initializing has previously completed") {

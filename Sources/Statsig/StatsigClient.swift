@@ -12,6 +12,9 @@ public class StatsigClient {
     private var networkService: NetworkService
     private var syncTimer: Timer?
     private var loggedExposures: [String: TimeInterval]
+    // We use a list of functions to keep a weak reference to each listener. Using
+    // NSHashTable.weakObjects isn't an option, as objects are only deallocated when
+    // inside an autoreleasepool block. See https://github.com/GitHawkApp/FlatCache/issues/3
     private var listeners: [() -> StatsigListening?] = []
     private var hasInitialized: Bool = false
     private var lastInitializeError: StatsigClientError?
@@ -110,8 +113,8 @@ public class StatsigClient {
      */
     public func addListener(_ listener: StatsigListening) {
         if (hasInitialized) {
-            listener.onInitializedWithResult(lastInitializeError)
-            (listener as StatsigListeningInternal).onInitialized(lastInitializeError?.message)
+            listener.onInitializedWithResult?(lastInitializeError)
+            (listener as StatsigListeningInternal).onInitialized?(lastInitializeError?.message)
         }
         listeners.append({ [weak listener] in return listener })
     }
@@ -806,16 +809,22 @@ extension StatsigClient {
     }
 
     private func notifyOnInitializedListeners(_ error: StatsigClientError?) {
-        for listener in listeners {
-            listener()?.onInitializedWithResult(error)
-            (listener() as StatsigListeningInternal?)?.onInitialized(error?.message)
+        for getter in listeners {
+            if let listener = getter() {
+                listener.onInitializedWithResult?(error)
+                // We use this cast to work around a deprecation warning we added on `onInitialized`
+                (listener as StatsigListeningInternal).onInitialized?(error?.message)
+            }
         }
     }
 
     private func notifyOnUserUpdatedListeners(_ error: StatsigClientError?) {
-        for listener in listeners {
-            listener()?.onUserUpdatedWithResult(error)
-            (listener() as StatsigListeningInternal?)?.onUserUpdated(error?.message)
+        for getter in listeners {
+            if let listener = getter() {
+                listener.onUserUpdatedWithResult?(error)
+                // We use this cast to work around a deprecation warning we added on `onUserUpdated`
+                (listener as StatsigListeningInternal).onUserUpdated?(error?.message)
+            }
         }
     }
 }
