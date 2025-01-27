@@ -169,7 +169,7 @@ class EventLogger {
         addFailedLogRequest([data])
     }
 
-    private func addFailedLogRequest(_ requestData: [Data]) {
+    internal func addFailedLogRequest(_ requestData: [Data]) {
         failedRequestLock.lock()
         defer { failedRequestLock.unlock() }
 
@@ -181,11 +181,17 @@ class EventLogger {
         }
     }
 
-    private func saveFailedLogRequestsToDisk() {
+    internal func saveFailedLogRequestsToDisk() {
         guard Thread.isMainThread else {
-            DispatchQueue.main.sync { saveFailedLogRequestsToDisk() }
+            // `self` is strongly captured to ensure we save to disk
+            DispatchQueue.main.async { [self] in
+                self.saveFailedLogRequestsToDisk()
+            }
             return
         }
+
+        failedRequestLock.lock()
+        defer { failedRequestLock.unlock() }
 
         userDefaults.setValue(
             failedRequestQueue,

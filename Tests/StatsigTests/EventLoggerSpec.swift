@@ -181,6 +181,125 @@ class EventLoggerSpec: BaseSpec {
                 expect(userDefaults.data[getFailedEventStorageKey("client-key")] as? [Data]).toEventuallyNot(beNil())
                 expect((userDefaults.data[getFailedEventStorageKey("client-key")] as! [Data]).count).to(equal(1))
             }
+
+            describe("with threads") {
+
+                it("should save to disk from the main thread") {
+                    stub(condition: isHost(LogEventHost)) { request in
+                        return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: NSURLErrorUnknown))
+                    }
+                    
+                    let userDefaults = MockDefaults()
+                    let logger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: userDefaults)
+
+                    expect(Thread.isMainThread).to(beTrue())
+
+                    logger.addFailedLogRequest([Data()])
+                    logger.saveFailedLogRequestsToDisk()
+                    
+                    expect(userDefaults.array(forKey: logger.storageKey)).toEventuallyNot(beNil())
+                    expect(userDefaults.array(forKey: logger.storageKey)?.count).to(equal(1))
+                }
+
+                it("should save to disk from a background thread") {
+                    let userDefaults = MockDefaults()
+                    let logger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: userDefaults)
+                    
+                    DispatchQueue.global(qos: .background).async {
+                        expect(Thread.isMainThread).to(beFalse())
+
+                        logger.addFailedLogRequest([Data()])
+                        logger.saveFailedLogRequestsToDisk()
+                    }
+
+                    expect(userDefaults.array(forKey: logger.storageKey)).toEventuallyNot(beNil())
+                    expect(userDefaults.array(forKey: logger.storageKey)?.count).to(equal(1))
+                }
+
+
+                it("should handle concurrent saves without deadlocks or corruption") {
+                    let iterations = 1024
+                    let numberOfTasks = 10
+
+                    var queues: [DispatchQueue] = []
+                    for i in 0..<numberOfTasks {
+                        queues.append(DispatchQueue(label: "com.statsig.task_\(i)"))
+                    }
+
+                    let userDefaults = MockDefaults()
+                    let logger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: userDefaults)
+
+                    var i = 0
+
+                    for j in 0..<iterations {
+                        let queue = queues[j % numberOfTasks]
+
+                        queue.async {
+                            logger.addFailedLogRequest([Data([UInt8(j % 256)])])
+                            logger.saveFailedLogRequestsToDisk()
+                            i += 1
+                        }
+                    }
+
+                    expect(i).toEventually(equal(iterations), timeout: .seconds(5))
+                    expect(userDefaults.array(forKey: logger.storageKey)).toEventuallyNot(beNil())
+                    expect(userDefaults.array(forKey: logger.storageKey)?.count).to(equal(iterations))
+
+                    var counters = Array(repeating: UInt8(0), count: 256)
+
+                    let requests = userDefaults.array(forKey: logger.storageKey) as? [Data]
+
+                    for req in requests ?? [] {
+                        if let firstByte = req.first {
+                            counters[Int(firstByte)] += 1
+                        }
+                    }
+
+                    for count in counters {
+                        expect(count).to(equal(4))
+                    }
+                }
+
+               it("should not save to disk while addFailedLogRequest is running") {
+                    let numberOfRequest = 1005
+                    let requestSize = 1000
+
+                    let addQueue = DispatchQueue(label: "com.statsig.add_failed_requests", qos: .userInitiated, attributes: .concurrent)
+                    let saveQueue = DispatchQueue(label: "com.statsig.save_failed_requests", qos: .userInitiated, attributes: .concurrent)
+
+                    let userDefaults = MockDefaults()
+                    let logger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: userDefaults)
+
+                    saveQueue.async {
+                        // Wait for the addFailedLogRequest to start adding requests to the queue
+                        while (logger.failedRequestQueue.count == 0) {
+                            Thread.sleep(forTimeInterval: 0.001)
+                        }
+                        while logger.failedRequestLock.try() {
+                            logger.failedRequestLock.unlock()
+                            Thread.sleep(forTimeInterval: 0.001)
+                        }
+                        // Once we fail to get the lock, try saving to disk
+                        logger.saveFailedLogRequestsToDisk()
+                    }
+
+                    addQueue.async {
+                        // Continuously add requests to ensure we have the lock
+                        while (userDefaults.array(forKey: logger.storageKey) == nil) {
+                            let requests = (0..<numberOfRequest).map { _ in Data(repeating: 0, count: requestSize) }
+                            logger.addFailedLogRequest(requests)
+                            // Test that the queue is not empty
+                            expect(logger.failedRequestQueue.count).to(beGreaterThan(0))
+                            // Test that the requests didn't fit the queue
+                            expect(logger.failedRequestQueue.count).to(beLessThan(numberOfRequest))
+                            Thread.sleep(forTimeInterval: 0.001)
+                        }
+                    }
+
+                    expect(userDefaults.array(forKey: logger.storageKey)).toEventuallyNot(beNil())
+                    expect(userDefaults.array(forKey: logger.storageKey)?.count).to(beGreaterThan(0))
+               }
+            }
         }
     }
 }
