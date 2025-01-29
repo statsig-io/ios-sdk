@@ -165,7 +165,8 @@ class NetworkService {
         makeAndSendRequest(
             .initialize,
             body: body,
-            marker: Diagnostics.mark?.initialize.network
+            marker: Diagnostics.mark?.initialize.network,
+            threadMarker: Diagnostics.mark?.initialize.netThreadJump
         ) { [weak self] data, response, error in
             if let error = error {
                 done(StatsigClientError(.failedToFetchValues, cause: error))
@@ -280,6 +281,7 @@ class NetworkService {
         _ endpoint: Endpoint,
         body: Data,
         marker: NetworkMarker? = nil,
+        threadMarker: InitializeStepMarker? = nil,
         completion: @escaping NetworkCompletionHandler,
         taskCapture: TaskCaptureHandler = nil
     )
@@ -304,7 +306,8 @@ class NetworkService {
             retryLimit: RetryLimits[endpoint] ?? 0,
             marker: marker,
             completion: completion,
-            taskCapture: taskCapture)
+            taskCapture: taskCapture,
+            threadMarker: threadMarker)
     }
 
     private func endpointOverrideURL(endpoint: Endpoint) -> URL? {
@@ -321,10 +324,13 @@ class NetworkService {
         retryLimit: Int,
         marker: NetworkMarker? = nil,
         completion: @escaping NetworkCompletionHandler,
-        taskCapture: TaskCaptureHandler
+        taskCapture: TaskCaptureHandler,
+        threadMarker: InitializeStepMarker? = nil
     ) {
+        threadMarker?.start()
         DispatchQueue.main.async { [weak self] in
             let currentAttempt = failedAttempts + 1
+            threadMarker?.end(success: true)
             marker?.start(attempt: currentAttempt)
 
 

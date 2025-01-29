@@ -34,19 +34,23 @@ public class Statsig {
         }
 
         func _initialize() {
+            Diagnostics.mark?.initialize.createCache.end(success: true)
             client = StatsigClient(sdkKey: sdkKey, user: user, options: options, completionWithResult: completion)
             addPendingListeners()
         }
 
         if options?.enableCacheByFile == true {
+            Diagnostics.mark?.initialize.createCache.start(type: .file)
             DispatchQueue.main.async {
                 StatsigUserDefaults.defaults = FileBasedUserDefaults()
                 _initialize()
             }
         } else if let storageProvider = options?.storageProvider {
+            Diagnostics.mark?.initialize.createCache.start(type: .provider)
             StatsigUserDefaults.defaults = StorageProviderBasedUserDefaults(storageProvider: storageProvider)
             _initialize()
         } else {
+            Diagnostics.mark?.initialize.createCache.start(type: .user_defaults)
             _initialize()
         }
     }

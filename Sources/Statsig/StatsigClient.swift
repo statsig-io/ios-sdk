@@ -52,8 +52,10 @@ public class StatsigClient {
         self.statsigOptions = options ?? StatsigOptions()
         self.store = InternalStore(sdkKey, self.currentUser, options: statsigOptions)
         self.networkService = NetworkService(sdkKey: sdkKey, options: statsigOptions, store: store)
+        Diagnostics.mark?.initialize.loggerStart.start()
         self.logger = EventLogger(sdkKey: sdkKey, user: currentUser, networkService: networkService)
         self.logger.start()
+        Diagnostics.mark?.initialize.loggerStart.end(success: true)
         self.loggedExposures = [String: TimeInterval]()
 
         subscribeToApplicationLifecycle()
@@ -712,8 +714,10 @@ extension StatsigClient {
 extension StatsigClient {
     private func fetchValuesFromNetwork(completion: ResultCompletionBlock?) {
         let currentUser = self.currentUser
+        Diagnostics.mark?.initialize.storeRead.start()
         let sinceTime = self.store.getLastUpdateTime(user: currentUser)
         let previousDerivedFields = self.store.getPreviousDerivedFields(user: currentUser)
+        Diagnostics.mark?.initialize.storeRead.end(success: true)
 
         networkService.fetchInitialValues(for: currentUser, sinceTime: sinceTime, previousDerivedFields: previousDerivedFields) { [weak self] error in
             if let self = self {
