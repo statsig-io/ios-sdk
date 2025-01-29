@@ -112,8 +112,8 @@ class LogEventFailureSpec: BaseSpec {
                 func stubError() {
                     stub(condition: isHost(LogEventHost)) { request in
                         requestCount += 1;
-                        // Use an unknown error to prevent the network retry logic
-                        return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: NSURLErrorUnknown))
+                        // Use a cancelled error to prevent the network retry logic
+                        return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: NSURLErrorCancelled))
                     }
                 }
 
@@ -233,7 +233,7 @@ class LogEventFailureSpec: BaseSpec {
                             events.contains(where: { $0["eventName"] as? String == "event_fail" })
                          {
                             // Request fails if it contains the "event_fail" event
-                            return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: NSURLErrorUnknown))
+                            return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: NSURLErrorCancelled))
                         }
                         return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
                     }

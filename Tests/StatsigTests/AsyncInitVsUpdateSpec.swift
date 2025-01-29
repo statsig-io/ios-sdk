@@ -35,7 +35,7 @@ class AsyncInitVsUpdateSpec: BaseSpec {
                         return HTTPStubsResponse(jsonObject: TestUtils.makeInitializeResponse("user_b_value"), statusCode: 200, headers: nil).responseTime(0.2)
                     }
 
-                    return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 500))
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 500, headers: nil)
                 }
 
 

@@ -3,6 +3,15 @@ import Foundation
 internal enum Endpoint: String {
     case initialize = "/v1/initialize"
     case logEvent = "/v1/rgstr"
+
+    var dnsKey: String {
+        get {
+            return switch self {
+                case .initialize: "i"
+                case .logEvent: "e"
+            }
+        }
+    }
 }
 
 fileprivate let RetryLimits: [Endpoint: Int] = [
@@ -18,6 +27,7 @@ class NetworkService {
     let statsigOptions: StatsigOptions
     var store: InternalStore
     var inflightRequests = AtomicDictionary<URLSessionTask>(label: "com.Statsig.InFlightRequests")
+    var networkFallbackResolver: NetworkFallbackResolver
 
     /**
      Default URL used to initialize the SDK. Used for tests.
@@ -35,6 +45,8 @@ class NetworkService {
         self.sdkKey = sdkKey
         self.statsigOptions = options
         self.store = store
+        let errorBoundary = ErrorBoundary.boundary(clientKey: sdkKey, deviceEnvironment: options.environment)
+        self.networkFallbackResolver = NetworkFallbackResolver(sdkKey: sdkKey, store: store, errorBoundary: errorBoundary);
     }
 
     func fetchUpdatedValues(
@@ -222,6 +234,8 @@ class NetworkService {
                            + "\(String(describing: response?.status))", body)
                 return
             }
+
+            completion(nil, body)
         }
     }
 
@@ -257,8 +271,8 @@ class NetworkService {
 
     private func urlForEndpoint(_ endpoint: Endpoint) -> URL? {
         return switch endpoint {
-            case .initialize: self.statsigOptions.initializationURL ?? NetworkService.defaultInitializationURL
-            case .logEvent: self.statsigOptions.eventLoggingURL ?? NetworkService.defaultEventLoggingURL
+            case .initialize: self.statsigOptions.initializationURL ?? self.networkFallbackResolver.getActiveFallbackURL(endpoint: endpoint) ?? NetworkService.defaultInitializationURL
+            case .logEvent: self.statsigOptions.eventLoggingURL ?? self.networkFallbackResolver.getActiveFallbackURL(endpoint: endpoint) ?? NetworkService.defaultEventLoggingURL
         }
     }
 
@@ -286,14 +300,23 @@ class NetworkService {
 
         sendRequest(
             request,
+            endpoint: endpoint,
             retryLimit: RetryLimits[endpoint] ?? 0,
             marker: marker,
             completion: completion,
             taskCapture: taskCapture)
     }
 
+    private func endpointOverrideURL(endpoint: Endpoint) -> URL? {
+        switch endpoint {
+            case .initialize: return self.statsigOptions.initializationURL
+            case .logEvent: return self.statsigOptions.eventLoggingURL
+        }
+    }
+
     private func sendRequest(
         _ request: URLRequest,
+        endpoint: Endpoint,
         failedAttempts: Int = 0,
         retryLimit: Int,
         marker: NetworkMarker? = nil,
@@ -310,19 +333,56 @@ class NetworkService {
 
                 marker?.end(currentAttempt, responseData, response, error)
 
-                if failedAttempts < retryLimit,
-                   let self = self,
-                   let code = response?.status,
-                   self.networkRetryErrorCodes.contains(code)
-                {
+                guard let self = self else {
+                    completion(responseData, response, error)
+                    return
+                }
+
+                if error == nil && response?.isOK == true {
+                    self.networkFallbackResolver.tryBumpExpiryTime(endpoint: endpoint)
+                }
+
+                guard failedAttempts < retryLimit else {
+                    completion(responseData, response, error)
+                    return
+                }
+
+
+                
+                if let code = response?.status,
+                    self.networkRetryErrorCodes.contains(code) {
+
                     self.sendRequest(
                         request,
+                        endpoint: endpoint,
                         failedAttempts: currentAttempt,
                         retryLimit: retryLimit,
                         marker: marker,
                         completion: completion,
                         taskCapture: taskCapture
                     )
+                } else if (isDomainFailure(error: error) && self.endpointOverrideURL(endpoint: endpoint) == nil) {
+                    // Fallback domains
+                    self.networkFallbackResolver.tryFetchUpdatedFallbackInfo(endpoint: endpoint) { [weak self] fallbackUpdated in
+                        if fallbackUpdated,
+                            let self = self,
+                            let fallbackUrl = self.networkFallbackResolver.getActiveFallbackURL(endpoint: endpoint)
+                        {
+                            var newRequest = request
+                            newRequest.url = fallbackUrl
+                            self.sendRequest(
+                                newRequest,
+                                endpoint: endpoint,
+                                failedAttempts: currentAttempt,
+                                retryLimit: retryLimit,
+                                marker: marker,
+                                completion: completion,
+                                taskCapture: taskCapture
+                            )
+                        } else {
+                            completion(responseData, response, error)
+                        }
+                    }
                 } else {
                     completion(responseData, response, error)
                 }
@@ -333,6 +393,13 @@ class NetworkService {
             }
 
             task?.resume()
+        }
+    }
+
+    internal static func defaultURLForEndpoint(_ endpoint: Endpoint) -> URL? {
+        return switch endpoint {
+            case .initialize: NetworkService.defaultInitializationURL
+            case .logEvent: NetworkService.defaultEventLoggingURL
         }
     }
 }

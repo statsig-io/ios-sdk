@@ -273,8 +273,7 @@ class StatsigSpec: BaseSpec {
 
                 // the values are now cached for the first user. Now test when network is not available, and cache for the first user should NOT be used
                 stub(condition: isHost(ApiHost)) { _ in
-                    let notConnectedError = NSError(domain: NSURLErrorDomain, code: 403)
-                    return HTTPStubsResponse(error: notConnectedError)
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 403, headers: nil)
                 }
 
                 waitUntil { done in

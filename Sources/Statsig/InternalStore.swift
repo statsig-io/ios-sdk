@@ -44,6 +44,7 @@ struct StatsigValuesCache {
     var userCacheKey: UserCacheKey
     var userLastUpdateTime: Double
     var stickyDeviceExperiments: [String: [String: Any]]
+    var networkFallbackInfo: [String: [String: Any]]
     var source: EvaluationSource = .Loading
 
     var lcut: UInt64? = nil
@@ -75,6 +76,7 @@ struct StatsigValuesCache {
         self.sdkKey = sdkKey
         self.cacheByID = StatsigValuesCache.loadDictMigratingIfRequired(forKey: InternalStore.localStorageKey)
         self.stickyDeviceExperiments = StatsigValuesCache.loadDictMigratingIfRequired(forKey: InternalStore.stickyDeviceExperimentsKey)
+        self.networkFallbackInfo = StatsigValuesCache.loadDictMigratingIfRequired(forKey: InternalStore.networkFallbackInfoKey)
 
         self.userCache = [:]
         self.userCacheKey = UserCacheKey(v1: "null", v2: "null")
@@ -166,6 +168,38 @@ struct StatsigValuesCache {
             return expObj
         }
         return nil
+    }
+
+    func getNetworkFallbackInfo() -> FallbackInfo {
+        var fallbackInfo: FallbackInfo = FallbackInfo()
+        for (key, info) in self.networkFallbackInfo {
+            if let endpoint = Endpoint(rawValue: key),
+                let expiryTime = info["expiryTime"] as? TimeInterval,
+                let previous = info["previous"] as? [String],
+                let infoURL = info["url"] as? String,
+                let url = URL(string: infoURL)
+            {
+                fallbackInfo[endpoint] = FallbackInfoEntry(url: url, previous: previous, expiryTime: Date(timeIntervalSince1970: expiryTime))
+            }
+        }
+        return fallbackInfo
+    }
+
+    mutating func saveNetworkFallbackInfo(_ fallbackInfo: FallbackInfo?) {
+        guard let fallbackInfo = fallbackInfo, !fallbackInfo.isEmpty else {
+            StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.networkFallbackInfoKey)
+            return;
+        }
+
+        var dict = [String: [String: Any]]()
+        for (endpoint, entry) in fallbackInfo {
+            dict[endpoint.rawValue] = [
+                "url": entry.url.absoluteString,
+                "expiryTime": entry.expiryTime.timeIntervalSince1970,
+                "previous": entry.previous,
+            ]
+        }
+        StatsigUserDefaults.defaults.setDictionarySafe(dict, forKey: InternalStore.networkFallbackInfoKey)
     }
 
     func getEvaluationDetails(_ reason: EvaluationReason? = nil) -> EvaluationDetails {
@@ -287,6 +321,7 @@ struct StatsigValuesCache {
         cacheByID[userCacheKey.v2] = userCache
         StatsigUserDefaults.defaults.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
         StatsigUserDefaults.defaults.setDictionarySafe(stickyDeviceExperiments, forKey: InternalStore.stickyDeviceExperimentsKey)
+        StatsigUserDefaults.defaults.setDictionarySafe(networkFallbackInfo, forKey: InternalStore.networkFallbackInfoKey)
     }
 
     private mutating func setUserCacheKeyAndValues(
@@ -421,6 +456,7 @@ class InternalStore {
     static let localOverridesKey = "com.Statsig.InternalStore.localOverridesKey"
     static let localStorageKey = "com.Statsig.InternalStore.localStorageKeyV2"
     static let stickyDeviceExperimentsKey = "com.Statsig.InternalStore.stickyDeviceExperimentsKey"
+    static let networkFallbackInfoKey = "com.Statsig.InternalStore.networkFallbackInfoKey"
 
     static let DEPRECATED_localStorageKey = "com.Statsig.InternalStore.localStorageKey"
     static let DEPRECATED_stickyUserExperimentsKey = "com.Statsig.InternalStore.stickyUserExperimentsKey"
@@ -461,6 +497,18 @@ class InternalStore {
     func getLastUpdateTime(user: StatsigUser) -> UInt64 {
         storeQueue.sync {
             return cache.getLastUpdatedTime(user: user)
+        }
+    }
+
+    func getNetworkFallbackInfo() -> FallbackInfo {
+        storeQueue.sync {
+            return cache.getNetworkFallbackInfo()
+        }
+    }
+
+    func saveNetworkFallbackInfo(_ fallbackInfo: FallbackInfo?) {
+        storeQueue.async(flags: .barrier) { [weak self] in
+            self?.cache.saveNetworkFallbackInfo(fallbackInfo)
         }
     }
 
@@ -595,6 +643,7 @@ class InternalStore {
         StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.localStorageKey)
         StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.DEPRECATED_stickyUserExperimentsKey)
         StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.stickyDeviceExperimentsKey)
+        StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.networkFallbackInfoKey)
         StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.DEPRECATED_stickyUserIDKey)
         StatsigUserDefaults.defaults.removeObject(forKey: InternalStore.localOverridesKey)
         _ = StatsigUserDefaults.defaults.synchronize()

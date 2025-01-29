@@ -52,8 +52,7 @@ class SDKKeySpec: BaseSpec {
 
             it("works when provided invalid SDK key by returning default value") {
                 stub(condition: isHost(ApiHost)) { _ in
-                    let notConnectedError = NSError(domain: NSURLErrorDomain, code: 403)
-                    return HTTPStubsResponse(error: notConnectedError)
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 403, headers: nil)
                 }
 
                 var errorMessage: String?

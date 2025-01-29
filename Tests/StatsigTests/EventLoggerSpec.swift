@@ -117,7 +117,7 @@ class EventLoggerSpec: BaseSpec {
                 var isPendingRequest = true
                 stub(condition: isHost(LogEventHost)) { request in
                     isPendingRequest = false
-                    return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 403))
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 403, headers: nil)
                 }
 
                 let userDefaults = MockDefaults()
@@ -139,7 +139,7 @@ class EventLoggerSpec: BaseSpec {
 
                 stub(condition: isHost(LogEventHost)) { request in
                     resendData.append(request.ohhttpStubs_httpBody!)
-                    return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 403))
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 403, headers: nil)
                 }
 
                 _ = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: userDefaults)
@@ -150,8 +150,10 @@ class EventLoggerSpec: BaseSpec {
             }
 
             it("should limit file size save to user defaults") {
+                var logEndpointCalled = false
                 stub(condition: isHost(LogEventHost)) { req in
-                    return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 500))
+                    logEndpointCalled = true
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 500, headers: nil)
                 }
 
                 let userDefaults = MockDefaults()
@@ -165,10 +167,12 @@ class EventLoggerSpec: BaseSpec {
                 logger.start(flushInterval: 10)
                 logger.log(Event(user: user, name: "a", value: 1, metadata: ["text": text], disableCurrentVCLogging: false))
                 logger.stop()
+                let failedEventsStorageKey = logger.storageKey
 
                 // Fail to save because event is too big
-                expect(userDefaults.data[getFailedEventStorageKey("client-key")] as? [Data]).toEventuallyNot(beNil())
-                expect((userDefaults.data[getFailedEventStorageKey("client-key")] as! [Data]).count).to(equal(0))
+                expect(logEndpointCalled).toEventually(equal(true))
+                expect(userDefaults.data[failedEventsStorageKey] as? [Data]).toEventuallyNot(beNil())
+                expect((userDefaults.data[failedEventsStorageKey] as! [Data]).count).to(equal(0))
 
                 userDefaults.reset()
 
@@ -178,15 +182,15 @@ class EventLoggerSpec: BaseSpec {
                 logger.stop()
 
                 // Successfully save event
-                expect(userDefaults.data[getFailedEventStorageKey("client-key")] as? [Data]).toEventuallyNot(beNil())
-                expect((userDefaults.data[getFailedEventStorageKey("client-key")] as! [Data]).count).to(equal(1))
+                expect(userDefaults.data[failedEventsStorageKey] as? [Data]).toEventuallyNot(beNil())
+                expect((userDefaults.data[failedEventsStorageKey] as? [Data])?.count).to(equal(1))
             }
 
             describe("with threads") {
 
                 it("should save to disk from the main thread") {
                     stub(condition: isHost(LogEventHost)) { request in
-                        return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: NSURLErrorUnknown))
+                        return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: NSURLErrorCancelled))
                     }
                     
                     let userDefaults = MockDefaults()

@@ -100,7 +100,7 @@ class NetworkServiceSpec: BaseSpec {
                         with: request.ohhttpStubs_httpBody!,
                         options: []) as! [String: Any]
                     actualRequestData = request.ohhttpStubs_httpBody
-                    return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 403))
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 403, headers: nil)
                 }
 
                 let store = InternalStore(sdkKey, StatsigUser(userID: "jkw"), options: opts)
@@ -138,7 +138,7 @@ class NetworkServiceSpec: BaseSpec {
                         with: request.ohhttpStubs_httpBody!,
                         options: []) as! [String: Any]
                     actualRequestData.append(request.ohhttpStubs_httpBody!)
-                    return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: 403))
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 403, headers: nil)
                 }
 
                 let user = StatsigUser(userID: "jkw")
