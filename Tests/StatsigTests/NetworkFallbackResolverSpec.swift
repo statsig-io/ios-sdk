@@ -24,6 +24,14 @@ class NetworkFallbackResolverSpec: BaseSpec {
 
             var dnsRequestCount = 0
 
+            beforeSuite {
+                NetworkFallbackResolver.fallbackEnabled = true
+            }
+
+            afterSuite {
+                NetworkFallbackResolver.fallbackEnabled = false
+            }
+
             beforeEach {
                 TestUtils.clearStorage()
                 TestUtils.resetDefaultURLs()

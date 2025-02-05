@@ -22,13 +22,14 @@ class StoreDeadlockSpec: BaseSpec {
             var queues: [DispatchQueue] = []
 
             beforeEach {
+                TestUtils.clearStorage()
                 NotificationCenter.default
                         .addObserver(
                             forName: UserDefaults.didChangeNotification,
                             object: UserDefaults.standard, queue: .main) { _ in }
 
                 stub(condition: isHost(ApiHost)) { req in
-                    let delay = Double.random(in: 0.1 ..< 1.0)
+                    let delay = Double.random(in: 0.1 ..< 0.8)
 
                     return HTTPStubsResponse(jsonObject: [
                         "feature_gates": [
@@ -43,6 +44,10 @@ class StoreDeadlockSpec: BaseSpec {
                         "has_updates": true
                     ], statusCode: 200, headers: nil).responseTime(delay)
                 }
+                
+                stub(condition: isHost(LogEventHost)) { req in
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
+                }
 
                 waitUntil { done in
                     Statsig.initialize(sdkKey: "client-key") { err in done() }
@@ -56,8 +61,8 @@ class StoreDeadlockSpec: BaseSpec {
             }
 
             afterEach {
-                HTTPStubs.removeAllStubs()
                 Statsig.shutdown()  // Ensure that Statsig is shut down
+                HTTPStubs.removeAllStubs()
             }
 
             it("can execute many different operations") {

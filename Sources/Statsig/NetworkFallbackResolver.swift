@@ -15,6 +15,17 @@ typealias FallbackInfo = [Endpoint: FallbackInfoEntry]
 let DEFAULT_TTL_SECONDS: TimeInterval = 7 * 24 * 60 * 60; // 7 days (in seconds)
 let COOLDOWN_TIME_SECONDS: TimeInterval = 4 * 60 * 60; // 4 hours (in seconds)
 
+let notDomainFailureCodes: [Int] = [
+    NSURLErrorCancelled,
+    NSURLErrorNotConnectedToInternet
+]
+
+#if TEST
+let DEFAULT_NETWORK_FALLBACK_ENABLED = false
+#else
+let DEFAULT_NETWORK_FALLBACK_ENABLED = true
+#endif
+
 public class NetworkFallbackResolver {
 
     private let sdkKey: String
@@ -28,6 +39,8 @@ public class NetworkFallbackResolver {
      Function to get the current Date. Used for tests.
      */
     internal static var now: () -> Date = { Date() }
+
+    internal static var fallbackEnabled = DEFAULT_NETWORK_FALLBACK_ENABLED
 
     init(sdkKey: String, store: InternalStore, errorBoundary: ErrorBoundary) {
         self.sdkKey = sdkKey
@@ -66,6 +79,19 @@ public class NetworkFallbackResolver {
         self.fallbackInfo = info;
 
         return entry.url;
+    }
+
+    func isDomainFailure(error: (any Error)?) -> Bool {
+        if !NetworkFallbackResolver.fallbackEnabled {
+            return false;
+        }
+        if let nsError = error as? NSError {
+            return (
+                nsError.domain == NSURLErrorDomain &&
+                !notDomainFailureCodes.contains(nsError.code)
+            );
+        }
+        return false;
     }
 
     func tryFetchUpdatedFallbackInfo(
@@ -171,21 +197,6 @@ public class NetworkFallbackResolver {
 
         return nil
     }
-}
-
-let notDomainFailureCodes: [Int] = [
-    NSURLErrorCancelled,
-    NSURLErrorNotConnectedToInternet
-]
-
-internal func isDomainFailure(error: (any Error)?) -> Bool {
-    if let nsError = error as? NSError {
-        return (
-            nsError.domain == NSURLErrorDomain &&
-            !notDomainFailureCodes.contains(nsError.code)
-        );
-    }
-    return false;
 }
 
 func getFallbackInfoStorageKey(sdkKey: String) -> String {

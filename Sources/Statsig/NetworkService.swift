@@ -371,7 +371,9 @@ class NetworkService {
                         completion: completion,
                         taskCapture: taskCapture
                     )
-                } else if (isDomainFailure(error: error) && self.endpointOverrideURL(endpoint: endpoint) == nil) {
+                } else if self.networkFallbackResolver.isDomainFailure(error: error)
+                    && self.endpointOverrideURL(endpoint: endpoint) == nil
+                {
                     // Fallback domains
                     self.networkFallbackResolver.tryFetchUpdatedFallbackInfo(endpoint: endpoint) { [weak self] fallbackUpdated in
                         if fallbackUpdated,
