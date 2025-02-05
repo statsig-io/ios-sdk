@@ -42,7 +42,7 @@ class NetworkServiceSpec: BaseSpec {
                     StatsigUser(
                         userID: "jkw",
                         privateAttributes: ["email": "something@somethingelse.com"],
-                        customIDs: ["randomID": "ABCDE"]), sinceTime: 0, previousDerivedFields: [:], completion: nil)
+                        customIDs: ["randomID": "ABCDE"]), sinceTime: 0, previousDerivedFields: [:], fullChecksum: nil, completion: nil)
                 let now = Date().timeIntervalSince1970
 
                 expect(actualRequestHttpBody?.keys).toEventually(contain("user", "statsigMetadata"))
@@ -75,7 +75,8 @@ class NetworkServiceSpec: BaseSpec {
                     ns.fetchUpdatedValues(
                         for: StatsigUser(userID: "jkw"),
                         lastSyncTimeForUser: now,
-                        previousDerivedFields: [:]
+                        previousDerivedFields: [:],
+                        fullChecksum: nil
                     ) { _ in
                         done()
                     }
@@ -189,7 +190,7 @@ class NetworkServiceSpec: BaseSpec {
 
                 var expected = -1
                 waitUntil { done in
-                    ns.fetchInitialValues(for: user, sinceTime: 0, previousDerivedFields: [:]) { err in
+                    ns.fetchInitialValues(for: user, sinceTime: 0, previousDerivedFields: [:], fullChecksum: nil) { err in
                         expected = calls
                         expect(err?.code).to(equal(StatsigClientErrorCode.initTimeoutExpired))
                         timedout = true;

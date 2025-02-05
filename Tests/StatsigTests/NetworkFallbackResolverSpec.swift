@@ -66,7 +66,7 @@ class NetworkFallbackResolverSpec: BaseSpec {
 
                 // Make request
                 waitUntil { done in
-                    ns.fetchInitialValues(for: user, sinceTime: 0, previousDerivedFields: [:]) { err in
+                    ns.fetchInitialValues(for: user, sinceTime: 0, previousDerivedFields: [:], fullChecksum: nil) { err in
                         fetchError = err
                         done()
                     }
@@ -133,7 +133,7 @@ class NetworkFallbackResolverSpec: BaseSpec {
 
                 // Make request
                 waitUntil { done in
-                    ns.fetchInitialValues(for: user, sinceTime: 0, previousDerivedFields: [:]) { err in
+                    ns.fetchInitialValues(for: user, sinceTime: 0, previousDerivedFields: [:], fullChecksum: nil) { err in
                         done()
                     }
                 }
@@ -143,7 +143,7 @@ class NetworkFallbackResolverSpec: BaseSpec {
                 let ns2 = NetworkService(sdkKey: sdkKey, options: opts, store: store2)
 
                 waitUntil { done in
-                    ns2.fetchInitialValues(for: user, sinceTime: 0, previousDerivedFields: [:]) { err in
+                    ns2.fetchInitialValues(for: user, sinceTime: 0, previousDerivedFields: [:], fullChecksum: nil) { err in
                         done()
                     }
                 }
@@ -184,7 +184,7 @@ class NetworkFallbackResolverSpec: BaseSpec {
                 
                 // Make request
                 waitUntil { done in
-                    ns.fetchInitialValues(for: user, sinceTime: 0, previousDerivedFields: [:]) { err in
+                    ns.fetchInitialValues(for: user, sinceTime: 0, previousDerivedFields: [:], fullChecksum: nil) { err in
                         done()
                     }
                 }
@@ -221,7 +221,7 @@ class NetworkFallbackResolverSpec: BaseSpec {
 
                 // Make request
                 waitUntil { done in
-                    ns.fetchInitialValues(for: user, sinceTime: 0, previousDerivedFields: [:]) { err in
+                    ns.fetchInitialValues(for: user, sinceTime: 0, previousDerivedFields: [:], fullChecksum: nil) { err in
                         done()
                     }
                 }
@@ -238,7 +238,7 @@ class NetworkFallbackResolverSpec: BaseSpec {
 
                 // Make request
                 waitUntil { done in
-                    ns.fetchInitialValues(for: user, sinceTime: 0, previousDerivedFields: [:]) { err in
+                    ns.fetchInitialValues(for: user, sinceTime: 0, previousDerivedFields: [:], fullChecksum: nil) { err in
                         done()
                     }
                 }

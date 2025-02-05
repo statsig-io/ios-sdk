@@ -717,9 +717,10 @@ extension StatsigClient {
         Diagnostics.mark?.initialize.storeRead.start()
         let sinceTime = self.store.getLastUpdateTime(user: currentUser)
         let previousDerivedFields = self.store.getPreviousDerivedFields(user: currentUser)
+        let fullChecksum = self.store.getFullChecksum(user: currentUser)
         Diagnostics.mark?.initialize.storeRead.end(success: true)
 
-        networkService.fetchInitialValues(for: currentUser, sinceTime: sinceTime, previousDerivedFields: previousDerivedFields) { [weak self] error in
+        networkService.fetchInitialValues(for: currentUser, sinceTime: sinceTime, previousDerivedFields: previousDerivedFields, fullChecksum: fullChecksum) { [weak self] error in
             if let self = self {
                 if let error = error {
                     self.logger.log(Event.statsigInternalEvent(
@@ -750,11 +751,13 @@ extension StatsigClient {
     private func syncValuesForCurrentUser() {
         let sinceTime = self.store.getLastUpdateTime(user: currentUser)
         let previousDerivedFields = self.store.getPreviousDerivedFields(user: currentUser)
+        let fullChecksum = self.store.getFullChecksum(user: currentUser)
 
         self.networkService.fetchUpdatedValues(
             for: currentUser,
             lastSyncTimeForUser: sinceTime,
-            previousDerivedFields: previousDerivedFields) { [weak self] error in
+            previousDerivedFields: previousDerivedFields,
+            fullChecksum: fullChecksum) { [weak self] error in
                 self?.notifyOnUserUpdatedListeners(error)
             }
     }

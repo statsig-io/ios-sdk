@@ -53,6 +53,7 @@ class NetworkService {
         for user: StatsigUser,
         lastSyncTimeForUser: UInt64,
         previousDerivedFields: [String: String],
+        fullChecksum: String?,
         completion: ResultCompletionBlock?
     ) {
         let (body, parseErr) = makeReqBody([
@@ -60,6 +61,7 @@ class NetworkService {
             "statsigMetadata": user.deviceEnvironment,
             "lastSyncTimeForUser": lastSyncTimeForUser,
             "previousDerivedFields": previousDerivedFields,
+            "full_checksum": fullChecksum ?? nil,
         ])
 
         guard let body = body else {
@@ -107,6 +109,7 @@ class NetworkService {
         for user: StatsigUser,
         sinceTime: UInt64,
         previousDerivedFields: [String: String],
+        fullChecksum: String?,
         completion: ResultCompletionBlock?
     ) {
         let cacheKey = UserCacheKey.from(self.statsigOptions, user, self.sdkKey)
@@ -152,7 +155,8 @@ class NetworkService {
             "statsigMetadata": user.deviceEnvironment,
             "sinceTime": sinceTime,
             "hash": statsigOptions.disableHashing ? "none" : "djb2",
-            "previousDerivedFields": previousDerivedFields
+            "previousDerivedFields": previousDerivedFields,
+            "full_checksum": fullChecksum ?? nil,
         ])
 
         guard let body = body else {
@@ -261,7 +265,7 @@ class NetworkService {
         }
     }
 
-    private func makeReqBody(_ dict: Dictionary<String, Any>) -> (Data?, Error?) {
+    private func makeReqBody(_ dict: Dictionary<String, Any?>) -> (Data?, Error?) {
         if JSONSerialization.isValidJSONObject(dict),
            let data = try? JSONSerialization.data(withJSONObject: dict){
             return (data, nil)
