@@ -45,13 +45,16 @@ class EventLogger {
         self.userDefaults = userDefaults
         self.storageKey = getFailedEventStorageKey(sdkKey)
         self.nonExposedChecks = [String: Int]()
+    }
 
-        if let failedRequestsCache = userDefaults.array(forKey: storageKey) as? [Data], !failedRequestsCache.isEmpty {
-            userDefaults.removeObject(forKey: storageKey)
-            
-            networkService.sendRequestsWithData(failedRequestsCache) { [weak self] failedRequestsData in
-                guard let failedRequestsData = failedRequestsData else { return }
-                DispatchQueue.main.async { [weak self] in
+    internal func retryFailedRequests() {
+        logQueue.async { [weak self] in
+            guard let self = self else { return }
+            if let failedRequestsCache = userDefaults.array(forKey: storageKey) as? [Data], !failedRequestsCache.isEmpty {
+                userDefaults.removeObject(forKey: storageKey)
+                
+                networkService.sendRequestsWithData(failedRequestsCache) { [weak self] failedRequestsData in
+                    guard let failedRequestsData = failedRequestsData else { return }
                     self?.addFailedLogRequest(failedRequestsData)
                     self?.saveFailedLogRequestsToDisk()
                 }

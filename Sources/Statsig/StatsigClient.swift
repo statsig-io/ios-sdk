@@ -72,7 +72,8 @@ public class StatsigClient {
 
             self.hasInitialized = true
             self.lastInitializeError = error
-            self.notifyOnInitializedListeners(error)
+
+            self.logger.retryFailedRequests();
 
             Diagnostics.mark?.overall.end(
                 success: error == nil,
@@ -81,6 +82,7 @@ public class StatsigClient {
             )
             Diagnostics.log(self.logger, user: capturedUser, context: .initialize)
 
+            self.notifyOnInitializedListeners(error)
             completionWithResult?(error)
             completion?(error?.message)
         }

@@ -142,7 +142,9 @@ class EventLoggerSpec: BaseSpec {
                     return HTTPStubsResponse(jsonObject: [:], statusCode: 403, headers: nil)
                 }
 
-                _ = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: userDefaults)
+                let newLogger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: userDefaults)
+                // initialize calls retryFailedRequests
+                newLogger.retryFailedRequests()
 
                 expect(resendData.isEmpty).toEventually(beFalse())
                 expect(savedData).toEventuallyNot(beNil())
@@ -177,6 +179,7 @@ class EventLoggerSpec: BaseSpec {
                 userDefaults.reset()
 
                 logger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: userDefaults)
+                logger.retryFailedRequests()
                 logger.start(flushInterval: 2)
                 logger.log(Event(user: user, name: "b", value: 1, metadata: ["text": "small"], disableCurrentVCLogging: false))
                 logger.stop()
@@ -273,6 +276,7 @@ class EventLoggerSpec: BaseSpec {
 
                     let userDefaults = MockDefaults()
                     let logger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: userDefaults)
+                    logger.retryFailedRequests()
 
                     saveQueue.async {
                         // Wait for the addFailedLogRequest to start adding requests to the queue

@@ -86,6 +86,7 @@ class LogEventFailureSpec: BaseSpec {
 
                 func createLogger() {
                     logger = EventLogger(sdkKey: sdkKey, user: user, networkService: ns, userDefaults: defaults)
+                    logger.retryFailedRequests()
                 }
 
                 beforeEach {
