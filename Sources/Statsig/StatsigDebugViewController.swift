@@ -5,7 +5,7 @@ public typealias DebuggerCallback = (Bool) -> Void
 import UIKit
 import WebKit
 
-class DebugViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler {
+public class StatsigDebugViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler {
     private let messageHandlerName = "statsigDebugMessageHandler"
 
     private var webView: WKWebView?
@@ -14,15 +14,8 @@ class DebugViewController: UIViewController, WKNavigationDelegate, WKScriptMessa
     private var isReloadRequested: Bool = false
     private var callback: DebuggerCallback?
 
-
     static func show(_ sdkKey: String, _ state: [String: Any?], _ callback: DebuggerCallback? = nil) {
-        guard JSONSerialization.isValidJSONObject(state) else {
-            print("[Statsig] DebugView received Invalid state")
-            return
-        }
-
-        guard let url = URL(string: "https://console.statsig.com/client_sdk_debugger_redirect?sdkKey=\(sdkKey)") else {
-            print("[Statsig] DebugView failed to create required URL")
+        guard let debugger = StatsigDebugViewController(sdkKey: sdkKey, state: state, callback: callback) else {
             return
         }
 
@@ -45,11 +38,20 @@ class DebugViewController: UIViewController, WKNavigationDelegate, WKScriptMessa
             return
         }
 
-        let debugger = DebugViewController(url: url, state: state, callback: callback)
         root.present(debugger, animated: true)
     }
 
-    init(url: URL, state: [String: Any?], callback: DebuggerCallback?) {
+    internal init?(sdkKey: String, state: [String: Any?], callback: DebuggerCallback? = nil) {
+        guard JSONSerialization.isValidJSONObject(state) else {
+            print("[Statsig] DebugView received Invalid state")
+            return nil
+        }
+
+        guard let url = URL(string: "https://console.statsig.com/client_sdk_debugger_redirect?sdkKey=\(sdkKey)") else {
+            print("[Statsig] DebugView failed to create required URL")
+            return nil
+        }
+
         self.url = url
         self.state = state
         self.callback = callback
@@ -60,7 +62,7 @@ class DebugViewController: UIViewController, WKNavigationDelegate, WKScriptMessa
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func viewDidLoad() {
+    override public func viewDidLoad() {
         super.viewDidLoad()
 
         do {
@@ -96,7 +98,7 @@ class DebugViewController: UIViewController, WKNavigationDelegate, WKScriptMessa
 
     }
 
-    override func viewWillDisappear(_ animated: Bool) {
+    override public func viewWillDisappear(_ animated: Bool) {
         callback?(isReloadRequested)
     }
     
@@ -104,7 +106,7 @@ class DebugViewController: UIViewController, WKNavigationDelegate, WKScriptMessa
         dismiss(animated: true, completion: nil)
     }
 
-    func userContentController(
+    public func userContentController(
         _ userContentController: WKUserContentController,
         didReceive message: WKScriptMessage
     ) {
@@ -120,9 +122,13 @@ class DebugViewController: UIViewController, WKNavigationDelegate, WKScriptMessa
 }
 
 #else
-class DebugViewController {
+public class StatsigDebugViewController {
     static func show(_ sdkKey: String, _ state: [String: Any?], _ callback: DebuggerCallback? = nil) {
         print("[Statsig] DebugView is currently only available on iOS")
+    }
+
+    internal init?(sdkKey: String, state: [String: Any?], callback: DebuggerCallback? = nil) {
+        return nil
     }
 }
 #endif

@@ -173,27 +173,6 @@ public class StatsigClient {
     }
 
     /**
-     Presents a view of the current internal state of the SDK.
-     */
-    public func openDebugView(_ callback: DebuggerCallback? = nil) {
-        let cache = store.cache
-        let reason = cache.getEvaluationDetails().getDetailedReason()
-        let state: [String: Any?] = [
-            "user": self.currentUser.toDictionary(forLogging: false),
-            "gates": cache.gates,
-            "configs": cache.configs,
-            "layers": cache.layers,
-            "evalReason": reason
-        ]
-
-        DispatchQueue.main.async { [weak self] in
-            if let self = self {
-                DebugViewController.show(self.sdkKey, state, callback)
-            }
-        }
-    }
-
-    /**
      Returns the raw values that the SDK is using internally to provide gate/config/layer results
      */
     public func getInitializeResponseJson() -> ExternalInitializeResponse {
@@ -708,6 +687,40 @@ extension StatsigClient {
      */
     public func getAllOverrides() -> StatsigOverrides {
         return store.getAllOverrides()
+    }
+}
+
+
+// MARK: Debug View
+extension StatsigClient {
+    /**
+     Presents a view of the current internal state of the SDK.
+     */
+    public func openDebugView(_ callback: DebuggerCallback? = nil) {
+        DispatchQueue.main.async { [weak self] in
+            if let self = self {
+                StatsigDebugViewController.show(self.sdkKey, self.getDebugViewControllerState(), callback)
+            }
+        }
+    }
+
+    /**
+     Creates a view controller with the current internal state of the SDK.
+     */
+    public func createDebugViewController(_ callback: DebuggerCallback? = nil) -> StatsigDebugViewController? {
+        return StatsigDebugViewController(sdkKey: self.sdkKey, state: self.getDebugViewControllerState(), callback: callback)
+    }
+
+    private func getDebugViewControllerState() -> [String: Any?] {
+        let cache = store.cache
+        let reason = cache.getEvaluationDetails().getDetailedReason()
+        return [
+            "user": self.currentUser.toDictionary(forLogging: false),
+            "gates": cache.gates,
+            "configs": cache.configs,
+            "layers": cache.layers,
+            "evalReason": reason
+        ]
     }
 }
 
