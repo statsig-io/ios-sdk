@@ -17,7 +17,7 @@ env:
 jobs:
   KONG:
     timeout-minutes: 15
-    runs-on: self-hosted
+    runs-on: macos-latest
     steps:
       - name: Get KONG
         run: git clone https://oauth2:$repo_pat@github.com/statsig-io/kong.git .
