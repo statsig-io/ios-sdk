@@ -142,6 +142,11 @@ public class StatsigOptions {
     public var urlSession: URLSession = .shared
 
     var environment: [String: String] = [:]
+
+    /**
+     Event names are trimmed to 64 characters by default. Set this option to true to disable this behavior.
+     */
+    var disableEventNameTrimming: Bool
     
     public init(initTimeout: Double? = 3.0,
                 disableCurrentVCLogging: Bool? = false,
@@ -162,9 +167,12 @@ public class StatsigOptions {
                 userValidationCallback: ((StatsigUser) -> StatsigUser)? = nil,
                 customCacheKey: ((String, StatsigUser) -> String)? = nil,
                 storageProvider: StorageProvider? = nil,
-                urlSession: URLSession? = nil
+                urlSession: URLSession? = nil,
+                disableEventNameTrimming: Bool = false
     )
     {
+        self.disableEventNameTrimming = disableEventNameTrimming
+
         if let initTimeout = initTimeout, initTimeout >= 0 {
             self.initTimeout = initTimeout
         }

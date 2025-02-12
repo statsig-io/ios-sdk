@@ -602,7 +602,7 @@ extension StatsigClient {
             print("[Statsig]: Must log with a non-empty event name.")
             return
         }
-        if eventName.count > maxEventNameLength {
+        if !self.statsigOptions.disableEventNameTrimming && eventName.count > maxEventNameLength {
             print("[Statsig]: Event name is too long. Trimming to \(maxEventNameLength).")
             eventName = String(eventName.prefix(maxEventNameLength))
         }

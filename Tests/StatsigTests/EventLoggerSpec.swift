@@ -151,6 +151,71 @@ class EventLoggerSpec: BaseSpec {
                 expect(savedData).toEventually(equal(resendData))
             }
 
+            // NOTE: This behavior should be removed with the next major release
+            describe("trimming event names") {
+                let longEventName = String(repeating: "1234567890", count: 10)
+
+                var actualRequestHttpBody: [String: Any]?
+                var client: StatsigClient?
+                beforeEach {
+                    // Prevent calls to initialize
+                    stub(condition: isHost(ApiHost)) { req in
+                        if ((req.url?.absoluteString.contains("/initialize") ?? false) == false) {
+                            return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
+                        }
+
+                        return HTTPStubsResponse(jsonObject: [:], statusCode: 500, headers: nil)
+                    }
+                    stub(condition: isHost(LogEventHost)) { request in
+                        actualRequestHttpBody = try! JSONSerialization.jsonObject(
+                            with: request.ohhttpStubs_httpBody!,
+                            options: []) as! [String: Any]
+                        return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
+                    }
+                }
+
+                afterEach {
+                    client = nil
+                    actualRequestHttpBody = nil
+                }
+
+                it("should trim event names to 64 characters") {
+
+                    waitUntil { done in
+                        client = StatsigClient(sdkKey: "client-key", user: user, options: StatsigOptions(disableDiagnostics: true), completionWithResult: { _ in
+                            done()
+                        })
+                    }
+
+                    client?.logEvent(longEventName, value: 1)
+                    client?.shutdown()
+
+                    expect(actualRequestHttpBody?.keys).toEventually(contain("user", "events", "statsigMetadata"))
+                    expect((actualRequestHttpBody?["events"] as? [[String: Any]])?.count).toEventually(beGreaterThanOrEqualTo(1))
+                    let trimmedEventName = String(longEventName.prefix(64))
+                    expect((actualRequestHttpBody?["events"] as? [[String: Any]])?
+                        .map({ $0["eventName"] as? String })
+                        .first(where: { $0 == trimmedEventName })).toEventuallyNot(beNil())
+                }
+
+                it("should send full event names if the disableEventNameTrimming option is set to true") {
+                    waitUntil { done in
+                        client = StatsigClient(sdkKey: "client-key", user: user, options: StatsigOptions(disableDiagnostics: true, disableEventNameTrimming: true), completionWithResult: { _ in
+                            done()
+                        })
+                    }
+
+                    client?.logEvent(longEventName, value: 1)
+                    client?.shutdown()
+
+                    expect(actualRequestHttpBody?.keys).toEventually(contain("user", "events", "statsigMetadata"))
+                    expect((actualRequestHttpBody?["events"] as? [[String: Any]])?.count).toEventually(beGreaterThanOrEqualTo(1))
+                    expect((actualRequestHttpBody?["events"] as? [[String: Any]])?
+                        .map({ $0["eventName"] as? String })
+                        .first(where: { $0 == longEventName })).toEventuallyNot(beNil())
+                }
+            }
+
             it("should limit file size save to user defaults") {
                 var logEndpointCalled = false
                 stub(condition: isHost(LogEventHost)) { req in
