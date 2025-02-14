@@ -8,7 +8,7 @@ typealias StringRecord = [String: String]
 
  SeeAlso [Layers Documentation](https://docs.statsig.com/layers)
  */
-public struct Layer: ConfigProtocol {
+public struct Layer: ConfigBase, ConfigProtocol {
     /**
      The name used to retrieve this Layer.
      */
@@ -56,7 +56,7 @@ public struct Layer: ConfigProtocol {
     internal var isDeviceBased: Bool = false
     internal var rawValue: [String: Any] = [:]
 
-    private let value: [String: Any]
+    internal let value: [String: Any]
 
     internal init(
         client: StatsigClient?,
@@ -89,22 +89,28 @@ public struct Layer: ConfigProtocol {
         value: [String: Any],
         ruleID: String,
         groupName: String?,
-        evalDetails: EvaluationDetails
+        evalDetails: EvaluationDetails,
+        secondaryExposures: [[String: String]]? = nil,
+        undelegatedSecondaryExposures: [[String: String]]? = nil,
+        explicitParameters: Set<String> = Set(),
+        allocatedExperimentName: String? = nil,
+        isExperimentActive: Bool? = nil,
+        isUserInExperiment: Bool? = nil
     ) {
         self.client = client
         self.name = name
         self.value = value
         self.ruleID = ruleID
         self.groupName = groupName
-        self.secondaryExposures = []
-        self.undelegatedSecondaryExposures = []
-        self.explicitParameters = Set()
+        self.secondaryExposures = secondaryExposures ?? []
+        self.undelegatedSecondaryExposures = undelegatedSecondaryExposures ?? []
+        self.explicitParameters = explicitParameters
+        self.allocatedExperimentName = allocatedExperimentName ?? ""
+        self.isExperimentActive = isExperimentActive ?? false
+        self.isUserInExperiment = isUserInExperiment ?? false
+
         self.hashedName = ""
-        
-        self.isExperimentActive = false
-        self.isUserInExperiment = false
-        self.allocatedExperimentName = ""
-        
+
         self.evaluationDetails = evalDetails
     }
 
@@ -134,6 +140,18 @@ public struct Layer: ConfigProtocol {
         )
         
         return result
+    }
+
+    internal static func empty(
+        _ client: StatsigClient?,
+        _ name: String,
+        _ evalDetails: EvaluationDetails
+    ) -> Layer {
+        Layer(
+            client: client,
+            name: name,
+            evalDetails: evalDetails
+        )
     }
 }
 

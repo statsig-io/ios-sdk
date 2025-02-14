@@ -34,7 +34,30 @@ public final class StatsigUserObjC: NSObject {
                   appVersion: appVersion,
                   custom: custom,
                   privateAttributes: privateAttributes,
-                  customIDs: nil)
+                  customIDs: nil,
+                  userAgent: nil)
+    }
+
+    @objc public convenience init(userID: String? = nil,
+                      email: String? = nil,
+                      ip: String? = nil,
+                      country: String? = nil,
+                      locale: String? = nil,
+                      appVersion: String? = nil,
+                      custom: [String: Any]? = nil,
+                      privateAttributes: [String: Any]? = nil,
+                      customIDs: [String: String]? = nil)
+    {
+        self.init(userID: userID,
+                  email: email,
+                  ip: ip,
+                  country: country,
+                  locale: locale,
+                  appVersion: appVersion,
+                  custom: custom,
+                  privateAttributes: privateAttributes,
+                  customIDs: nil,
+                  userAgent: nil)
     }
 
 
@@ -46,7 +69,8 @@ public final class StatsigUserObjC: NSObject {
                       appVersion: String? = nil,
                       custom: [String: Any]? = nil,
                       privateAttributes: [String: Any]? = nil,
-                      customIDs: [String: String]? = nil)
+                      customIDs: [String: String]? = nil,
+                      userAgent: String? = nil)
     {
         var filteredCustom = [String: StatsigUserCustomTypeConvertible]()
         if let custom = custom {
@@ -79,7 +103,8 @@ public final class StatsigUserObjC: NSObject {
             appVersion: appVersion,
             custom: filteredCustom.isEmpty ? nil : filteredCustom,
             privateAttributes: filteredPrivateAttributes.isEmpty ? nil : filteredPrivateAttributes,
-            customIDs: customIDs)
+            customIDs: customIDs,
+            userAgent: userAgent)
     }
 
     @objc public func getUserID() -> String? {

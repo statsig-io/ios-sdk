@@ -7,7 +7,7 @@ import Foundation
 
  SeeAlso [Experiments Documentation](https://docs.statsig.com/experiments-plus)
  */
-public struct DynamicConfig: ConfigProtocol {
+public struct DynamicConfig: ConfigBase, ConfigProtocol {
     /**
      The name used to retrieve this DynamicConfig
      */
@@ -62,7 +62,11 @@ public struct DynamicConfig: ConfigProtocol {
         self.init(configName: name, configObj: configObj, evalDetails: evalDetails)
     }
 
-    internal init(configName: String, configObj: [String: Any] = [:], evalDetails: EvaluationDetails) {
+    internal init(
+        configName: String,
+        configObj: [String: Any] = [:],
+        evalDetails: EvaluationDetails
+    ) {
         self.name = configName
         self.ruleID = configObj["rule_id"] as? String ?? ""
         self.groupName = configObj["group_name"] as? String
@@ -79,17 +83,26 @@ public struct DynamicConfig: ConfigProtocol {
         self.evaluationDetails = evalDetails
     }
 
-    internal init(configName: String, value: [String: Any], ruleID: String, evalDetails: EvaluationDetails) {
+    internal init(
+        configName: String,
+        value: [String: Any],
+        ruleID: String,
+        evalDetails: EvaluationDetails,
+        secondaryExposures: [[String: String]]? = nil,
+        isExperimentActive: Bool? = nil,
+        isUserInExperiment: Bool? = nil,
+        didPassRule: Bool? = nil
+    ) {
         self.name = configName
         self.value = value
         self.ruleID = ruleID
         self.groupName = nil
-        self.secondaryExposures = []
+        self.secondaryExposures = secondaryExposures ?? []
         self.hashedName = ""
 
-        self.isExperimentActive = false
-        self.isUserInExperiment = false
-        self.didPassRule = false
+        self.isExperimentActive = isExperimentActive ?? false
+        self.isUserInExperiment = isUserInExperiment ?? false
+        self.didPassRule = didPassRule ?? false
 
         self.evaluationDetails = evalDetails
     }
@@ -116,6 +129,16 @@ public struct DynamicConfig: ConfigProtocol {
         }
         
         return result
+    }
+
+    internal static func empty(
+        _ name: String,
+        _ evalDetails: EvaluationDetails
+    ) -> DynamicConfig {
+        return DynamicConfig(
+            name: name,
+            evalDetails: evalDetails
+        )
     }
 }
 

@@ -6,21 +6,24 @@ public struct EvaluationDetails: Codable {
     public var reason: EvaluationReason?;
     public var lcut: UInt64?
     public var receivedAt: UInt64?
+    public var prefix: String?
 
     init(
         source: EvaluationSource,
         reason: EvaluationReason? = nil,
         lcut: UInt64? = nil,
-        receivedAt: UInt64? = nil
+        receivedAt: UInt64? = nil,
+        prefix: String? = nil
     ) {
         self.source = source
         self.reason = reason
         self.lcut = lcut
         self.receivedAt = receivedAt
+        self.prefix = prefix
     }
 
     func getDetailedReason() -> String {
-        var result = source.rawValue
+        var result = "\(self.prefix ?? "")\(source.rawValue)"
         if source == .NoValues || source == .Uninitialized {
             return result
         }

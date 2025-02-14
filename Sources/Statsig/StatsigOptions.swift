@@ -147,6 +147,11 @@ public class StatsigOptions {
      Event names are trimmed to 64 characters by default. Set this option to true to disable this behavior.
      */
     var disableEventNameTrimming: Bool
+
+    /**
+     Adapter for on-device evaluation.
+     */
+    public var overrideAdapter: OnDeviceEvalAdapter?
     
     public init(initTimeout: Double? = 3.0,
                 disableCurrentVCLogging: Bool? = false,
@@ -168,7 +173,8 @@ public class StatsigOptions {
                 customCacheKey: ((String, StatsigUser) -> String)? = nil,
                 storageProvider: StorageProvider? = nil,
                 urlSession: URLSession? = nil,
-                disableEventNameTrimming: Bool = false
+                disableEventNameTrimming: Bool = false,
+                overrideAdapter: OnDeviceEvalAdapter? = nil
     )
     {
         self.disableEventNameTrimming = disableEventNameTrimming
@@ -248,6 +254,8 @@ public class StatsigOptions {
         self.evaluationCallback = evaluationCallback
         
         self.userValidationCallback = userValidationCallback
+        
+        self.overrideAdapter = overrideAdapter
     }
 }
 

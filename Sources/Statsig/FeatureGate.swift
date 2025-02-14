@@ -1,4 +1,4 @@
-public struct FeatureGate: Codable {
+public struct FeatureGate: ConfigBase, Codable {
     public let name: String
     public let ruleID: String
     public let value: Bool
@@ -13,11 +13,24 @@ public struct FeatureGate: Codable {
         self.evaluationDetails = evalDetails
     }
 
-    internal init(name: String, value: Bool, ruleID: String, evalDetails: EvaluationDetails) {
+    internal init(name: String, value: Bool, ruleID: String, evalDetails: EvaluationDetails, secondaryExposures: [[String: String]]? = nil) {
         self.name = name
         self.value = value
         self.ruleID = ruleID
-        self.secondaryExposures = []
+        self.secondaryExposures = secondaryExposures ?? []
         self.evaluationDetails = evalDetails
+    }
+
+    internal static func empty(
+        _ name: String,
+        _ evalDetails: EvaluationDetails
+    ) -> FeatureGate {
+        return FeatureGate(
+            name: name,
+            value: false,
+            ruleID: "",
+            evalDetails: evalDetails,
+            secondaryExposures: []
+        )
     }
 }

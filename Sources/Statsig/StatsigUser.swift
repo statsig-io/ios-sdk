@@ -57,6 +57,11 @@ public struct StatsigUser {
      */
     public let customIDs: [String: String]?
 
+    /**
+     This user's UserAgent
+     */
+    public var userAgent: String?
+
     var statsigEnvironment: [String: String] = [:]
     var deviceEnvironment: [String: String?]
 
@@ -69,7 +74,8 @@ public struct StatsigUser {
                 custom: [String: StatsigUserCustomTypeConvertible]? = nil,
                 privateAttributes: [String: StatsigUserCustomTypeConvertible]? = nil,
                 optOutNonSdkMetadata: Bool? = false,
-                customIDs: [String: String]? = nil)
+                customIDs: [String: String]? = nil,
+                userAgent: String? = nil)
     {
         self.userID = userID
         self.email = email
@@ -79,6 +85,7 @@ public struct StatsigUser {
         self.appVersion = appVersion
         self.customIDs = customIDs
         self.optOutNonSdkMetadata = optOutNonSdkMetadata
+        self.userAgent = userAgent
 
         if let custom = custom, JSONSerialization.isValidJSONObject(custom) {
             self.custom = custom
@@ -119,6 +126,7 @@ public struct StatsigUser {
         dict["email"] = self.email
         dict["ip"] = self.ip
         dict["country"] = self.country
+        dict["userAgent"] = self.userAgent
         dict["locale"] = self.locale
         dict["appVersion"] = self.appVersion
         dict["custom"] = self.custom
@@ -153,4 +161,77 @@ fileprivate func getSortedPairsString(_ dictionary: [String: Any?]) -> String {
     }
 
     return sortedResult.joined(separator: ",")
+}
+
+extension StatsigUser {
+    internal func getUnitID(_ type: String) -> String? {
+        let lowered = type.lowercased()
+
+        if lowered == "userid" {
+            return self.userID
+        }
+
+        return self.customIDs?[type] ?? self.customIDs?[lowered]
+    }
+
+    static func empty() -> StatsigUser {
+        StatsigUser(userID: "")
+    }
+
+    internal func getFromEnvironment(_ field: String?) -> JsonValue? {
+        guard let field else {
+            return nil
+        }
+
+        let lowered = field.lowercased()
+        if let value = getEnvironmentValueString(lowered) {
+            return .string(value)
+        }
+
+        return nil
+    }
+
+    internal func getUserValue(_ field: String?) -> JsonValue? {
+        guard let field else {
+            return nil
+        }
+
+        let lowered = field.lowercased()
+        if let strValue = getUserValueString(lowered) {
+            return .string(strValue)
+        }
+
+        if let value = self.custom?[field] ?? self.custom?[lowered],
+            let jsonValue = JsonValue(value) {
+            return jsonValue
+        }
+
+        if let value = self.privateAttributes?[field] ?? self.privateAttributes?[lowered],
+            let jsonValue = JsonValue(value) {
+            return jsonValue
+        }
+
+        return nil
+    }
+
+    private func getUserValueString(_ field: String) -> String? {
+        switch field {
+        case "userid", "user_id": return self.userID
+        case "email": return self.email
+        case "ip": return self.ip
+        case "useragent", "user_agent": return self.userAgent
+        case "country": return self.country
+        case "locale": return self.locale
+        case "appversion", "app_version": return self.appVersion
+        default: return nil
+        }
+    }
+
+    private func getEnvironmentValueString(_ field: String) -> String? {
+        switch field {
+        case "tier":
+            return self.statsigEnvironment["tier"] ?? self.deviceEnvironment["tier"] as? String
+        default: return nil
+        }
+    }
 }
