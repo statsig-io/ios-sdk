@@ -62,6 +62,8 @@ class NetworkService {
             "lastSyncTimeForUser": lastSyncTimeForUser,
             "previousDerivedFields": previousDerivedFields,
             "full_checksum": fullChecksum ?? nil,
+            "sinceTime": lastSyncTimeForUser,
+            "hash": statsigOptions.disableHashing ? "none" : "djb2",
         ])
 
         guard let body = body else {
