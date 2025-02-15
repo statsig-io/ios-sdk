@@ -233,11 +233,7 @@ struct StatsigValuesCache {
     }
 
     func getFullChecksum(user: StatsigUser) -> String? {
-        if (userCache[InternalStore.userHashKey] as? String == user.getFullUserHash()) {
-            return userCache[InternalStore.fullChecksum] as? String ?? nil
-        }
-
-        return nil
+        return userCache[InternalStore.fullChecksum] as? String ?? nil
     }
 
     mutating func updateUser(_ newUser: StatsigUser, _ values: [String: Any]? = nil) {
