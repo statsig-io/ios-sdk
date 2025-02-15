@@ -178,9 +178,20 @@ class EventLogger {
 
         failedRequestQueue += requestData
 
-        while (failedRequestQueue.count > 0
-               && failedRequestQueue.reduce(0,{ $0 + $1.count }) > MAX_SAVED_LOG_REQUEST_SIZE) {
-            failedRequestQueue.removeFirst()
+        // Find the cut-off point where total size exceeds the maximum
+        var cutoffIndex: Int? = nil
+        var cumulativeSize: Int = 0
+        for (index, data) in failedRequestQueue.enumerated().reversed() {
+            cumulativeSize += data.count
+            if cumulativeSize > MAX_SAVED_LOG_REQUEST_SIZE {
+                cutoffIndex = index
+                break
+            }
+        }
+
+        // If we exceeded the size limit, remove older entries
+        if let cutoffIndex = cutoffIndex {
+            failedRequestQueue.removeSubrange(0...cutoffIndex)
         }
     }
 

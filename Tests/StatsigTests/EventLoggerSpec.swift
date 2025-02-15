@@ -332,7 +332,7 @@ class EventLoggerSpec: BaseSpec {
                     }
                 }
 
-               it("should not save to disk while addFailedLogRequest is running") {
+                it("should not save to disk while addFailedLogRequest is running") {
                     let numberOfRequest = 1005
                     let requestSize = 1000
 
@@ -371,7 +371,52 @@ class EventLoggerSpec: BaseSpec {
 
                     expect(userDefaults.array(forKey: logger.storageKey)).toEventuallyNot(beNil())
                     expect(userDefaults.array(forKey: logger.storageKey)?.count).to(beGreaterThan(0))
-               }
+                }
+            }
+
+            describe("addFailedLogRequest") {
+                var logger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: MockDefaults())
+                let limit = logger.MAX_SAVED_LOG_REQUEST_SIZE;
+
+                let bigdata = Data(count: limit + 100)
+                let mediumdata = Data(count: limit / 2 + 100)
+                let smalldata = Data(count: 100)
+                
+
+                beforeEach {
+                    logger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: MockDefaults())
+                }
+
+                it("accepts data under the limit") {
+                    logger.addFailedLogRequest([smalldata, smalldata, smalldata])
+                    expect(logger.failedRequestQueue.count).to(equal(3))
+                }
+                it("clears first queue items until it reaches the limit") {
+                    logger.addFailedLogRequest([smalldata, smalldata, smalldata])
+                    logger.addFailedLogRequest([mediumdata])
+                    logger.addFailedLogRequest([smalldata, smalldata, smalldata, mediumdata])
+                    expect(logger.failedRequestQueue.count).to(equal(4))
+                }
+                it("can clear the first item of the queue") {
+                    logger.addFailedLogRequest([mediumdata])
+                    logger.addFailedLogRequest([smalldata, smalldata, smalldata, mediumdata])
+                    expect(logger.failedRequestQueue.count).to(equal(4))
+                }
+                it("can keep the last item of the queue") {
+                    logger.addFailedLogRequest([mediumdata, smalldata, smalldata])
+                    logger.addFailedLogRequest([mediumdata, mediumdata])
+                    expect(logger.failedRequestQueue.count).to(equal(1))
+                }
+                it("keeps part of the data array if it's above the limit") {
+                    logger.addFailedLogRequest([smalldata, mediumdata, smalldata, smalldata, smalldata, mediumdata])
+                    expect(logger.failedRequestQueue.count).to(equal(4))
+                }
+                it("clears the entire queue if the last item is above the limit") {
+                    logger.addFailedLogRequest([smalldata, smalldata, smalldata])
+                    logger.addFailedLogRequest([mediumdata])
+                    logger.addFailedLogRequest([bigdata])
+                    expect(logger.failedRequestQueue.count).to(equal(0))
+                }
             }
         }
     }
