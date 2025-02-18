@@ -36,42 +36,42 @@
     [Statsig shutdown];
 }
 
-- (void)testStartWithKey {
+- (void)testStartWithKey __attribute((deprecated("Testing deprecated function"))) {
     [Statsig startWithSDKKey:@"client-"];
     [self waitForExpectations:@[_requestExpectation] timeout:1];
 }
 
-- (void)testStartWithKeyOptions {
+- (void)testStartWithKeyOptions __attribute((deprecated("Testing deprecated function"))) {
     [Statsig startWithSDKKey:@"client-" options:_options];
     [self waitForExpectations:@[_requestExpectation] timeout:1];
 }
 
-- (void)testStartWithKeyCompletion {
+- (void)testStartWithKeyCompletion __attribute((deprecated("Testing deprecated function"))) {
     [Statsig startWithSDKKey:@"client-" completion:_completion];
     [self waitForExpectations:@[_requestExpectation] timeout:1];
 }
 
-- (void)testStartWithKeyUser {
+- (void)testStartWithKeyUser __attribute((deprecated("Testing deprecated function"))) {
     [Statsig startWithSDKKey:@"client-" user:_user];
     [self waitForExpectations:@[_requestExpectation] timeout:1];
 }
 
-- (void)testStartWithKeyUserCompletion {
+- (void)testStartWithKeyUserCompletion __attribute((deprecated("Testing deprecated function"))) {
     [Statsig startWithSDKKey:@"client-" user:_user completion:_completion];
     [self waitForExpectations:@[_requestExpectation] timeout:1];
 }
 
-- (void)testStartWithKeyUserOptions {
+- (void)testStartWithKeyUserOptions __attribute((deprecated("Testing deprecated function"))) {
     [Statsig startWithSDKKey:@"client-" user:_user options:_options];
     [self waitForExpectations:@[_requestExpectation] timeout:1];
 }
 
-- (void)testStartWithKeyOptionsCompletion {
+- (void)testStartWithKeyOptionsCompletion __attribute((deprecated("Testing deprecated function"))) {
     [Statsig startWithSDKKey:@"client-" options:_options completion:_completion];
     [self waitForExpectations:@[_requestExpectation] timeout:1];
 }
 
-- (void)testStartWithKeyUserOptionsCompletion {
+- (void)testStartWithKeyUserOptionsCompletion __attribute((deprecated("Testing deprecated function"))) {
     [Statsig startWithSDKKey:@"client-" user:_user options:_options completion:_completion];
     [self waitForExpectations:@[_requestExpectation] timeout:1];
 }
@@ -149,7 +149,7 @@
 
 - (void)initializeStatsig
 {
-    [Statsig startWithSDKKey:@"client-"];
+    [Statsig initializeWithSDKKey:@"client-"];
     [self waitForExpectations:@[_requestExpectation] timeout:1];
 }
 

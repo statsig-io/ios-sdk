@@ -52,12 +52,11 @@ class StorageProviderBasedUserDefaultsUsageSpec: BaseSpec {
             }
             
             func clearUserDefaults() {
-                if let defaultsDictionary = UserDefaults.standard.dictionaryRepresentation() as? [String: Any] {
-                    for key in defaultsDictionary.keys {
-                        UserDefaults.standard.removeObject(forKey: key)
-                    }
-                    UserDefaults.standard.synchronize()
+                let defaultsDictionary = UserDefaults.standard.dictionaryRepresentation()
+                for key in defaultsDictionary.keys {
+                    UserDefaults.standard.removeObject(forKey: key)
                 }
+                UserDefaults.standard.synchronize()
             }
 
             afterEach {

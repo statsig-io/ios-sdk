@@ -96,7 +96,7 @@
 
 - (void)initializeStatsig
 {
-    [Statsig startWithSDKKey:@"client-"];
+    [Statsig initializeWithSDKKey:@"client-"];
     [self waitForExpectations:@[_requestExpectation] timeout:1];
 }
 

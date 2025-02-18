@@ -173,7 +173,7 @@ class CodableSpec: BaseSpec {
                         evalDetails: .uninitialized()
                     ),
                     Layer.init(
-                        client: StatsigClient(sdkKey: "client-key", user: nil, options: nil) { _ in },
+                        client: StatsigClient(sdkKey: "client-key", user: nil, options: nil, completionWithResult: { _ in }),
                         name: "full_layer",
                         configObj: [
                             "name": "full_layer",

@@ -24,7 +24,6 @@ class DNSQuerySpec: BaseSpec {
             }
 
             it("parses DNS response") {
-                let parsed =
                 switch parseDNSResponse(data: sampleDNSResponse) {
                 case .failure(let error):
                     throw error

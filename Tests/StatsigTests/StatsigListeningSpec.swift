@@ -127,7 +127,7 @@ class StatsigListeningSpec: BaseSpec {
                 expect(Statsig.isInitialized()).to(beFalse())
                 var called = false
                 let opts = StatsigOptions(disableDiagnostics: true)
-                Statsig.start(sdkKey: "client-key", options: opts) { _ in
+                Statsig.initialize(sdkKey: "client-key", options: opts) { _ in
                     called = true
                 }
                 expect(called).toEventually(beTrue())
@@ -333,7 +333,7 @@ class StatsigListeningSpec: BaseSpec {
 
                 let listener = TestListener()
                 Statsig.addListener(listener)
-                Statsig.updateUser(StatsigUser())
+                Statsig.updateUserWithResult(StatsigUser())
 
                 expect(listener.onUserUpdatedError).toEventually(contain("An error occurred during fetching values for the user. 500"))
                 expect(listener.onUserUpdatedWithResultError?.message).toEventually(contain("An error occurred during fetching values for the user. 500"))
@@ -344,7 +344,7 @@ class StatsigListeningSpec: BaseSpec {
 
                 let listener = TestListener()
                 Statsig.addListener(listener)
-                Statsig.updateUser(StatsigUser())
+                Statsig.updateUserWithResult(StatsigUser())
 
                 expect(listener.onUserUpdatedCalled).toEventually(beTrue())
                 expect(listener.onUserUpdatedWithResultCalled).toEventually(beTrue())
