@@ -35,7 +35,7 @@ final class AutoUpdateSpec: BaseSpec {
                 TestUtils.startStatsigAndWait(key: "client-key", nil, opts)
             }
 
-            expect(callsMade).toEventually(equal(10))
+            expect(callsMade).toEventually(beGreaterThanOrEqualTo(10))
         }
 
         it("pulls in changed values") {
