@@ -34,7 +34,7 @@ class LogFlushTimerSpec: BaseSpec {
             }
 
             it("fires timers regardless of starting thread") {
-                DispatchQueue.global(qos: .background).async {
+                DispatchQueue.global().async {
                     logger.start(flushInterval: 0.001)
                 }
 

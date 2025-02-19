@@ -277,7 +277,7 @@ class EventLoggerSpec: BaseSpec {
                     let userDefaults = MockDefaults()
                     let logger = EventLogger(sdkKey: "client-key", user: user, networkService: ns, userDefaults: userDefaults)
                     
-                    DispatchQueue.global(qos: .background).async {
+                    DispatchQueue.global().async {
                         expect(Thread.isMainThread).to(beFalse())
 
                         logger.addFailedLogRequest([Data()])

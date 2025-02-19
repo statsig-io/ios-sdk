@@ -26,7 +26,7 @@ class AtomicDictionarySpec: BaseSpec {
                 }
 
                 DispatchQueue.main.async(execute: work)
-                DispatchQueue.global(qos: .background).async(execute: work)
+                DispatchQueue.global().async(execute: work)
 
                 waitUntil { done in
                     DispatchQueue.global(qos: .userInitiated).sync {
