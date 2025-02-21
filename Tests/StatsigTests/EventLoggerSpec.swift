@@ -159,12 +159,8 @@ class EventLoggerSpec: BaseSpec {
                 var client: StatsigClient?
                 beforeEach {
                     // Prevent calls to initialize
-                    stub(condition: isHost(ApiHost)) { req in
-                        if ((req.url?.absoluteString.contains("/initialize") ?? false) == false) {
-                            return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
-                        }
-
-                        return HTTPStubsResponse(jsonObject: [:], statusCode: 500, headers: nil)
+                    stub(condition: isHost(ApiHost) && isPath("/v1/initialize")) { req in
+                        return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
                     }
                     stub(condition: isHost(LogEventHost)) { request in
                         actualRequestHttpBody = try! JSONSerialization.jsonObject(
