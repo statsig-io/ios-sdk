@@ -90,7 +90,12 @@ public class StatsigClient {
         if (options?.initializeValues != nil) {
             _onComplete(nil)
         } else {
-            fetchValuesFromNetwork(completion: _onComplete)
+            fetchValuesFromNetwork(
+                marker: Diagnostics.mark?.initialize.network,
+                threadMarker: Diagnostics.mark?.initialize.netThreadJump,
+                processMarker: Diagnostics.mark?.initialize.process,
+                completion: _onComplete
+            )
         }
     }
 
@@ -763,7 +768,12 @@ extension StatsigClient {
 // MARK: Misc Private
 extension StatsigClient {
 
-    private func fetchValuesFromNetwork(completion: ResultCompletionBlock?) {
+    internal func fetchValuesFromNetwork(
+        marker: NetworkMarker? = nil,
+        threadMarker: InitializeStepMarker? = nil,
+        processMarker: InitializeStepMarker? = nil,
+        completion: ResultCompletionBlock?
+    ) {
         let currentUser = self.currentUser
         Diagnostics.mark?.initialize.storeRead.start()
         let sinceTime = self.store.getLastUpdateTime(user: currentUser)
@@ -771,7 +781,15 @@ extension StatsigClient {
         let fullChecksum = self.store.getFullChecksum(user: currentUser)
         Diagnostics.mark?.initialize.storeRead.end(success: true)
 
-        networkService.fetchInitialValues(for: currentUser, sinceTime: sinceTime, previousDerivedFields: previousDerivedFields, fullChecksum: fullChecksum) { [weak self] error in
+        networkService.fetchInitialValues(
+            for: currentUser,
+            sinceTime: sinceTime,
+            previousDerivedFields: previousDerivedFields,
+            fullChecksum: fullChecksum,
+            marker: marker,
+            threadMarker: threadMarker,
+            processMarker: processMarker
+        ) { [weak self] error in
             if let self = self {
                 if let error = error {
                     self.logger.log(Event.statsigInternalEvent(
