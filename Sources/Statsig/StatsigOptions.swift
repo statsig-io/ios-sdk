@@ -215,8 +215,8 @@ public class StatsigOptions {
             self.shutdownOnBackground = shutdownOnBackground
         }
         
-        if let internval = autoValueUpdateIntervalSec {
-            self.autoValueUpdateIntervalSec = internval
+        if let autoValueUpdateIntervalSec = autoValueUpdateIntervalSec {
+            self.autoValueUpdateIntervalSec = autoValueUpdateIntervalSec
         }
         
         if let storageProvider = storageProvider {

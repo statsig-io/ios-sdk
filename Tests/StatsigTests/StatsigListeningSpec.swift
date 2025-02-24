@@ -243,7 +243,7 @@ class StatsigListeningSpec: BaseSpec {
                 goodStub()
                 let opts = StatsigOptions(
                     enableAutoValueUpdate: true,
-                    autoValueUpdateIntervalSec: 1,
+                    autoValueUpdateIntervalSec: 0.01,
                     api: "http://AutoUpdateSpec"
                 )
 
@@ -263,10 +263,6 @@ class StatsigListeningSpec: BaseSpec {
                 let listener = TestListener()
                 Statsig.addListener(listener)
 
-                // Wait for the auto-update interval to pass
-                let timeoutInSeconds = 5
-                sleep(UInt32(timeoutInSeconds))
-
                 expect(listener.onUserUpdatedCalled).toEventually(beTrue())
                 expect(listener.onUserUpdatedWithResultCalled).toEventually(beTrue())
                 expect(listener.onUserUpdatedError).to(beNil())
@@ -281,10 +277,6 @@ class StatsigListeningSpec: BaseSpec {
 
                 let listener = TestListener()
                 Statsig.addListener(listener)
-
-                // Wait for the auto-update interval to pass
-                let timeoutInSeconds = 5
-                sleep(UInt32(timeoutInSeconds))
 
                 expect(listener.onUserUpdatedCalled).toEventually(beTrue())
                 expect(listener.onUserUpdatedWithResultCalled).toEventually(beTrue())
