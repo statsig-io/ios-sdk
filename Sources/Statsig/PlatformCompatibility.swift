@@ -44,7 +44,7 @@ class PlatformCompatibility
     static let deviceInfo = DeviceInfo()
 
     static func getRootViewControllerClassName(_ callback: @escaping (_ name: String?) -> Void) {
-        DispatchQueue.main.async { [callback] in
+        ensureMainThread { [callback] in
             callback(nil)
         }
     }
@@ -71,7 +71,7 @@ class PlatformCompatibility
     static let deviceInfo = DeviceInfo()
 
     static func getRootViewControllerClassName(_ callback: @escaping (_ name: String?) -> Void) {
-        DispatchQueue.main.async { [callback] in
+        ensureMainThread { [callback] in
             if let klass = UIApplication.shared.keyWindow?.rootViewController?.classForCoder {
                 callback("\(klass)")
             } else {
@@ -101,7 +101,7 @@ class PlatformCompatibility
     static let deviceInfo = DeviceInfo()
 
     static func getRootViewControllerClassName(_ callback: @escaping (_ name: String?) -> Void) {
-        DispatchQueue.main.async { [callback] in
+        ensureMainThread { [callback] in
             let scene = UIApplication.shared.connectedScenes.first(where: { scene in
                 return scene.activationState == UIScene.ActivationState.foregroundActive
             })
@@ -150,7 +150,7 @@ class PlatformCompatibility
     static let deviceInfo = DeviceInfo()
 
     static func getRootViewControllerClassName(_ callback: @escaping (_ name: String?) -> Void) {
-        DispatchQueue.main.async { [callback] in
+        ensureMainThread { [callback] in
             if let klass = NSApplication.shared.keyWindow?.contentViewController?.classForCoder {
                 callback("\(klass)")
             } else {

@@ -196,21 +196,16 @@ class EventLogger {
     }
 
     internal func saveFailedLogRequestsToDisk() {
-        guard Thread.isMainThread else {
-            // `self` is strongly captured to ensure we save to disk
-            DispatchQueue.main.async { [self] in
-                self.saveFailedLogRequestsToDisk()
-            }
-            return
+        // `self` is strongly captured explictly to ensure we save to disk
+        ensureMainThread { [self] in
+            failedRequestLock.lock()
+            defer { failedRequestLock.unlock() }
+
+            userDefaults.setValue(
+                failedRequestQueue,
+                forKey: storageKey
+            )
         }
-
-        failedRequestLock.lock()
-        defer { failedRequestLock.unlock() }
-
-        userDefaults.setValue(
-            failedRequestQueue,
-            forKey: storageKey
-        )
     }
 
     static func deleteLocalStorage(sdkKey: String) {

@@ -732,7 +732,7 @@ extension StatsigClient {
      Presents a view of the current internal state of the SDK.
      */
     public func openDebugView(_ callback: DebuggerCallback? = nil) {
-        DispatchQueue.main.async { [weak self] in
+        ensureMainThread { [weak self] in
             if let self = self {
                 StatsigDebugViewController.show(self.sdkKey, self.getDebugViewControllerState(), callback)
             }
@@ -850,7 +850,7 @@ extension StatsigClient {
             return
         }
         
-        DispatchQueue.main.async { [weak self] in
+        ensureMainThread { [weak self] in
             self?.fetchValuesFromNetwork { [weak self, completion] error in
                 guard let self = self else {
                     return

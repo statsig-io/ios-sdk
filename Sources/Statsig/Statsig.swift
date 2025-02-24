@@ -41,7 +41,7 @@ public class Statsig {
 
         if options?.enableCacheByFile == true {
             Diagnostics.mark?.initialize.createCache.start(type: .file)
-            DispatchQueue.main.async {
+            ensureMainThread {
                 StatsigUserDefaults.defaults = FileBasedUserDefaults()
                 _initialize()
             }

@@ -138,7 +138,7 @@ class NetworkService {
             completed = true
 
             self?.store.finalizeValues {
-                DispatchQueue.main.async {
+                ensureMainThread {
                     task?.cancel()
                     completion?(err)
                 }
@@ -334,7 +334,7 @@ class NetworkService {
         threadMarker: InitializeStepMarker? = nil
     ) {
         threadMarker?.start()
-        DispatchQueue.main.async { [weak self] in
+        ensureMainThread { [weak self] in
             let currentAttempt = failedAttempts + 1
             threadMarker?.end(success: true)
             marker?.start(attempt: currentAttempt)

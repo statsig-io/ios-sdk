@@ -121,6 +121,19 @@ class TestUtils {
         NetworkService.defaultInitializationURL = URL(string: "https://\(ApiHost)\(Endpoint.initialize.rawValue)")
         NetworkService.defaultEventLoggingURL = URL(string: "https://\(LogEventHost)\(Endpoint.logEvent.rawValue)")
     }
+
+    static func freezeThreadUntilAsyncDone(dispatchQueue: DispatchQueue = DispatchQueue.global(), _ callback: @escaping () -> Void) {
+        let semaphore = DispatchSemaphore(value: 0)
+
+        dispatchQueue.async {
+            callback()
+
+            // Unblocks calling thread
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+    }
 }
 
 extension URLRequest {
