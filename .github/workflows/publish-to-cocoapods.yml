@@ -1,9 +1,9 @@
-name: Publish iOS SDK
+name: Publish to CocoaPods
 
 on:
   workflow_dispatch:
   release:
-    types: [released]
+    types: [released, prereleased]
 
 jobs:
   build:
