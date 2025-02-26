@@ -1,0 +1,20 @@
+name: Publish iOS SDK
+
+on:
+  workflow_dispatch:
+  release:
+    types: [released]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Publish to CocoaPods
+        env:
+            COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+        run: pod trunk push Statsig.podspec --skip-tests
