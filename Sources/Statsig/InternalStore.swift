@@ -609,13 +609,18 @@ class InternalStore {
         }
     }
 
-    func finalizeValues(completion: (() -> Void)? = nil) {
+    func finalizeValues(
+        completionQueue: DispatchQueue = Thread.isMainThread ? .main : .global(),
+        completion: (() -> Void)? = nil
+    ) {
         storeQueue.async(flags: .barrier) { [weak self] in
             if self?.cache.source == .Loading {
                 self?.cache.source = .NoValues
             }
 
-            completion?()
+            completionQueue.async {
+                completion?()
+            }
         }
     }
 
@@ -636,11 +641,11 @@ class InternalStore {
             self.cache.saveValues(values, cacheKey, userHash)
             let cacheByID = self.cache.cacheByID
 
-            DispatchQueue.global().async(flags: .barrier) {
+            DispatchQueue.global().async() {
                 StatsigUserDefaults.defaults.setDictionarySafe(cacheByID, forKey: InternalStore.localStorageKey)
             }
 
-            DispatchQueue.main.async { completion?() }
+            DispatchQueue.global().async { completion?() }
         }
     }
 

@@ -67,12 +67,13 @@ class NetworkService {
         ])
 
         guard let body = body else {
-            self.store.finalizeValues()
-            completion?(StatsigClientError(
-                .failedToFetchValues,
-                message: parseErr?.localizedDescription ?? "Failed to serialize request body ",
-                cause: parseErr
-            ))
+            self.store.finalizeValues {
+                completion?(StatsigClientError(
+                    .failedToFetchValues,
+                    message: parseErr?.localizedDescription ?? "Failed to serialize request body ",
+                    cause: parseErr
+                ))
+            }
             return
         }
 
@@ -98,8 +99,9 @@ class NetworkService {
             }
             
             guard let dict = data?.json, dict["has_updates"] as? Bool == true else {
-                self.store.finalizeValues()
-                completion?(nil)
+                self.store.finalizeValues {
+                    completion?(nil)
+                }
                 return
             }
 
@@ -140,17 +142,15 @@ class NetworkService {
             guard !completed else { return }
             completed = true
 
-            self?.store.finalizeValues {
-                ensureMainThread {
-                    task?.cancel()
-                    completion?(err)
-                }
+            self?.store.finalizeValues(completionQueue: .main) {
+                task?.cancel()
+                completion?(err)
             }
 
         }
 
         if statsigOptions.initTimeout > 0 {
-            DispatchQueue.main.asyncAfter(deadline: .now() + statsigOptions.initTimeout) {
+            DispatchQueue.global().asyncAfter(deadline: .now() + statsigOptions.initTimeout) {
                 done(StatsigClientError(.initTimeoutExpired))
             }
         }
