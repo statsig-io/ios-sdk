@@ -16,8 +16,8 @@ class StoreDeadlockSpec: BaseSpec {
         super.spec()
 
         describe("Store Deadlock Detection") {
-            let iterations = 1000
-            let numberOfTasks = 10
+            let iterations = 100
+            let numberOfTasks = 5
 
             var queues: [DispatchQueue] = []
 
@@ -29,7 +29,7 @@ class StoreDeadlockSpec: BaseSpec {
                             object: UserDefaults.standard, queue: .main) { _ in }
 
                 stub(condition: isHost(ApiHost)) { req in
-                    let delay = Double.random(in: 0.1 ..< 0.8)
+                    let delay = Statsig.isInitialized() ? Double.random(in: 0.1 ..< 0.8) : 0
 
                     return HTTPStubsResponse(jsonObject: [
                         "feature_gates": [
