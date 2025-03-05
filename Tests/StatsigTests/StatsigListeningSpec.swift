@@ -241,6 +241,10 @@ class StatsigListeningSpec: BaseSpec {
         describe("listening to background sync callbacks") {
             beforeEach {
                 goodStub()
+                stub(condition: isHost("AutoUpdateSpec")) { req in
+                    return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
+                }
+
                 let opts = StatsigOptions(
                     enableAutoValueUpdate: true,
                     autoValueUpdateIntervalSec: 0.01,
@@ -255,11 +259,6 @@ class StatsigListeningSpec: BaseSpec {
             }
 
             it("triggers the listener after auto-update interval") {
-                goodStub()
-                stub(condition: isHost("AutoUpdateSpec")) { req in
-                    return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
-                }
-
                 let listener = TestListener()
                 Statsig.addListener(listener)
 
@@ -270,7 +269,6 @@ class StatsigListeningSpec: BaseSpec {
             }
             
             it("triggers the listener with error") {
-                goodStub()
                 stub(condition: isHost("AutoUpdateSpec")) { req in
                     return HTTPStubsResponse(jsonObject: [:], statusCode: 500, headers: nil)
                 }
