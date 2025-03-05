@@ -92,7 +92,6 @@ public class StatsigClient {
         } else {
             fetchValuesFromNetwork(
                 marker: Diagnostics.mark?.initialize.network,
-                threadMarker: Diagnostics.mark?.initialize.netThreadJump,
                 processMarker: Diagnostics.mark?.initialize.process,
                 completion: _onComplete
             )
@@ -770,7 +769,6 @@ extension StatsigClient {
 
     internal func fetchValuesFromNetwork(
         marker: NetworkMarker? = nil,
-        threadMarker: InitializeStepMarker? = nil,
         processMarker: InitializeStepMarker? = nil,
         completion: ResultCompletionBlock?
     ) {
@@ -787,7 +785,6 @@ extension StatsigClient {
             previousDerivedFields: previousDerivedFields,
             fullChecksum: fullChecksum,
             marker: marker,
-            threadMarker: threadMarker,
             processMarker: processMarker
         ) { [weak self] error in
             if let self = self {

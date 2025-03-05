@@ -115,7 +115,6 @@ class NetworkService {
         previousDerivedFields: [String: String],
         fullChecksum: String?,
         marker: NetworkMarker? = nil,
-        threadMarker: InitializeStepMarker? = nil,
         processMarker: InitializeStepMarker? = nil,
         completion: ResultCompletionBlock?
     ) {
@@ -174,8 +173,7 @@ class NetworkService {
         makeAndSendRequest(
             .initialize,
             body: body,
-            marker: marker,
-            threadMarker: threadMarker
+            marker: marker
         ) { [weak self] data, response, error in
             if let error = error {
                 done(StatsigClientError(.failedToFetchValues, cause: error))
@@ -290,7 +288,6 @@ class NetworkService {
         _ endpoint: Endpoint,
         body: Data,
         marker: NetworkMarker? = nil,
-        threadMarker: InitializeStepMarker? = nil,
         completion: @escaping NetworkCompletionHandler,
         taskCapture: TaskCaptureHandler = nil
     )
@@ -315,8 +312,7 @@ class NetworkService {
             retryLimit: RetryLimits[endpoint] ?? 0,
             marker: marker,
             completion: completion,
-            taskCapture: taskCapture,
-            threadMarker: threadMarker)
+            taskCapture: taskCapture)
     }
 
     private func endpointOverrideURL(endpoint: Endpoint) -> URL? {
@@ -333,84 +329,79 @@ class NetworkService {
         retryLimit: Int,
         marker: NetworkMarker? = nil,
         completion: @escaping NetworkCompletionHandler,
-        taskCapture: TaskCaptureHandler,
-        threadMarker: InitializeStepMarker? = nil
+        taskCapture: TaskCaptureHandler
     ) {
-        threadMarker?.start()
-        ensureMainThread { [weak self] in
-            let currentAttempt = failedAttempts + 1
-            threadMarker?.end(success: true)
-            marker?.start(attempt: currentAttempt)
+        let currentAttempt = failedAttempts + 1
+        marker?.start(attempt: currentAttempt)
 
 
-            let task = self?.statsigOptions.urlSession.dataTask(with: request) {
-                [weak self] responseData, response, error in
+        let task = self.statsigOptions.urlSession.dataTask(with: request) {
+            [weak self] responseData, response, error in
 
-                marker?.end(currentAttempt, responseData, response, error)
+            marker?.end(currentAttempt, responseData, response, error)
 
-                guard let self = self else {
-                    completion(responseData, response, error)
-                    return
-                }
+            guard let self = self else {
+                completion(responseData, response, error)
+                return
+            }
 
-                if error == nil && response?.isOK == true {
-                    self.networkFallbackResolver.tryBumpExpiryTime(endpoint: endpoint)
-                }
+            if error == nil && response?.isOK == true {
+                self.networkFallbackResolver.tryBumpExpiryTime(endpoint: endpoint)
+            }
 
-                guard failedAttempts < retryLimit else {
-                    completion(responseData, response, error)
-                    return
-                }
+            guard failedAttempts < retryLimit else {
+                completion(responseData, response, error)
+                return
+            }
 
 
-                
-                if let code = response?.status,
-                    self.networkRetryErrorCodes.contains(code) {
+            
+            if let code = response?.status,
+                self.networkRetryErrorCodes.contains(code) {
 
-                    self.sendRequest(
-                        request,
-                        endpoint: endpoint,
-                        failedAttempts: currentAttempt,
-                        retryLimit: retryLimit,
-                        marker: marker,
-                        completion: completion,
-                        taskCapture: taskCapture
-                    )
-                } else if self.networkFallbackResolver.isDomainFailure(error: error)
-                    && self.endpointOverrideURL(endpoint: endpoint) == nil
-                {
-                    // Fallback domains
-                    self.networkFallbackResolver.tryFetchUpdatedFallbackInfo(endpoint: endpoint) { [weak self] fallbackUpdated in
-                        if fallbackUpdated,
-                            let self = self,
-                            let fallbackUrl = self.networkFallbackResolver.getActiveFallbackURL(endpoint: endpoint)
-                        {
-                            var newRequest = request
-                            newRequest.url = fallbackUrl
-                            self.sendRequest(
-                                newRequest,
-                                endpoint: endpoint,
-                                failedAttempts: currentAttempt,
-                                retryLimit: retryLimit,
-                                marker: marker,
-                                completion: completion,
-                                taskCapture: taskCapture
-                            )
-                        } else {
-                            completion(responseData, response, error)
-                        }
+                self.sendRequest(
+                    request,
+                    endpoint: endpoint,
+                    failedAttempts: currentAttempt,
+                    retryLimit: retryLimit,
+                    marker: marker,
+                    completion: completion,
+                    taskCapture: taskCapture
+                )
+            } else if self.networkFallbackResolver.isDomainFailure(error: error)
+                && self.endpointOverrideURL(endpoint: endpoint) == nil
+            {
+                // Fallback domains
+                self.networkFallbackResolver.tryFetchUpdatedFallbackInfo(endpoint: endpoint) { [weak self] fallbackUpdated in
+                    if fallbackUpdated,
+                        let self = self,
+                        let fallbackUrl = self.networkFallbackResolver.getActiveFallbackURL(endpoint: endpoint)
+                    {
+                        var newRequest = request
+                        newRequest.url = fallbackUrl
+                        self.sendRequest(
+                            newRequest,
+                            endpoint: endpoint,
+                            failedAttempts: currentAttempt,
+                            retryLimit: retryLimit,
+                            marker: marker,
+                            completion: completion,
+                            taskCapture: taskCapture
+                        )
+                    } else {
+                        completion(responseData, response, error)
                     }
-                } else {
-                    completion(responseData, response, error)
                 }
+            } else {
+                completion(responseData, response, error)
             }
-
-            if let taskCapture = taskCapture, let task = task {
-                taskCapture(task)
-            }
-
-            task?.resume()
         }
+
+        if let taskCapture = taskCapture {
+            taskCapture(task)
+        }
+
+        task.resume()
     }
 
     internal static func defaultURLForEndpoint(_ endpoint: Endpoint) -> URL? {

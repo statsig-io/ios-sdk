@@ -207,6 +207,75 @@ class NetworkServiceSpec: BaseSpec {
                     }
                 }
             }
+
+            describe("with DispatchQueues") {
+
+                var logEventReceived = false
+
+                let user = StatsigUser(userID: "jkw")
+                let store = InternalStore(sdkKey, user, options: opts)
+                let ns = NetworkService(sdkKey: sdkKey, options: opts, store: store)
+
+                beforeEach {
+                    logEventReceived = false
+
+                    stub(condition: isHost(LogEventHost)) { req in
+                        logEventReceived = true
+                        return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
+                    }
+                }
+
+                afterEach {
+                    HTTPStubs.removeAllStubs()
+                }
+
+                it("should send requests from main dispatch queue") {
+                    var completionErrorMessage: String? = nil
+                    waitUntil { done in
+                        // Probably not needed
+                        DispatchQueue.main.async {
+                            ns.sendEvents(forUser: user, events: []) { errorMessage, data in
+                                completionErrorMessage = errorMessage
+                                done()
+                            }
+                        }
+                    }
+
+                    expect(logEventReceived).to(beTrue())
+                    expect(completionErrorMessage).to(beNil())
+                }
+
+                it("should send requests from a background dispatch queue") {
+                    var completionErrorMessage: String? = nil
+                    waitUntil { done in
+                        DispatchQueue.global().async {
+                            ns.sendEvents(forUser: user, events: []) { errorMessage, data in
+                                completionErrorMessage = errorMessage
+                                done()
+                            }
+                        }
+                    }
+
+                    expect(logEventReceived).to(beTrue())
+                    expect(completionErrorMessage).to(beNil())
+                }
+
+                it("should send requests from a custom dispatch queue") {
+                    var completionErrorMessage: String? = nil
+                    let queue = DispatchQueue(label: "com.Statsig.Test", attributes: .concurrent)
+                    waitUntil { done in
+                        queue.async {
+                            ns.sendEvents(forUser: user, events: []) { errorMessage, data in
+                                completionErrorMessage = errorMessage
+                                done()
+                            }
+                        }
+                    }
+
+                    expect(logEventReceived).to(beTrue())
+                    expect(completionErrorMessage).to(beNil())
+                }
+            }
         }
     }
 }
