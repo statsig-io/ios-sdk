@@ -140,7 +140,7 @@ public struct StatsigUser {
         return dict
     }
 
-    func getFullUserHash() -> String? {
+    func getFullUserHash() -> String {
         let dict = toDictionary(forLogging: false)
         let sorted = getSortedPairsString(dict)
         return sorted.djb2()

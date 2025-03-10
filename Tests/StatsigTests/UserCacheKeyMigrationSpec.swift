@@ -50,9 +50,9 @@ class UserCacheKeyMigrationSpec: BaseSpec {
                     HTTPStubs.removeAllStubs()
                 }
 
-                it("saves values as v2") {
+                it("saves values as full") {
                     let keys = defaults.getUserCaches().allKeys as? [String]
-                    expect(keys).to(equal([cacheKey.v2]))
+                    expect(keys).to(equal([cacheKey.full]))
                 }
             }
 
@@ -84,9 +84,9 @@ class UserCacheKeyMigrationSpec: BaseSpec {
                     _ = TestUtils.startWithResponseAndWait(["has_updates": false], key, user)
                 }
 
-                it("saves values as v2 and removes v1") {
+                it("saves values as full user hash and removes v1") {
                     let keys = defaults.getUserCaches().allKeys as? [String]
-                    expect(keys).to(equal([cacheKey.v2]))
+                    expect(keys).to(equal([cacheKey.full]))
                 }
 
                 it("gets the values that were migrated from v1") {
@@ -122,9 +122,47 @@ class UserCacheKeyMigrationSpec: BaseSpec {
                     _ = TestUtils.startWithResponseAndWait(["has_updates": false], key, user)
                 }
                 
-                it("saves values as v2") {
+                it("saves values as full user hash and removes v2") {
                     let keys = defaults.getUserCaches().allKeys as? [String]
-                    expect(keys).to(equal([cacheKey.v2]))
+                    expect(keys).to(equal([cacheKey.full]))
+                }
+
+                it("gets the values were in cache") {
+                    expect(Statsig.checkGate("test_gate")).to(beTrue())
+                }
+            }
+
+            describe("when cache has full user hash key") {
+                beforeEach {
+                    defaults = MockDefaults(data: [
+                        InternalStore.localStorageKey: [
+                            cacheKey.full: [
+                                "feature_gates": [
+                                    "test_gate": [
+                                        "name": "test_gate",
+                                        "value": true,
+                                        "rule_id": "a_rule_id",
+                                        "id_type": "userID",
+                                        "secondary_exposures": []
+                                    ]
+                                ],
+                                "dynamic_configs": [:],
+                                "layer_configs": [:],
+                                "time": 123,
+                                "has_updates": true,
+                                "hash_used": "none"
+                            ]
+                        ]
+                    ])
+
+                    StatsigUserDefaults.defaults = defaults
+
+                    _ = TestUtils.startWithResponseAndWait(["has_updates": false], key, user)
+                }
+                
+                it("saves values as full user hash") {
+                    let keys = defaults.getUserCaches().allKeys as? [String]
+                    expect(keys).to(equal([cacheKey.full]))
                 }
 
                 it("gets the values were in cache") {
