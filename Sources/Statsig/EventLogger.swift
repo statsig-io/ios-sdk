@@ -84,7 +84,9 @@ class EventLogger {
     }
 
     func stop() {
-        flushTimer?.invalidate()
+        ensureMainThread { [weak self] in
+            self?.flushTimer?.invalidate()
+        }
         logQueue.sync {
             self.addNonExposedChecksEvent()
             self.flushInternal(isShuttingDown: true)
