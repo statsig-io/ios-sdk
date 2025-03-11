@@ -476,6 +476,17 @@ public class Statsig {
     }
 
     /**
+     Sets a value to be returned for the given parameter store instead of following the actual ref in the store.
+
+     Parameters:
+     - storeName: The name of the config or experiment to be overridden
+     - value: Dictionary where keys are property names and values are static ref values in the overridden store
+     */
+    public static func overrideParamStore(_ storeName: String, value: [String: Any]) {
+        client?.overrideParamStore(storeName, value: value)
+    }
+
+    /**
      Clears any overridden value for the given gate/dynamic config/experiment.
 
      Parameters:
