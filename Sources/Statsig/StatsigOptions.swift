@@ -259,6 +259,82 @@ public class StatsigOptions {
     }
 }
 
+// MARK: Get dictionary for logging
+extension StatsigOptions {
+    // Global variables are lazy by default
+    static var defaultOptions = StatsigOptions()
+
+    internal func getDictionaryForLogging() -> [String: Any] {
+        let defaultOptions = StatsigOptions.defaultOptions;
+
+        var dict: [String : Any] = [
+            "environment": environment
+        ]
+
+        if storageProvider != nil {
+            dict["storageProvider"] = "set"
+        }
+        if overrideAdapter != nil {
+            dict["overrideAdapter"] = "set"
+        }
+        if evaluationCallback != nil {
+            dict["evaluationCallback"] = "set"
+        }
+        if customCacheKey != nil {
+            dict["customCacheKey"] = "set"
+        }
+        if userValidationCallback != nil {
+            dict["userValidationCallback"] = "set"
+        }
+        if urlSession != URLSession.shared {
+            dict["urlSession"] = "set"
+        }
+        if let id = overrideStableID, id != defaultOptions.overrideStableID {
+            dict["overrideStableID"] = id.count < 50 ? id : "set"
+        }
+        if let initURL = initializationURL, initURL.absoluteString != defaultOptions.initializationURL?.absoluteString {
+            dict["initializationURL"] = initURL.absoluteString
+        }
+        if let logURL = eventLoggingURL, logURL.absoluteString != defaultOptions.eventLoggingURL?.absoluteString {
+            dict["eventLoggingURL"] = logURL.absoluteString
+        }
+        if initTimeout != defaultOptions.initTimeout {
+            dict["initTimeout"] = initTimeout
+        }
+        if autoValueUpdateIntervalSec != defaultOptions.autoValueUpdateIntervalSec {
+            dict["autoValueUpdateIntervalSec"] = autoValueUpdateIntervalSec
+        }
+        if disableCurrentVCLogging != defaultOptions.disableCurrentVCLogging {
+            dict["disableCurrentVCLogging"] = disableCurrentVCLogging
+        }
+        if enableAutoValueUpdate != defaultOptions.enableAutoValueUpdate {
+            dict["enableAutoValueUpdate"] = enableAutoValueUpdate
+        }
+        if enableCacheByFile != defaultOptions.enableCacheByFile {
+            dict["enableCacheByFile"] = enableCacheByFile
+        }
+        if disableDiagnostics != defaultOptions.disableDiagnostics {
+            dict["disableDiagnostics"] = disableDiagnostics
+        }
+        if disableHashing != defaultOptions.disableHashing {
+            dict["disableHashing"] = disableHashing
+        }
+        if shutdownOnBackground != defaultOptions.shutdownOnBackground {
+            dict["shutdownOnBackground"] = shutdownOnBackground
+        }
+        if disableEventNameTrimming != defaultOptions.disableEventNameTrimming {
+            dict["disableEventNameTrimming"] = disableEventNameTrimming
+        }
+
+        // Initialize Values dictionary
+        if initializeValues != nil {
+            dict["initializeValues"] = "set"
+        }
+
+        return dict
+    }
+}
+
 // NOTE: This is here to to prevent a bugfix from causing a breaking change to users of the `api` option
 extension URL {
     var ignoringPath: URL? {

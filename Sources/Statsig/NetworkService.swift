@@ -45,7 +45,7 @@ class NetworkService {
         self.sdkKey = sdkKey
         self.statsigOptions = options
         self.store = store
-        let errorBoundary = ErrorBoundary.boundary(clientKey: sdkKey, deviceEnvironment: options.environment)
+        let errorBoundary = ErrorBoundary.boundary(clientKey: sdkKey, statsigOptions: options)
         self.networkFallbackResolver = NetworkFallbackResolver(sdkKey: sdkKey, store: store, errorBoundary: errorBoundary);
     }
 

@@ -2,23 +2,23 @@ import Foundation
 
 class ErrorBoundary {
     private var clientKey: String
-    private var deviceEnvironment: [String: String]
+    private var statsigOptions: StatsigOptions
     private var seen: Set<String>
     private var url: String
     
-    static func boundary(clientKey: String, deviceEnvironment: [String: String]?) -> ErrorBoundary {
+    static func boundary(clientKey: String, statsigOptions: StatsigOptions) -> ErrorBoundary {
         let boundary = ErrorBoundary(
             clientKey: clientKey,
-            deviceEnvironment: deviceEnvironment ?? [:],
+            statsigOptions: statsigOptions,
             seen: Set<String>(),
             url: "https://statsigapi.net/v1/sdk_exception"
         )
         return boundary
     }
     
-    private init(clientKey: String, deviceEnvironment: [String: String], seen: Set<String>, url: String) {
+    private init(clientKey: String, statsigOptions: StatsigOptions, seen: Set<String>, url: String) {
         self.clientKey = clientKey
-        self.deviceEnvironment = deviceEnvironment
+        self.statsigOptions = statsigOptions
         self.seen = seen
         self.url = url
     }
@@ -66,8 +66,9 @@ class ErrorBoundary {
             let body: [String: Any] = [
                 "exception": errorDetails.name,
                 "info": errorDetails.info,
-                "statsigMetadata": deviceEnvironment,
-                "tag": tag
+                "statsigMetadata": self.statsigOptions.environment, 
+                "tag": tag,
+                "statsigOptions": self.statsigOptions.getDictionaryForLogging()
             ]
             
             let jsonData = try JSONSerialization.data(withJSONObject: body)
