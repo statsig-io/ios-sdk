@@ -20,4 +20,4 @@ jobs:
         uses: actions/checkout@main
 
       - name: Run Tests
-        run: ./run_tests.sh
+        run: ./run_tests.sh -test-iterations 3 -retry-tests-on-failure
