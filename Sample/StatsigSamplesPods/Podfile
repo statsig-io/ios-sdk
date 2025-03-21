@@ -1,0 +1,10 @@
+platform :ios, '12.0'
+
+project './StatsigSamples.xcodeproj'
+
+target 'StatsigSamples' do
+    pod 'Statsig', :path => "../.." #, :modular_headers => true
+
+    target 'StatsigSamplesTests' do
+    end
+end

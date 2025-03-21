@@ -1,0 +1,41 @@
+name: Test Pod Install
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-pod-install:
+    name: Test Pod Install
+    runs-on: macos-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Cache CocoaPods specs
+        uses: actions/cache@v3
+        with:
+          path: ~/.cocoapods
+          key: ${{ runner.os }}-cocoapods-specs-${{ hashFiles('**/Podfile') }}
+          restore-keys: |
+            ${{ runner.os }}-cocoapods-specs-
+
+      - name: Pod install
+        working-directory: Sample/StatsigSamplesPods
+        timeout-minutes: 5
+        run: pod install --repo-update
+
+      - name: Test Sample App
+        working-directory: Sample/StatsigSamplesPods
+        timeout-minutes: 8
+        run: |
+          xcodebuild test \
+            -destination "platform=iOS Simulator,name=iPhone SE (3rd generation)" \
+            -workspace StatsigSamples.xcworkspace/ \
+            -scheme StatsigSamplesTests \
+            | xcbeautify && exit ${PIPESTATUS[0]}
