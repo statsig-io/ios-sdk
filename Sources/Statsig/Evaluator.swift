@@ -3,13 +3,19 @@ import CommonCrypto
 
 class Evaluator {
 
+    private var lcut: UInt64
     private var specs: SpecMap = [:]
-    private var lcut: UInt64?
+    private var paramStores: [String : ParamStoreSpec]?
     private var receivedAt: UInt64 = Time.now()
 
-    internal init(specs: SpecMap, lcut: UInt64) {
+    internal init(
+        lcut: UInt64,
+        specs: SpecMap,
+        paramStores: [String : ParamStoreSpec]?
+    ) {
         self.lcut = lcut
         self.specs = specs
+        self.paramStores = paramStores
     }
 
     func getGate(_ user: StatsigUser, _ name: String) -> FeatureGate?
@@ -85,6 +91,17 @@ class Evaluator {
             allocatedExperimentName: evaluationResult.configDelegate,
             isExperimentActive: evaluationResult.isExperimentActive,
             isUserInExperiment: evaluationResult.isExperimentGroup
+        )
+    }
+
+    func getParameterStore(_ name: String, _ client: StatsigClient?) -> ParameterStore? {
+        let paramStore = self.paramStores?[name]
+
+        return ParameterStore(
+            name: name,
+            evaluationDetails: self.evalDetails(reason: paramStore != nil ? .Recognized : .Unrecognized),
+            client: client,
+            configuration: paramStore?.parameters.getSerializedDictionaryResult()?.dictionary ?? [:]
         )
     }
 

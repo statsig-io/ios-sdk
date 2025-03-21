@@ -29,7 +29,7 @@ fileprivate struct ParamKeys {
     static let layerName = "layer_name"
 }
 
-public struct ParameterStore {
+public struct ParameterStore: ConfigBase {
     /**
      The name used to retrieve this ParameterStore.
      */

@@ -8,8 +8,8 @@ public class OnDeviceEvalAdapter: OverrideAdapter {
 
     private var evaluator: Evaluator
 
-    internal init(specs: SpecMap, lcut: UInt64) {
-        self.evaluator = Evaluator(specs: specs, lcut: lcut)
+    internal init(lcut: UInt64, specs: SpecMap, paramStores: [String : ParamStoreSpec]?) {
+        self.evaluator = Evaluator(lcut: lcut, specs: specs, paramStores: paramStores)
     }
 
     public convenience init?(stringPayload: String) {
@@ -36,7 +36,7 @@ public class OnDeviceEvalAdapter: OverrideAdapter {
             .layer: createMapFromList(list: dcsResponse.layerConfigs, key: \.name)
         ]
 
-        self.init(specs: specs, lcut: dcsResponse.time)
+        self.init(lcut: dcsResponse.time, specs: specs, paramStores: dcsResponse.paramStores)
     }
 
     func getGate(user: StatsigUser, name: String, original: FeatureGate) -> FeatureGate?
@@ -55,6 +55,10 @@ public class OnDeviceEvalAdapter: OverrideAdapter {
 
     func getLayer(client: StatsigClient?, user: StatsigUser, name: String, original: Layer) -> Layer? {
         return decideConfigBase(original, evaluator.getLayer(client, user, name))
+    }
+
+    func getParameterStore(client: StatsigClient?, name: String, original: ParameterStore) -> ParameterStore? {
+        return decideConfigBase(original, evaluator.getParameterStore(name, client))
     }
 
     private func decideConfigBase<T>(_ originalConfig: T, _ overriddenConfig: T?) -> T? where T : ConfigBase {
