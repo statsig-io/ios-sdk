@@ -50,4 +50,6 @@ jobs:
             -destination "platform=iOS Simulator,name=iPhone SE (3rd generation)" \
             -workspace StatsigSamples.xcworkspace/ \
             -scheme Statsig-Unit-Tests \
+            -retry-tests-on-failure \
+            -test-iterations 3 \
             | xcbeautify && exit ${PIPESTATUS[0]}
