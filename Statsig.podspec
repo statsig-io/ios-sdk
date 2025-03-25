@@ -35,5 +35,6 @@ Pod::Spec.new do |spec|
       test_spec.dependency 'Quick'
       test_spec.dependency 'OHHTTPStubs'
       test_spec.dependency 'OHHTTPStubs/Swift'
+      test_spec.dependency 'GzipSwift'
   end
 end

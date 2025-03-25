@@ -47,13 +47,13 @@ class EventLogger {
         self.nonExposedChecks = [String: Int]()
     }
 
-    internal func retryFailedRequests() {
+    internal func retryFailedRequests(forUser user: StatsigUser) {
         logQueue.async { [weak self] in
             guard let self = self else { return }
             if let failedRequestsCache = userDefaults.array(forKey: storageKey) as? [Data], !failedRequestsCache.isEmpty {
                 userDefaults.removeObject(forKey: storageKey)
                 
-                networkService.sendRequestsWithData(failedRequestsCache) { [weak self] failedRequestsData in
+                networkService.sendRequestsWithData(failedRequestsCache, forUser: user) { [weak self] failedRequestsData in
                     guard let failedRequestsData = failedRequestsData else { return }
                     self?.addFailedLogRequest(failedRequestsData)
                     self?.saveFailedLogRequestsToDisk()

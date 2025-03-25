@@ -136,9 +136,31 @@ class TestUtils {
     }
 }
 
+extension CompressionType {
+    static func from(header: String?) -> CompressionType? {
+        switch header {
+            case nil: return CompressionType.none
+            case "gzip": return .gzip
+            default: return nil
+        }
+    }
+}
+
 extension URLRequest {
-    public var statsig_body: [String: Any]? {
+    public var statsig_decodedBody: Data? {
         guard let body = ohhttpStubs_httpBody else {
+            return nil
+        }
+        
+        let contentEncoding = self.value(forHTTPHeaderField: "Content-Encoding")
+        return switch CompressionType.from(header: contentEncoding) {
+            case .gzip: try! body.gunzipped()
+            default: body
+        }
+    }
+
+    public var statsig_body: [String: Any]? {
+        guard let body = statsig_decodedBody else {
             return nil
         }
 

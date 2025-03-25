@@ -40,6 +40,21 @@ public struct BootstrapMetadata {
     }
 }
 
+internal struct SDKFlags: Decodable {    
+    var enabledLogEventCompression: Bool = false
+
+    init() {}
+
+    init(from payload: Any?) {
+        if let value = (payload as? [String : Any])?["enabled_log_event_compression"] as? Bool {
+            self.enabledLogEventCompression = value
+        }
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case enabledLogEventCompression = "enabled_log_event_compression"
+    }
+}
 
 struct StatsigValuesCache {
     var cacheByID: [String: [String: Any]]
@@ -63,6 +78,7 @@ struct StatsigValuesCache {
     var sdkKey: String
     var options: StatsigOptions
     var bootstrapMetadata: BootstrapMetadata? = nil
+    var sdkFlags: SDKFlags?
 
     var userCache: [String: Any] {
         didSet {
@@ -74,6 +90,7 @@ struct StatsigValuesCache {
             paramStores = userCache[InternalStore.paramStoresKey] as? [String: [String: Any]]
             hashUsed = userCache[InternalStore.hashUsedKey] as? String
             bootstrapMetadata = userCache[InternalStore.bootstrapMetadata] as? BootstrapMetadata
+            sdkFlags = SDKFlags(from: userCache[InternalStore.sdkFlagsKey])
         }
     }
 
@@ -247,6 +264,14 @@ struct StatsigValuesCache {
         return nil
     }
 
+    func getSDKFlags(user: StatsigUser) -> SDKFlags {
+        if userCache[InternalStore.userHashKey] as? String == user.getFullUserHash() {
+            return sdkFlags ?? SDKFlags();
+        }
+
+        return SDKFlags()
+    }
+
     mutating func updateUser(_ newUser: StatsigUser, _ values: [String: Any]? = nil) {
         // when updateUser is called, state will be uninitialized until updated values are fetched or local cache is retrieved
         source = .Loading
@@ -268,6 +293,7 @@ struct StatsigValuesCache {
             cache[InternalStore.hashUsedKey] = values[InternalStore.hashUsedKey]
             cache[InternalStore.derivedFieldsKey] = values[InternalStore.derivedFieldsKey]
             cache[InternalStore.fullChecksum] = values[InternalStore.fullChecksum]
+            cache[InternalStore.sdkFlagsKey] = values[InternalStore.sdkFlagsKey]
         }
 
         if (userCacheKey.full == cacheKey.full) {
@@ -522,6 +548,7 @@ class InternalStore {
     static let bootstrapMetadata = "bootstrap_metadata"
     static let fullChecksum = "full_checksum"
     static let fullUserHashKey = "full_user_hash"
+    static let sdkFlagsKey = "sdk_flags"
 
     var cache: StatsigValuesCache
     var localOverrides: [String: Any] = InternalStore.getEmptyOverrides()
@@ -568,6 +595,12 @@ class InternalStore {
     func getFullChecksum(user: StatsigUser) -> String? {
         storeQueue.sync {
             return cache.getFullChecksum(user: user)
+        }
+    }
+
+    func getSDKFlags(user: StatsigUser) -> SDKFlags {
+        storeQueue.sync {
+            return cache.getSDKFlags(user: user)
         }
     }
 

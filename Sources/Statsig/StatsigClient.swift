@@ -73,7 +73,7 @@ public class StatsigClient {
             self.hasInitialized = true
             self.lastInitializeError = error
 
-            self.logger.retryFailedRequests();
+            self.logger.retryFailedRequests(forUser: capturedUser);
 
             Diagnostics.mark?.overall.end(
                 success: error == nil,

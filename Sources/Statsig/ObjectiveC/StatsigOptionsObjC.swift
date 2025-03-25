@@ -36,6 +36,10 @@ public final class StatsigOptionsObjC: NSObject {
             self.optionsInternal.disableHashing = disableHashing
         }
 
+        if let disableCompression = args["disableCompression"] as? Bool {
+            self.optionsInternal.disableCompression = disableCompression
+        }
+
         if let initializeValues = args["initializeValues"] as? [String: Any] {
             self.optionsInternal.initializeValues = initializeValues
         }

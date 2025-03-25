@@ -83,13 +83,16 @@ class LogEventFailureSpec: BaseSpec {
 
                 var requestCount = 0
                 var originalEventRetryCount = 0
+                var lastRequest: URLRequest? = nil
 
                 func createLogger() {
                     logger = EventLogger(sdkKey: sdkKey, user: user, networkService: ns, userDefaults: defaults)
-                    logger.retryFailedRequests()
+                    logger.retryFailedRequests(forUser: user)
                 }
 
                 beforeEach {
+                    lastRequest = nil
+                    NetworkService.disableCompression = false
                     defaults.data.reset([:])
                     requestCount = 0
                     originalEventRetryCount = 0
@@ -108,11 +111,13 @@ class LogEventFailureSpec: BaseSpec {
 
                 afterEach {
                     teardownNetwork()
+                    NetworkService.disableCompression = true
                 }
 
                 func stubError() {
                     stub(condition: isHost(LogEventHost)) { request in
                         requestCount += 1;
+                        lastRequest = request;
                         // Use a cancelled error to prevent the network retry logic
                         return HTTPStubsResponse(error: NSError(domain: NSURLErrorDomain, code: NSURLErrorCancelled))
                     }
@@ -121,6 +126,7 @@ class LogEventFailureSpec: BaseSpec {
                 func stubOK() {
                     stub(condition: isHost(LogEventHost)) { request in
                         requestCount += 1;
+                        lastRequest = request;
                         if let events = request.statsig_body?["events"] as? [[String: Any]] {
                             originalEventRetryCount += events.filter({ $0["eventName"] as? String == "an_event" }).count
                         }
@@ -242,6 +248,40 @@ class LogEventFailureSpec: BaseSpec {
 
                     // Should contain the "event_fail" request data
                     expect(logger.failedRequestQueue.count).toEventually(equal(1))
+                }
+
+
+                it("compresses the request data") {
+                    logger.flush()
+                    expect(logger.failedRequestQueue).toEventuallyNot(beEmpty())
+
+                    // Verify that the request had a compressed body
+                    let requestBody = lastRequest?.ohhttpStubs_httpBody
+                    expect(requestBody).toNot(beNil())
+                    expect(try requestBody?.gunzipped()).toNot(throwError())
+
+                    // Verify that the failed request queue is not compressed
+                    let uncompressedBody = logger.failedRequestQueue.first
+                    expect(uncompressedBody).toNot(beNil())
+                    expect(try uncompressedBody?.gunzipped()).to(throwError())
+
+                    // Try again with failures
+                    let currentRequestCount = requestCount
+                    logger.retryFailedRequests(forUser: user)
+                    expect(requestCount).toEventually(beGreaterThan(currentRequestCount))
+                    expect(logger.failedRequestQueue).toEventuallyNot(beEmpty())
+
+                    // Verify that the request body didn't change between retries
+                    expect(lastRequest?.ohhttpStubs_httpBody).to(equal(requestBody))
+                    // Verify that the queue data didn't change between retries
+                    expect(logger.failedRequestQueue.first).to(equal(uncompressedBody))
+
+                    // Try again with success
+                    teardownNetwork()
+                    stubOK()
+
+                    // Verify that the request body didn't change between retries
+                    expect(lastRequest?.ohhttpStubs_httpBody).to(equal(requestBody))
                 }
             }
         }

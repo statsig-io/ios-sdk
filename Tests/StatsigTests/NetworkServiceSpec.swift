@@ -97,10 +97,8 @@ class NetworkServiceSpec: BaseSpec {
 
                 stub(condition: isHost(LogEventHost)) { request in
                     actualRequest = request
-                    actualRequestHttpBody = try! JSONSerialization.jsonObject(
-                        with: request.ohhttpStubs_httpBody!,
-                        options: []) as! [String: Any]
-                    actualRequestData = request.ohhttpStubs_httpBody
+                    actualRequestHttpBody = request.statsig_body
+                    actualRequestData = request.statsig_decodedBody
                     return HTTPStubsResponse(jsonObject: [:], statusCode: 403, headers: nil)
                 }
 
@@ -157,7 +155,7 @@ class NetworkServiceSpec: BaseSpec {
                 }
 
                 waitUntil { done in
-                    ns.sendRequestsWithData(data) { failedData in
+                    ns.sendRequestsWithData(data, forUser: user) { failedData in
                         returnedRequestData = failedData!
                         done()
                     }
@@ -204,6 +202,140 @@ class NetworkServiceSpec: BaseSpec {
                         expect(expected).notTo(equal(-1))
                         expect(calls).to(equal(expected))
                         done()
+                    }
+                }
+            }
+
+            describe("Encoding requests") {
+
+                let fakeHost = "NetworkServiceSpec"
+
+                var body: Data?
+                var contentEncodingHeader: String?
+
+                let user = StatsigUser(userID: "jkw")
+
+                beforeEach {
+                    NetworkService.disableCompression = false
+                    body = nil
+                    contentEncodingHeader = nil
+                    stub(condition: isHost(LogEventHost) || isHost(fakeHost)) { req in
+                        body = req.ohhttpStubs_httpBody
+                        contentEncodingHeader = req.value(forHTTPHeaderField: "Content-Encoding")
+                        return HTTPStubsResponse(jsonObject: [:], statusCode: 200, headers: nil)
+                    }
+                }
+
+                afterEach {
+                    NetworkService.disableCompression = true
+                }
+
+                it("should encode requests with gzip by default") { () throws in
+                    let options = StatsigOptions()
+                    let store = InternalStore(sdkKey, user, options: options)
+                    let ns = NetworkService(sdkKey: sdkKey, options: options, store: store)
+
+                    waitUntil { done in
+                        ns.sendEvents(forUser: user, events: []) { errorMessage, data in
+                            done()
+                        }
+                    }
+
+                    guard let body = body else {
+                        fail("Missing request body")
+                        return;
+                    }
+                    
+                    expect(contentEncodingHeader).to(equal("gzip"))
+                    expect(try body.gunzipped()).toNot(throwError())
+                }
+
+                it("should skip encoding when the statsig option is set") { () throws in
+                    let options = StatsigOptions(disableCompression: true)
+                    let store = InternalStore(sdkKey, user, options: options)
+                    let ns = NetworkService(sdkKey: sdkKey, options: options, store: store)
+
+                    waitUntil { done in
+                        ns.sendEvents(forUser: user, events: []) { errorMessage, data in
+                            done()
+                        }
+                    }
+
+                    guard let body = body else {
+                        fail("Missing request body")
+                        return;
+                    }
+                    
+                    expect(contentEncodingHeader).to(beNil())
+                    expect(try body.gunzipped()).to(throwError())
+                }
+
+                it("should skip encoding when the eventLoggingURL option is set") { () throws in
+                    let options = StatsigOptions(eventLoggingURL: URL(string: "https://\(fakeHost)/v1/rgstr"))
+                    let store = InternalStore(sdkKey, user, options: options)
+                    let ns = NetworkService(sdkKey: sdkKey, options: options, store: store)
+
+                    waitUntil { done in
+                        ns.sendEvents(forUser: user, events: []) { errorMessage, data in
+                            done()
+                        }
+                    }
+                    guard let body = body else {
+                        fail("Missing request body")
+                        return;
+                    }
+
+                    expect(contentEncodingHeader).to(beNil())
+                    expect(try body.gunzipped()).to(throwError())
+                }
+
+                it("should skip encoding when the eventLoggingApi option is set") { () throws in
+                    let options: StatsigOptions = StatsigOptions(eventLoggingApi: "https://\(fakeHost)/v1/rgstr")
+                    let store = InternalStore(sdkKey, user, options: options)
+                    let ns = NetworkService(sdkKey: sdkKey, options: options, store: store)
+
+                    waitUntil { done in
+                        ns.sendEvents(forUser: user, events: []) { errorMessage, data in
+                            done()
+                        }
+                    }
+                    guard let body = body else {
+                        fail("Missing request body")
+                        return;
+                    }
+
+                    expect(contentEncodingHeader).to(beNil())
+                    expect(try body.gunzipped()).to(throwError())
+                }
+
+                it("should use the right compression headers on immediate retries") {
+                    let options = StatsigOptions()
+                    let store = InternalStore(sdkKey, user, options: options)
+                    let ns = NetworkService(sdkKey: sdkKey, options: options, store: store)
+
+                    var requests: [URLRequest] = []
+                    stub(condition: isHost(LogEventHost)) { request in
+                        let isFirstRequest = requests.count == 0;
+                        requests.append(request)
+                        // Status 500 should trigger a retry
+                        return HTTPStubsResponse(jsonObject: [:], statusCode: isFirstRequest ? 500 : 200, headers: nil)
+                    }
+
+                    // Send event
+                    waitUntil { done in
+                        ns.sendEvents(forUser: user, events: []) { errorMessage, data in
+                            done()
+                        }
+                    }
+
+                    expect(requests.count).toEventually(beGreaterThanOrEqualTo(2))
+                    let firstBody = requests.first?.ohhttpStubs_httpBody
+                    for request in requests {
+                        // Check that all requests have the compression header
+                        expect(request.value(forHTTPHeaderField: "Content-Encoding")).to(equal("gzip"))
+                        // Check that the bodies are all the same
+                        expect(request.ohhttpStubs_httpBody).toNot(beNil())
+                        expect(request.ohhttpStubs_httpBody).to(equal(firstBody))
                     }
                 }
             }
@@ -275,6 +407,7 @@ class NetworkServiceSpec: BaseSpec {
                     expect(logEventReceived).to(beTrue())
                     expect(completionErrorMessage).to(beNil())
                 }
+
             }
         }
     }

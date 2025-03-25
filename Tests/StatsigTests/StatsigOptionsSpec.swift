@@ -80,6 +80,7 @@ class StatsigOptionsSpec: BaseSpec {
                     initializeValues: [:],
                     disableDiagnostics: true,
                     disableHashing: true,
+                    disableCompression: true,
                     shutdownOnBackground: false,
                     initializationURL: URL(string: "http://ErrorBoundarySpec/v1/initialize"),
                     eventLoggingURL: URL(string: "http://ErrorBoundarySpec/v1/rgstr"),

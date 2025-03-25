@@ -22,6 +22,22 @@ fileprivate let RetryLimits: [Endpoint: Int] = [
 fileprivate typealias NetworkCompletionHandler = (Data?, URLResponse?, Error?) -> Void
 fileprivate typealias TaskCaptureHandler = ((URLSessionDataTask) -> Void)?
 
+internal enum CompressionType {
+    case gzip
+    case none
+    func contentEncodingHeader() -> String? {
+        return switch self {
+            case .gzip: "gzip"
+            case .none: nil
+        }
+    }
+}
+
+struct CompressedBody {
+    let body: Data
+    let compression: CompressionType
+}
+
 class NetworkService {
     let sdkKey: String
     let statsigOptions: StatsigOptions
@@ -38,15 +54,22 @@ class NetworkService {
      Default URL used for log_event network requests. Used for tests.
      */
     internal static var defaultEventLoggingURL = URL(string: "https://\(LogEventHost)\(Endpoint.logEvent.rawValue)")
+    
+    /**
+     Disables compression globally. Used for tests.
+     */
+    internal static var disableCompression = false
 
     private final let networkRetryErrorCodes = [408, 500, 502, 503, 504, 522, 524, 599]
+
+    private let errorBoundary: ErrorBoundary
 
     init(sdkKey: String, options: StatsigOptions, store: InternalStore) {
         self.sdkKey = sdkKey
         self.statsigOptions = options
         self.store = store
-        let errorBoundary = ErrorBoundary.boundary(clientKey: sdkKey, statsigOptions: options)
-        self.networkFallbackResolver = NetworkFallbackResolver(sdkKey: sdkKey, store: store, errorBoundary: errorBoundary);
+        self.errorBoundary = ErrorBoundary.boundary(clientKey: sdkKey, statsigOptions: options)
+        self.networkFallbackResolver = NetworkFallbackResolver(sdkKey: sdkKey, store: store, errorBoundary: self.errorBoundary)
     }
 
     func fetchUpdatedValues(
@@ -217,45 +240,68 @@ class NetworkService {
         }
     }
 
-    func sendEvents(forUser: StatsigUser, events: [Event],
+    func sendEvents(forUser user: StatsigUser, events: [Event],
                     completion: @escaping ((_ errorMessage: String?, _ data: Data?) -> Void))
     {
-        let (body, parseErr) = makeReqBody([
+        let (uncompressedBody, parseErr) = makeReqBody([
             "events": events.map { $0.toDictionary() },
-            "user": forUser.toDictionary(forLogging: true),
-            "statsigMetadata": forUser.deviceEnvironment
+            "user": user.toDictionary(forLogging: true),
+            "statsigMetadata": user.deviceEnvironment
         ])
 
-        guard let body = body else {
+        guard let uncompressedBody = uncompressedBody else {
             completion(parseErr?.localizedDescription, nil)
             return
         }
 
-        makeAndSendRequest(.logEvent, body: body) { _, response, error in
+        let compressed = tryCompress(body: uncompressedBody, forUser: user)
+
+        makeAndSendRequest(.logEvent, body: compressed.body, compression: compressed.compression) { _, response, error in
             if let error = error {
-                completion(error.localizedDescription, body)
+                completion(error.localizedDescription, uncompressedBody)
                 return
             }
 
             guard response?.isOK == true else {
                 completion("An error occurred during sending events to server. "
-                           + "\(String(describing: response?.status))", body)
+                           + "\(String(describing: response?.status))", uncompressedBody)
                 return
             }
 
-            completion(nil, body)
+            completion(nil, uncompressedBody)
         }
+    }
+
+    func tryCompress(body: Data, forUser user: StatsigUser) -> CompressedBody  {
+        guard  !self.statsigOptions.disableCompression,
+            !NetworkService.disableCompression,
+            (self.statsigOptions.eventLoggingURL == nil
+            || self.store.getSDKFlags(user: user).enabledLogEventCompression)
+        else {
+            return CompressedBody(body: body, compression: .none)
+        }
+
+        switch gzipped(body) {
+            case .success(let compressed):
+                return CompressedBody(body: compressed, compression: .gzip)
+            case .failure(let error):
+                self.errorBoundary.logException(tag: "network_compression_gzip", error: error)
+        }
+
+        return CompressedBody(body: body, compression: .none)
     }
 
     func sendRequestsWithData(
         _ dataArray: [Data],
+        forUser user: StatsigUser,
         completion: @escaping ((_ failedRequestsData: [Data]?) -> Void)
     ) {
         var failedRequests: [Data] = []
         let dispatchGroup = DispatchGroup()
         for data in dataArray {
             dispatchGroup.enter()
-            makeAndSendRequest(.logEvent, body: data) { _, response, error in
+            let compressed = tryCompress(body: data, forUser: user)
+            makeAndSendRequest(.logEvent, body: compressed.body, compression: compressed.compression) { _, response, error in
                 if error != nil || response?.isOK != true
                 {
                     failedRequests.append(data)
@@ -287,6 +333,7 @@ class NetworkService {
     private func makeAndSendRequest(
         _ endpoint: Endpoint,
         body: Data,
+        compression: CompressionType = .none,
         marker: NetworkMarker? = nil,
         completion: @escaping NetworkCompletionHandler,
         taskCapture: TaskCaptureHandler = nil
@@ -303,6 +350,9 @@ class NetworkService {
         request.setValue("\(Time.now())", forHTTPHeaderField: "STATSIG-CLIENT-TIME")
         request.setValue(DeviceEnvironment.sdkType, forHTTPHeaderField: "STATSIG-SDK-TYPE")
         request.setValue(DeviceEnvironment.sdkVersion, forHTTPHeaderField: "STATSIG-SDK-VERSION")
+        if let contentEncoding = compression.contentEncodingHeader() {
+            request.setValue(contentEncoding, forHTTPHeaderField: "Content-Encoding")
+        }
         request.httpBody = body
         request.httpMethod = "POST"
 

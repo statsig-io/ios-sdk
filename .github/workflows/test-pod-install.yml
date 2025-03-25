@@ -6,12 +6,13 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  release:
+    types: [released, prereleased]
 
 jobs:
   test-pod-install:
     name: Test Pod Install
     runs-on: macos-latest
-    timeout-minutes: 15
 
     steps:
       - name: Checkout Code
@@ -38,4 +39,15 @@ jobs:
             -destination "platform=iOS Simulator,name=iPhone SE (3rd generation)" \
             -workspace StatsigSamples.xcworkspace/ \
             -scheme StatsigSamplesTests \
+            | xcbeautify && exit ${PIPESTATUS[0]}
+
+      - name: Run unit tests through CocoaPods
+        if: startsWith(github.head_ref, 'releases/') || github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+        working-directory: Sample/StatsigSamplesPods
+        timeout-minutes: 10
+        run: |
+          xcodebuild test \
+            -destination "platform=iOS Simulator,name=iPhone SE (3rd generation)" \
+            -workspace StatsigSamples.xcworkspace/ \
+            -scheme Statsig-Unit-Tests \
             | xcbeautify && exit ${PIPESTATUS[0]}

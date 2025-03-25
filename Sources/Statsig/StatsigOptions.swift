@@ -63,6 +63,11 @@ public class StatsigOptions {
     public var disableHashing = false;
     
     /**
+     When disabled, the SDK will not compress events sent to Statsig
+     */
+    public var disableCompression = false;
+    
+    /**
      The SDK automatically shuts down when an app is put into the background.
      If you need to use the SDK while your app is backgrounded, set this to false.
      */
@@ -163,6 +168,7 @@ public class StatsigOptions {
                 initializeValues: [String: Any]? = nil,
                 disableDiagnostics: Bool? = false,
                 disableHashing: Bool? = false,
+                disableCompression: Bool? = false,
                 shutdownOnBackground: Bool? = true,
                 api: String? = nil,
                 eventLoggingApi: String? = nil,
@@ -209,6 +215,10 @@ public class StatsigOptions {
         
         if let disableHashing = disableHashing {
             self.disableHashing = disableHashing
+        }
+        
+        if let disableCompression = disableCompression {
+            self.disableCompression = disableCompression
         }
         
         if let shutdownOnBackground = shutdownOnBackground {
@@ -318,6 +328,9 @@ extension StatsigOptions {
         }
         if disableHashing != defaultOptions.disableHashing {
             dict["disableHashing"] = disableHashing
+        }
+        if disableCompression != defaultOptions.disableCompression {
+            dict["disableCompression"] = disableCompression
         }
         if shutdownOnBackground != defaultOptions.shutdownOnBackground {
             dict["shutdownOnBackground"] = shutdownOnBackground

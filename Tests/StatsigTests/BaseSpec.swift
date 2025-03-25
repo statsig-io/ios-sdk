@@ -13,6 +13,8 @@ class BaseSpec: QuickSpec {
 
     override func spec() {
         beforeSuite {
+            NetworkService.disableCompression = true;
+
             if (self.shouldResetUserDefaultsBeforeSuite()) {
                 BaseSpec.resetUserDefaults()
             }

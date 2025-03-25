@@ -32,7 +32,7 @@
              custom:nil
              privateAttributes:nil];
 
-    _options = [[StatsigOptions alloc] initWithArgs:@{@"initTimeout": @2}];
+    _options = [[StatsigOptions alloc] initWithArgs:@{@"initTimeout": @2, @"disableCompression": @YES}];
     _completion = ^(NSString * _Nullable err) {};
 }
 
@@ -96,7 +96,7 @@
 
 - (void)initializeStatsig
 {
-    [Statsig initializeWithSDKKey:@"client-"];
+    [Statsig initializeWithSDKKey:@"client-" options:_options];
     [self waitForExpectations:@[_requestExpectation] timeout:1];
 }
 
