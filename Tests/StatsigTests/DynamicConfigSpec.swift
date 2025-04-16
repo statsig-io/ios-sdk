@@ -110,5 +110,85 @@ class DynamicConfigSpec: BaseSpec {
                 expect(dc.getValue(forKey: "wrong_key", defaultValue: ["key": "value"])) == ["key": "value"]
             }
         }
+
+        describe("not using defaultValue") {
+            var dc: DynamicConfig!
+
+            beforeEach {
+                dc = DynamicConfig(
+                    configName: "testConfig",
+                    configObj: DynamicConfigSpec.TestMixedConfig,
+                    evalDetails: .init(source: .Network))
+            }
+
+            it("returns values with different type specifications") {
+                // Inferrable
+                expect(dc.getValue(forKey: "str")) == "string"
+                // Explicit type definition
+                let a: String? = dc.getValue(forKey: "str")
+                expect(a) == "string"
+                // Casting
+                let b = dc.getValue(forKey: "str") as String?
+                expect(b) == "string"
+            }
+
+            it("returns nil when the type doesn't match") {
+                // Explicit type definition
+                let a: Int? = dc.getValue(forKey: "str")
+                expect(a) == nil
+                // Casting
+                let b = dc.getValue(forKey: "str") as Int?
+                expect(b) == nil
+            }
+
+            it("returns nil when the key is unknown") {
+                // Explicit type definition
+                let a: String? = dc.getValue(forKey: "wrong_key")
+                expect(a) == nil
+                // Casting
+                let b = dc.getValue(forKey: "wrong_key") as String?
+                expect(b) == nil
+            }
+            
+            it("returns nil when the config doesn't exist") {
+                let dummy = DynamicConfig(configName: "dummy", evalDetails: .init(source: .Network))
+
+                // Explicit type definition
+                let a: String? = dummy.getValue(forKey: "str")
+                expect(a) == nil
+                // Casting
+                let b = dummy.getValue(forKey: "str") as String?
+                expect(b) == nil
+            }
+
+            it("returns values of every type") {
+                expect(dc.getValue(forKey: "str")) == "string"
+                expect(dc.getValue(forKey: "bool")) == true
+                expect(dc.getValue(forKey: "double")) == 3.14
+                expect(dc.getValue(forKey: "int")) == 3
+                expect(dc.getValue(forKey: "strArray")) == ["1", "2"]
+
+                expect(dc.evaluationDetails.source).to(equal(.Network))
+
+                let mixedArray: [any StatsigDynamicConfigValue]? = dc.getValue(forKey: "mixedArray")
+                expect(mixedArray?.count) == 2
+                expect(mixedArray?[0] as? Int) == 1
+                expect(mixedArray?[1] as? String) == "2"
+
+                let dict: [String: String]? = dc.getValue(forKey: "dict")
+                expect(dict?.count) == 1
+                expect(dict?["key"]) == "value"
+
+                let mixedDict: [String: any StatsigDynamicConfigValue]?  = dc.getValue(forKey: "mixedDict")
+                expect(mixedDict?.count) == 5
+                expect(mixedDict?["keyStr"] as? String) == "string"
+                expect(mixedDict?["keyInt"] as? Int) == 2
+                expect(mixedDict?["keyArr"] as? [Int]) == [1, 2]
+                expect(mixedDict?["keyDouble"] as? Double) == 1.23
+                expect(mixedDict?["keyDict"] as? [String: String]) == ["k": "v"]
+
+                expect(dc.ruleID) == "default"
+            }
+        }
     }
 }

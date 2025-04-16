@@ -116,15 +116,33 @@ public struct DynamicConfig: ConfigBase, ConfigProtocol {
      - forKey: The key of parameter being fetched
      - defaultValue: The fallback value if the key cannot be found
      */
-    public func getValue<T: StatsigDynamicConfigValue>(forKey: String, defaultValue: T) -> T {
-        
-        guard let result = value[forKey] else {
-            print("[Statsig]: \(forKey) does not exist in this Dynamic Config. Returning the defaultValue.")
+    public func getValue<T: StatsigDynamicConfigValue>(forKey key: String, defaultValue: T) -> T {
+        return getValueImpl(forKey: key, defaultValue: defaultValue) ?? defaultValue
+    }
+
+    /**
+     Get the value for the given key, falling back to nil if it cannot be found or is of a different type.
+     If you get the error "Generic parameter 'T' could not be inferred", here are a few ways to fix it:
+     1. Set the type on the variable definition `let a: String? = layer.getValue(...)`
+     2. Cast to the type you need `let a = layer.getValue(...) as String?`
+     3. Add the defaultValue parameter: `let a = layer.getValue(forKey:"key", defaultValue: "")`.
+
+     Parameters:
+     - forKey: The key of parameter being fetched
+     */
+    public func getValue<T: StatsigDynamicConfigValue>(forKey key: String) -> T? {
+        return getValueImpl(forKey: key)
+    }
+
+    internal func getValueImpl<T: StatsigDynamicConfigValue>(forKey key: String, defaultValue: T? = nil) -> T? {
+        let returningLog = defaultValue == nil ? "nil" : "the defaultValue"
+        guard let result = value[key] else {
+            print("[Statsig]: \(key) does not exist in this Dynamic Config. Returning \(returningLog).")
             return defaultValue
         }
-        
+    
         guard let result = result as? T else {
-            print("[Statsig]: \(forKey) exists in this Dynamic Config, but requested type was incorrect (Requested = \(type(of: defaultValue)), Actual = \(type(of: result))). Returning the defaultValue.")
+            print("[Statsig]: \(key) exists in this Dynamic Config, but requested type was incorrect (Requested = \(T.self), Actual = \(type(of: result))). Returning \(returningLog).")
             return defaultValue
         }
         

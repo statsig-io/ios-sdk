@@ -49,6 +49,17 @@ fileprivate struct Data {
         ],
     ]
 
+    static let TestMixedConfigValue: [String : Any] = [
+        "str": "string",
+        "bool": true,
+        "double": 3.14,
+        "int": 3,
+        "strArray": ["1", "2"],
+        "mixedArray": [1, "2"],
+        "dict": ["key": "value"],
+        "mixedDict": ["keyStr": "string", "keyInt": 2, "keyArr": [1, 2], "keyDouble": 1.23, "keyDict": ["k": "v"]],
+    ]
+
     static let LayerConfigWithExperimentKey = "layer_with_exp"
     static let HashLayerConfigWithExperimentKey = LayerConfigWithExperimentKey.sha256()
 
@@ -250,6 +261,95 @@ class LayerConfigSpec: BaseSpec {
                 expect(layer.getValue(forKey: "wrong_key", defaultValue: [1, 2, 3])) == [1, 2, 3]
                 expect(layer.getValue(forKey: "wrong_key", defaultValue: ["key": 3])) == ["key": 3]
                 expect(layer.getValue(forKey: "wrong_key", defaultValue: ["key": "value"])) == ["key": "value"]
+            }
+
+            describe("not using defaultValue") {
+                var layer: Layer!
+
+                beforeEach {
+                    layer = Layer(
+                        client: client,
+                        name: "a_layer",
+                        value: Data.TestMixedConfigValue,
+                        ruleID: "default",
+                        groupName: nil,
+                        evalDetails: .init(source: .Network))
+                }
+
+                it("returns values with different type specifications") {
+                    // Inferrable
+                    expect(layer.getValue(forKey: "str")) == "string"
+                    // Explicit type definition
+                    let a: String? = layer.getValue(forKey: "str")
+                    expect(a) == "string"
+                    // Casting
+                    let b = layer.getValue(forKey: "str") as String?
+                    expect(b) == "string"
+                }
+
+                it("returns nil when the type doesn't match") {
+                    // Explicit type definition
+                    let a: Int? = layer.getValue(forKey: "str")
+                    expect(a) == nil
+                    // Casting
+                    let b = layer.getValue(forKey: "str") as Int?
+                    expect(b) == nil
+                }
+
+                it("returns nil when the key is unknown") {
+                    // Explicit type definition
+                    let a: String? = layer.getValue(forKey: "wrong_key")
+                    expect(a) == nil
+                    // Casting
+                    let b = layer.getValue(forKey: "wrong_key") as String?
+                    expect(b) == nil
+                }
+                
+                it("returns nil when the layer doesn't exist") {
+                    let dummy = Layer(
+                        client: client,
+                        name: "dummy",
+                        value: [:],
+                        ruleID: "",
+                        groupName: nil,
+                        evalDetails: .init(source: .Network))
+
+                    // Explicit type definition
+                    let a: String? = dummy.getValue(forKey: "str")
+                    expect(a) == nil
+                    // Casting
+                    let b = dummy.getValue(forKey: "str") as String?
+                    expect(b) == nil
+                }
+
+                it("returns values of every type") {
+                    expect(layer.getValue(forKey: "str")) == "string"
+                    expect(layer.getValue(forKey: "bool")) == true
+                    expect(layer.getValue(forKey: "double")) == 3.14
+                    expect(layer.getValue(forKey: "int")) == 3
+                    expect(layer.getValue(forKey: "strArray")) == ["1", "2"]
+
+                    expect(layer.evaluationDetails.source).to(equal(.Network))
+
+                    let mixedArray: [any StatsigDynamicConfigValue]? = layer.getValue(forKey: "mixedArray")
+                    expect(mixedArray?.count) == 2
+                    expect(mixedArray?[0] as? Int) == 1
+                    expect(mixedArray?[1] as? String) == "2"
+
+                    let dict: [String: String]? = layer.getValue(forKey: "dict")
+                    expect(dict?.count) == 1
+                    expect(dict?["key"]) == "value"
+
+                    let mixedDict: [String: any StatsigDynamicConfigValue]? = layer.getValue(forKey: "mixedDict")
+                    expect(mixedDict?.count) == 5
+                    expect(mixedDict?["keyStr"] as? String) == "string"
+                    expect(mixedDict?["keyInt"] as? Int) == 2
+                    expect(mixedDict?["keyArr"] as? [Int]) == [1, 2]
+                    expect(mixedDict?["keyDouble"] as? Double) == 1.23
+                    expect(mixedDict?["keyDict"] as? [String: String]) == ["k": "v"]
+
+                    expect(layer.ruleID) == "default"
+                }
             }
         }
     }

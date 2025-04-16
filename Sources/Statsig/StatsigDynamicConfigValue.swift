@@ -44,4 +44,18 @@ func getTypeOf<T: StatsigDynamicConfigValue>(_ value: T) -> String? {
      }
 }
 
+func getTypeOf<T: StatsigDynamicConfigValue>(type: T.Type = T.self) -> String? {
 
+    if (type == Bool.self) {
+        return TypeString.boolean
+    } else if (type == Int.self || type == Double.self) {
+        return TypeString.number
+    } else if (type == String.self || type == Optional<String>.self) {
+        return TypeString.string
+    } else if let arr = [] as? T, arr is Array<StatsigDynamicConfigValue> {
+        return TypeString.array
+    } else if let dict = [:] as? T, dict is Dictionary<String, StatsigDynamicConfigValue> {
+        return TypeString.object
+    }
+    return nil
+}
