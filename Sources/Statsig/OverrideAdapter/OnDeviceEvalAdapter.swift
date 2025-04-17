@@ -24,7 +24,7 @@ public class OnDeviceEvalAdapter: OverrideAdapter {
         let dcsResponse: SpecsResponse
         switch parseResult {
             case .failure(let error):
-                print("[Statsig] Error parsing specs: \(error)")
+                print("[Statsig] OnDeviceEvalAdapter failed to parse specs: \(error)")
                 return nil
             case .success(let value):
                 dcsResponse = value
