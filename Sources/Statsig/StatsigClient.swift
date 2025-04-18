@@ -791,16 +791,14 @@ extension StatsigClient {
     ) {
         let currentUser = self.currentUser
         Diagnostics.mark?.initialize.storeRead.start()
-        let sinceTime = self.store.getLastUpdateTime(user: currentUser)
-        let previousDerivedFields = self.store.getPreviousDerivedFields(user: currentUser)
-        let fullChecksum = self.store.getFullChecksum(user: currentUser)
+        let initValues = self.store.getInitializationValues(user: currentUser)
         Diagnostics.mark?.initialize.storeRead.end(success: true)
 
         networkService.fetchInitialValues(
             for: currentUser,
-            sinceTime: sinceTime,
-            previousDerivedFields: previousDerivedFields,
-            fullChecksum: fullChecksum,
+            sinceTime: initValues.lastUpdateTime,
+            previousDerivedFields: initValues.previousDerivedFields,
+            fullChecksum: initValues.fullChecksum,
             marker: marker,
             processMarker: processMarker
         ) { [weak self] error in
@@ -832,15 +830,13 @@ extension StatsigClient {
     }
 
     private func syncValuesForCurrentUser() {
-        let sinceTime = self.store.getLastUpdateTime(user: currentUser)
-        let previousDerivedFields = self.store.getPreviousDerivedFields(user: currentUser)
-        let fullChecksum = self.store.getFullChecksum(user: currentUser)
+        let initValues = self.store.getInitializationValues(user: currentUser)
 
         self.networkService.fetchUpdatedValues(
             for: currentUser,
-            lastSyncTimeForUser: sinceTime,
-            previousDerivedFields: previousDerivedFields,
-            fullChecksum: fullChecksum) { [weak self] error in
+            lastSyncTimeForUser: initValues.lastUpdateTime,
+            previousDerivedFields: initValues.previousDerivedFields,
+            fullChecksum: initValues.fullChecksum) { [weak self] error in
                 self?.notifyOnUserUpdatedListeners(error)
             }
     }

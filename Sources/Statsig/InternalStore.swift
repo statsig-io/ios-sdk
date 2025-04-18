@@ -568,12 +568,6 @@ class InternalStore {
         }
     }
 
-    func getLastUpdateTime(user: StatsigUser) -> UInt64 {
-        storeQueue.sync {
-            return cache.getLastUpdatedTime(user: user)
-        }
-    }
-
     func getNetworkFallbackInfo() -> FallbackInfo {
         storeQueue.sync {
             return cache.getNetworkFallbackInfo()
@@ -585,16 +579,14 @@ class InternalStore {
             self?.cache.saveNetworkFallbackInfo(fallbackInfo)
         }
     }
-
-    func getPreviousDerivedFields(user: StatsigUser) -> [String: String] {
+    
+    func getInitializationValues(user: StatsigUser) -> (lastUpdateTime: UInt64, previousDerivedFields: [String: String], fullChecksum: String?) {
         storeQueue.sync {
-            return cache.getPreviousDerivedFields(user: user)
-        }
-    }
-
-    func getFullChecksum(user: StatsigUser) -> String? {
-        storeQueue.sync {
-            return cache.getFullChecksum(user: user)
+            return (
+                lastUpdateTime: cache.getLastUpdatedTime(user: user),
+                previousDerivedFields: cache.getPreviousDerivedFields(user: user),
+                fullChecksum: cache.getFullChecksum(user: user)
+            )
         }
     }
 
