@@ -48,9 +48,10 @@ public class StatsigClient {
         Diagnostics.mark?.overall.start();
 
         self.sdkKey = sdkKey
-        self.currentUser = StatsigClient.normalizeUser(user, options: options)
+        let normalizedUser = StatsigClient.normalizeUser(user, options: options)
+        self.currentUser = normalizedUser
         self.statsigOptions = options ?? StatsigOptions()
-        self.store = InternalStore(sdkKey, self.currentUser, options: statsigOptions)
+        self.store = InternalStore(sdkKey, normalizedUser, options: statsigOptions)
         self.networkService = NetworkService(sdkKey: sdkKey, options: statsigOptions, store: store)
         Diagnostics.mark?.initialize.loggerStart.start()
         self.logger = EventLogger(sdkKey: sdkKey, user: currentUser, networkService: networkService)
@@ -60,7 +61,6 @@ public class StatsigClient {
 
         subscribeToApplicationLifecycle()
 
-        let capturedUser = self.currentUser
         let _onComplete: (StatsigClientError?) -> Void = { [weak self, completionWithResult, completion] error in
             guard let self = self else {
                 return
@@ -73,14 +73,14 @@ public class StatsigClient {
             self.hasInitialized = true
             self.lastInitializeError = error
 
-            self.logger.retryFailedRequests(forUser: capturedUser);
+            self.logger.retryFailedRequests(forUser: normalizedUser);
 
             Diagnostics.mark?.overall.end(
                 success: error == nil,
                 details: self.store.cache.getEvaluationDetails(),
                 errorMessage: error?.message
             )
-            Diagnostics.log(self.logger, user: capturedUser, context: .initialize)
+            Diagnostics.log(self.logger, user: normalizedUser, context: .initialize)
 
             self.notifyOnInitializedListeners(error)
             completionWithResult?(error)
@@ -91,8 +91,10 @@ public class StatsigClient {
             _onComplete(nil)
         } else {
             fetchValuesFromNetwork(
+                user: normalizedUser,
                 marker: Diagnostics.mark?.initialize.network,
                 processMarker: Diagnostics.mark?.initialize.process,
+                storeMarker: Diagnostics.mark?.initialize.storeRead,
                 completion: _onComplete
             )
         }
@@ -785,14 +787,16 @@ extension StatsigClient {
 extension StatsigClient {
 
     internal func fetchValuesFromNetwork(
+        user: StatsigUser,
         marker: NetworkMarker? = nil,
         processMarker: InitializeStepMarker? = nil,
+        storeMarker: InitializeStepMarker? = nil,
         completion: ResultCompletionBlock?
     ) {
-        let currentUser = self.currentUser
-        Diagnostics.mark?.initialize.storeRead.start()
+        let currentUser = user
+        storeMarker?.start()
         let initValues = self.store.getInitializationValues(user: currentUser)
-        Diagnostics.mark?.initialize.storeRead.end(success: true)
+        storeMarker?.end(success: true)
 
         networkService.fetchInitialValues(
             for: currentUser,
@@ -805,7 +809,7 @@ extension StatsigClient {
             if let self = self {
                 if let error = error {
                     self.logger.log(Event.statsigInternalEvent(
-                        user: self.currentUser,
+                        user: user,
                         name: "fetch_values_failed",
                         value: nil,
                         metadata: ["error": error.message]))
@@ -869,7 +873,8 @@ extension StatsigClient {
     }
 
     private func updateUserImpl(_ user: StatsigUser, values: [String: Any]? = nil, completion: ResultCompletionBlock? = nil) {
-        currentUser = StatsigClient.normalizeUser(user, options: statsigOptions)
+        let normalizedUser = StatsigClient.normalizeUser(user, options: statsigOptions)
+        currentUser = normalizedUser
         store.updateUser(currentUser, values: values)
         logger.user = currentUser
         
@@ -879,7 +884,7 @@ extension StatsigClient {
         }
         
         ensureMainThread { [weak self] in
-            self?.fetchValuesFromNetwork { [weak self, completion] error in
+            self?.fetchValuesFromNetwork(user: normalizedUser) { [weak self, completion] error in
                 guard let self = self else {
                     return
                 }
