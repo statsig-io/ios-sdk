@@ -59,7 +59,7 @@ func gzipped(_ input: Data) -> Result<Data, GzipError> {
     // Append trailer: CRC32 (4 bytes) and input size mod 2^32 (4 bytes), both little-endian
     let crc = crc32(input)
     var crcLE = crc.littleEndian
-    var inputSizeLE = UInt32(sourceSize % (1 << 32)).littleEndian
+    var inputSizeLE = UInt32(truncatingIfNeeded: sourceSize).littleEndian
     Swift.withUnsafeBytes(of: &crcLE) { output.append(contentsOf: $0) }
     Swift.withUnsafeBytes(of: &inputSizeLE) { output.append(contentsOf: $0) }
     
