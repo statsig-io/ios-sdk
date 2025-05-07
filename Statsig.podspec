@@ -22,6 +22,7 @@ Pod::Spec.new do |spec|
   spec.ios.deployment_target = "10.0"
   spec.osx.deployment_target = "10.13"
   spec.tvos.deployment_target = "10.0"
+  spec.watchos.deployment_target = "7.0"
 
   spec.source       = { :git => "https://github.com/statsig-io/ios-sdk.git", :tag => "#{spec.version}" }
   spec.source_files  = "Sources/Statsig/**/*.swift"
@@ -31,6 +32,7 @@ Pod::Spec.new do |spec|
 
   spec.test_spec 'Tests' do |test_spec|
       test_spec.source_files = 'Tests/StatsigTests/**/*.{swift}'
+      test_spec.platforms = { :ios => "10.0", :osx => "10.13", :tvos => "10.0" }
       test_spec.dependency 'Nimble'
       test_spec.dependency 'Quick'
       test_spec.dependency 'OHHTTPStubs'

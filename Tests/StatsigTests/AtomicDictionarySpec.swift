@@ -42,7 +42,7 @@ class AtomicDictionarySpec: BaseSpec {
             }
 
             it("can be created with data") {
-                let data = NSKeyedArchiver.archivedData(withRootObject: ["a": "b"])
+                let data = try NSKeyedArchiver.archivedData(withRootObject: ["a": "b"], requiringSecureCoding: false)
                 let new = AtomicDictionary<String>.fromData(data, label: "")
                 expect(new["a"]).to(equal("b"))
             }
