@@ -273,6 +273,7 @@ class NetworkService {
     }
 
     func tryCompress(body: Data, forUser user: StatsigUser) -> CompressedBody  {
+        #if !os(watchOS)
         guard  !self.statsigOptions.disableCompression,
             !NetworkService.disableCompression,
             (self.statsigOptions.eventLoggingURL == nil
@@ -287,6 +288,7 @@ class NetworkService {
             case .failure(let error):
                 self.errorBoundary.logException(tag: "network_compression_gzip", error: error)
         }
+        #endif
 
         return CompressedBody(body: body, compression: .none)
     }
