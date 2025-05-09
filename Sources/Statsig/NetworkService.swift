@@ -276,7 +276,7 @@ class NetworkService {
         guard  !self.statsigOptions.disableCompression,
             !NetworkService.disableCompression,
             (self.statsigOptions.eventLoggingURL == nil
-            || self.store.getSDKFlags(user: user).enabledLogEventCompression)
+            || self.store.getSDKFlags(user: user).enableLogEventCompression)
         else {
             return CompressedBody(body: body, compression: .none)
         }
