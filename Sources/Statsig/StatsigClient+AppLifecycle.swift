@@ -2,6 +2,7 @@ import Foundation
 
 extension StatsigClient {
     internal func subscribeToApplicationLifecycle() {
+#if !os(watchOS)
         let center = NotificationCenter.default
         
         center.addObserver(
@@ -21,6 +22,7 @@ extension StatsigClient {
             selector: #selector(appDidBecomeActive),
             name: PlatformCompatibility.didBecomeActiveNotification,
             object: nil)
+#endif
     }
 
     internal func unsubscribeFromApplicationLifecycle() {
