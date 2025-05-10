@@ -51,6 +51,9 @@ public class StatsigClient {
         let normalizedUser = StatsigClient.normalizeUser(user, options: options)
         self.currentUser = normalizedUser
         self.statsigOptions = options ?? StatsigOptions()
+        if let handler = self.statsigOptions.printHandler {
+            PrintHandler.setPrintHandler(handler)
+        }
         self.store = InternalStore(sdkKey, normalizedUser, options: statsigOptions)
         self.networkService = NetworkService(sdkKey: sdkKey, options: statsigOptions, store: store)
         Diagnostics.mark?.initialize.loggerStart.start()
@@ -646,15 +649,15 @@ extension StatsigClient {
         var eventName = withName
 
         if eventName.isEmpty {
-            print("[Statsig]: Must log with a non-empty event name.")
+            PrintHandler.log("[Statsig]: Must log with a non-empty event name.")
             return
         }
         if !self.statsigOptions.disableEventNameTrimming && eventName.count > maxEventNameLength {
-            print("[Statsig]: Event name is too long. Trimming to \(maxEventNameLength).")
+            PrintHandler.log("[Statsig]: Event name is too long. Trimming to \(maxEventNameLength).")
             eventName = String(eventName.prefix(maxEventNameLength))
         }
         if let metadata = metadata, !JSONSerialization.isValidJSONObject(metadata) {
-            print("[Statsig]: metadata is not a valid JSON object. Event is logged without metadata.")
+            PrintHandler.log("[Statsig]: metadata is not a valid JSON object. Event is logged without metadata.")
             logger.log(
                 Event(
                     user: currentUser,

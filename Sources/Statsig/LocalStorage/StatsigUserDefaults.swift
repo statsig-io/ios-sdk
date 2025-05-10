@@ -20,7 +20,7 @@ extension UserDefaults: DefaultsLike {
         guard JSONSerialization.isValidJSONObject(dict),
               let json = try? JSONSerialization.data(withJSONObject: dict)
         else {
-            print("[Statsig]: Failed to save to cache")
+            PrintHandler.log("[Statsig]: Failed to save to cache")
             return
         }
 

@@ -27,8 +27,7 @@ class ErrorBoundary {
         do {
             try task()
         } catch let error {
-            print("[Statsig]: An unexpected exception occurred.")
-            print(error)
+            PrintHandler.log("[Statsig]: An unexpected exception occurred.")
             
             logException(tag: tag, error: error)
             

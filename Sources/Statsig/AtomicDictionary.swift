@@ -66,7 +66,7 @@ class AtomicDictionary<T>
             let dict = self.internalDictionary
             if #available(iOS 11.0, tvOS 11.0, *) {
                 guard let data = try? NSKeyedArchiver.archivedData(withRootObject: dict, requiringSecureCoding: false) else {
-                    print("[Statsig]: Failed create Data from AtomicDictionary")
+                    PrintHandler.log("[Statsig]: Failed create Data from AtomicDictionary")
                     return nil
                 }
                 return data

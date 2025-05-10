@@ -91,7 +91,7 @@ public struct StatsigUser {
             self.custom = custom
         } else {
             if custom != nil {
-                print("[Statsig]: The provided custom value is not added to the user because it is not a valid JSON object.")
+                PrintHandler.log("[Statsig]: The provided custom value is not added to the user because it is not a valid JSON object.")
             }
             self.custom = nil
         }
@@ -100,7 +100,7 @@ public struct StatsigUser {
             self.privateAttributes = privateAttributes
         } else {
             if privateAttributes != nil {
-                print("[Statsig]: The provided privateAttributes is not added to the user because it is not a valid JSON object.")
+                PrintHandler.log("[Statsig]: The provided privateAttributes is not added to the user because it is not a valid JSON object.")
             }
             self.privateAttributes = nil
         }

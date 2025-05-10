@@ -112,7 +112,7 @@ struct StatsigValuesCache {
 
     func getGate(_ gateName: String) -> FeatureGate {
         guard let gates = gates else {
-            print("[Statsig]: Failed to get feature gate with name \(gateName). Returning false as the default.")
+            PrintHandler.log("[Statsig]: Failed to get feature gate with name \(gateName). Returning false as the default.")
             return createUnfoundGate(gateName)
         }
 
@@ -124,13 +124,13 @@ struct StatsigValuesCache {
             )
         }
 
-        print("[Statsig]: The feature gate with name \(gateName) does not exist. Returning false as the default.")
+        PrintHandler.log("[Statsig]: The feature gate with name \(gateName) does not exist. Returning false as the default.")
         return createUnfoundGate(gateName)
     }
 
     func getConfig(_ configName: String) -> DynamicConfig {
         guard let configs = configs else {
-            print("[Statsig]: Failed to get config with name \(configName). Returning a dummy DynamicConfig that will only return default values.")
+            PrintHandler.log("[Statsig]: Failed to get config with name \(configName). Returning a dummy DynamicConfig that will only return default values.")
             return createUnfoundDynamicConfig(configName)
         }
 
@@ -141,13 +141,13 @@ struct StatsigValuesCache {
                 evalDetails: getEvaluationDetails(.Recognized))
         }
 
-        print("[Statsig]: \(configName) does not exist. Returning a dummy DynamicConfig that will only return default values.")
+        PrintHandler.log("[Statsig]: \(configName) does not exist. Returning a dummy DynamicConfig that will only return default values.")
         return createUnfoundDynamicConfig(configName)
     }
 
     func getLayer(_ client: StatsigClient?, _ layerName: String) -> Layer {
         guard let layers = layers else {
-            print("[Statsig]: Failed to get layer with name \(layerName). Returning an empty Layer.")
+            PrintHandler.log("[Statsig]: Failed to get layer with name \(layerName). Returning an empty Layer.")
             return createUnfoundLayer(client, layerName)
         }
 
@@ -160,13 +160,13 @@ struct StatsigValuesCache {
             )
         }
 
-        print("[Statsig]: The layer with name \(layerName) does not exist. Returning an empty Layer.")
+        PrintHandler.log("[Statsig]: The layer with name \(layerName) does not exist. Returning an empty Layer.")
         return createUnfoundLayer(client, layerName)
     }
     
     func getParamStore(_ client: StatsigClient?, _ storeName: String) -> ParameterStore {
         guard let stores = paramStores else {
-            print("[Statsig]: Failed to get parameter store with name \(storeName). Returning an empty ParameterStore.")
+            PrintHandler.log("[Statsig]: Failed to get parameter store with name \(storeName). Returning an empty ParameterStore.")
             return createUnfoundParamStore(client, storeName)
         }
 
@@ -179,7 +179,7 @@ struct StatsigValuesCache {
             )
         }
 
-        print("[Statsig]: The parameter store with name \(storeName) does not exist. Returning an empty ParameterStore.")
+        PrintHandler.log("[Statsig]: The parameter store with name \(storeName) does not exist. Returning an empty ParameterStore.")
         return createUnfoundParamStore(client, storeName)
     }
 

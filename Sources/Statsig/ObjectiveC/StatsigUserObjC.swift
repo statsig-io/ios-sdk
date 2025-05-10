@@ -78,7 +78,7 @@ public final class StatsigUserObjC: NSObject {
                 if let v = convertToUserCustomType(value) {
                     filteredCustom[key] = v
                 } else {
-                    print("[Statsig]: the entry for key \(key) is dropped because it is not of a supported type.")
+                    PrintHandler.log("[Statsig]: the entry for key \(key) is dropped because it is not of a supported type.")
                 }
             }
         }
@@ -89,7 +89,7 @@ public final class StatsigUserObjC: NSObject {
                 if let v = convertToUserCustomType(value) {
                     filteredPrivateAttributes[key] = v
                 } else {
-                    print("[Statsig]: the entry for key \(key) is dropped because it is not of a supported type.")
+                    PrintHandler.log("[Statsig]: the entry for key \(key) is dropped because it is not of a supported type.")
                 }
             }
         }

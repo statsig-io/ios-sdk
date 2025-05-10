@@ -72,7 +72,7 @@ class StorageProviderBasedUserDefaults: DefaultsLike {
         if let data = dict.toData() {
             storageProvider.write(data, "com.statsig.cache")
         } else {
-            print("[Statsig]: Failed to write data to storage provider.")
+            PrintHandler.log("[Statsig]: Failed to write data to storage provider.")
             return
         }
     }

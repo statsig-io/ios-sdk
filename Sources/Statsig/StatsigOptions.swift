@@ -95,7 +95,7 @@ public class StatsigOptions {
             if let apiURL = URL(string: newValue)?.ignoringPath {
                 self.initializationURL = apiURL.appendingPathComponent(Endpoint.initialize.rawValue, isDirectory: false)
             } else {
-                print("[Statsig]: Failed to create URL with StatsigOptions.api. Please check if it's a valid URL")
+                PrintHandler.log("[Statsig]: Failed to create URL with StatsigOptions.api. Please check if it's a valid URL")
             }
         }
     }
@@ -112,7 +112,7 @@ public class StatsigOptions {
             if let apiURL = URL(string: newValue)?.ignoringPath {
                 self.eventLoggingURL = apiURL.appendingPathComponent(Endpoint.logEvent.rawValue, isDirectory: false)
             } else {
-                print("[Statsig]: Failed to create URL with StatsigOptions.eventLoggingApi. Please check if it's a valid URL")
+                PrintHandler.log("[Statsig]: Failed to create URL with StatsigOptions.eventLoggingApi. Please check if it's a valid URL")
             }
         }
     }
@@ -145,6 +145,12 @@ public class StatsigOptions {
      This property can be customized to utilize URLSession instances with specific configurations, including certificate pinning, for enhanced security when communicating with servers.
      */
     public var urlSession: URLSession = .shared
+    
+    /**
+     A handler for log messages from the SDK. If not provided, logs will be printed to the console.
+     The handler receives the message string that would otherwise be printed to the console.
+     */
+    public var printHandler: ((String) -> Void)?
 
     var environment: [String: String] = [:]
 
@@ -180,7 +186,8 @@ public class StatsigOptions {
                 storageProvider: StorageProvider? = nil,
                 urlSession: URLSession? = nil,
                 disableEventNameTrimming: Bool = false,
-                overrideAdapter: OnDeviceEvalAdapter? = nil
+                overrideAdapter: OnDeviceEvalAdapter? = nil,
+                printHandler: ((String) -> Void)? = nil
     )
     {
         self.disableEventNameTrimming = disableEventNameTrimming
@@ -236,7 +243,7 @@ public class StatsigOptions {
         if let initializationURL = initializationURL {
             self.initializationURL = initializationURL
             if api != nil {
-                print("[Statsig]: StatsigOptions.api is being ignored because StatsigOptions.initializationURL is also being set.")
+                PrintHandler.log("[Statsig]: StatsigOptions.api is being ignored because StatsigOptions.initializationURL is also being set.")
             }
         } else if let api = api {
             self.api = api
@@ -245,7 +252,7 @@ public class StatsigOptions {
         if let eventLoggingURL = eventLoggingURL {
             self.eventLoggingURL = eventLoggingURL
             if eventLoggingApi != nil {
-                print("[Statsig]: StatsigOptions.eventLoggingApi is being ignored because StatsigOptions.eventLoggingURL is also being set.")
+                PrintHandler.log("[Statsig]: StatsigOptions.eventLoggingApi is being ignored because StatsigOptions.eventLoggingURL is also being set.")
             }
         } else if let eventLoggingApi = eventLoggingApi {
             self.eventLoggingApi = eventLoggingApi
@@ -266,6 +273,8 @@ public class StatsigOptions {
         self.userValidationCallback = userValidationCallback
         
         self.overrideAdapter = overrideAdapter
+        
+        self.printHandler = printHandler
     }
 }
 
@@ -289,6 +298,9 @@ extension StatsigOptions {
         }
         if evaluationCallback != nil {
             dict["evaluationCallback"] = "set"
+        }
+        if printHandler != nil {
+            dict["printHandler"] = "set"
         }
         if customCacheKey != nil {
             dict["customCacheKey"] = "set"

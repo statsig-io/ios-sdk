@@ -18,7 +18,7 @@ public enum JsonValue: Decodable, Equatable {
         else if let value = value as? [Any] {
             self = .array(value.map{ v in
                 guard let jv = JsonValue(v) else {
-                    print("[Statsig] Failed to convert value to JsonValue \(v)")
+                    PrintHandler.log("[Statsig] Failed to convert value to JsonValue \(v)")
                     return .null
                 }
                 return jv
@@ -49,7 +49,7 @@ public enum JsonValue: Decodable, Equatable {
             JSONSerialization.isValidJSONObject(value) {
             self = .dictionary(value.mapValues { (v: Any?) -> JsonValue in
                 guard let jv = JsonValue(v) else {
-                    print("[Statsig] Failed to convert value to JsonValue \(v.debugDescription)")
+                    PrintHandler.log("[Statsig] Failed to convert value to JsonValue \(v.debugDescription)")
                     return .null
                 }
                 return jv

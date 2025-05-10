@@ -115,7 +115,7 @@ class StatsigOptionsSpec: BaseSpec {
                 }
 
                 it("creates a dictionary with every option") {
-                    let ignoredKeys = ["getDictionaryForLogging", "api", "eventLoggingApi"]
+                    let ignoredKeys = ["getDictionaryForLogging", "api", "eventLoggingApi", "printHandler"]
 
                     let dict = options.getDictionaryForLogging()
 

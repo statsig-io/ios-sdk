@@ -137,12 +137,12 @@ public struct DynamicConfig: ConfigBase, ConfigProtocol {
     internal func getValueImpl<T: StatsigDynamicConfigValue>(forKey key: String, defaultValue: T? = nil) -> T? {
         let returningLog = defaultValue == nil ? "nil" : "the defaultValue"
         guard let result = value[key] else {
-            print("[Statsig]: \(key) does not exist in this Dynamic Config. Returning \(returningLog).")
+            PrintHandler.log("[Statsig]: \(key) does not exist in this Dynamic Config. Returning \(returningLog).")
             return defaultValue
         }
     
         guard let result = result as? T else {
-            print("[Statsig]: \(key) exists in this Dynamic Config, but requested type was incorrect (Requested = \(T.self), Actual = \(type(of: result))). Returning \(returningLog).")
+            PrintHandler.log("[Statsig]: \(key) exists in this Dynamic Config, but requested type was incorrect (Requested = \(T.self), Actual = \(type(of: result))). Returning \(returningLog).")
             return defaultValue
         }
         

@@ -34,7 +34,7 @@ public class StatsigDebugViewController: UIViewController, WKNavigationDelegate,
         }
 
         guard let root = root else {
-            print("[Statsig] DebugView failed to find parent view controller")
+            PrintHandler.log("[Statsig] DebugView failed to find parent view controller")
             return
         }
 
@@ -43,12 +43,12 @@ public class StatsigDebugViewController: UIViewController, WKNavigationDelegate,
 
     internal init?(sdkKey: String, state: [String: Any?], callback: DebuggerCallback? = nil) {
         guard JSONSerialization.isValidJSONObject(state) else {
-            print("[Statsig] DebugView received Invalid state")
+            PrintHandler.log("[Statsig] DebugView received Invalid state")
             return nil
         }
 
         guard let url = URL(string: "https://console.statsig.com/client_sdk_debugger_redirect?sdkKey=\(sdkKey)") else {
-            print("[Statsig] DebugView failed to create required URL")
+            PrintHandler.log("[Statsig] DebugView failed to create required URL")
             return nil
         }
 
@@ -89,7 +89,7 @@ public class StatsigDebugViewController: UIViewController, WKNavigationDelegate,
             webView.load(URLRequest(url: url))
             self.webView = webView
         } catch {
-            print("[Statsig] Failed to create debug state")
+            PrintHandler.log("[Statsig] Failed to create debug state")
         }
 
         // Add a close button to dismiss the modal view
@@ -124,7 +124,7 @@ public class StatsigDebugViewController: UIViewController, WKNavigationDelegate,
 #else
 public class StatsigDebugViewController {
     static func show(_ sdkKey: String, _ state: [String: Any?], _ callback: DebuggerCallback? = nil) {
-        print("[Statsig] DebugView is currently only available on iOS")
+        PrintHandler.log("[Statsig] DebugView is currently only available on iOS")
     }
 
     internal init?(sdkKey: String, state: [String: Any?], callback: DebuggerCallback? = nil) {
