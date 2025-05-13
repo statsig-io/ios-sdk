@@ -574,7 +574,6 @@ extension StatsigClient {
 }
 
 // MARK: Parameter Stores
-
 extension StatsigClient {
     public func getParameterStore(_ storeName: String) -> ParameterStore {
         return getParameterStoreImpl(storeName, shouldExpose: true)

@@ -255,29 +255,6 @@ public class Statsig {
     public static func getLayerWithExposureLoggingDisabled(_ layerName: String, keepDeviceValue: Bool = false) -> Layer {
         return getLayerImpl(layerName, keepDeviceValue: keepDeviceValue, withExposures: false, functionName: funcName())
     }
-    
-    /**
-     
-     */
-    public static func getParameterStore(
-        _ storeName: String
-    ) -> ParameterStore {
-        return getParameterStoreImpl(
-            storeName,
-            withExposures: true,
-            functionName: funcName()
-        )
-    }
-    
-    public static func getParameterStoreWithExposureLoggingDisabled(
-        _ storeName: String
-    ) -> ParameterStore {
-        return getParameterStoreImpl(
-            storeName,
-            withExposures: false,
-            functionName: funcName()
-        )
-    }
 
     /**
      Logs an exposure event for the given layer parameter. Only required if a related getLayerWithExposureLoggingDisabled call has been made.
@@ -293,6 +270,42 @@ public class Statsig {
         }
 
         client.manuallyLogLayerParameterExposure(layerName, parameterName, keepDeviceValue: keepDeviceValue)
+    }
+
+    /**
+     Get the values for the given parameter store. Exposure events will be fired when getValue is called on the result ParameterStore class.
+
+     Parameters:
+     - storeName: The name of the parameter store setup on console.statsig.com
+
+     SeeAlso [Parameter Stores Documentation](https://docs.statsig.com/client/concepts/parameter-stores/)
+     */
+    public static func getParameterStore(
+        _ storeName: String
+    ) -> ParameterStore {
+        return getParameterStoreImpl(
+            storeName,
+            withExposures: true,
+            functionName: funcName()
+        )
+    }
+    
+    /**
+     Get the values for the given parameter store. No exposure events will be fired.
+
+     Parameters:
+     - storeName: The name of the parameter store setup on console.statsig.com
+
+     SeeAlso [Parameter Stores Documentation](https://docs.statsig.com/client/concepts/parameter-stores/)
+     */
+    public static func getParameterStoreWithExposureLoggingDisabled(
+        _ storeName: String
+    ) -> ParameterStore {
+        return getParameterStoreImpl(
+            storeName,
+            withExposures: false,
+            functionName: funcName()
+        )
     }
 
     /**

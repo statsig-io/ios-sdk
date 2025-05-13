@@ -557,8 +557,8 @@ class InternalStore {
     init(_ sdkKey: String, _ user: StatsigUser, options: StatsigOptions) {
         Diagnostics.mark?.initialize.readCache.start()
         cache = StatsigValuesCache(sdkKey, user, options)
-        localOverrides = StatsigUserDefaults.defaults.dictionarySafe(forKey: InternalStore.localOverridesKey)
-        ?? InternalStore.getEmptyOverrides()
+        let savedOverrides = StatsigUserDefaults.defaults.dictionarySafe(forKey: InternalStore.localOverridesKey) ?? [:]
+        localOverrides = InternalStore.getEmptyOverrides().merging(savedOverrides) { (_, saved) in saved }
         Diagnostics.mark?.initialize.readCache.end(success: true)
     }
     
@@ -671,14 +671,14 @@ class InternalStore {
     
     func getParamStore(client: StatsigClient?, forName storeName: String) -> ParameterStore {
         storeQueue.sync {
-            if let override = (localOverrides[InternalStore.paramStoresKey] as? [String: [String: StatsigDynamicConfigValue]])?[storeName] {
+            if let override = (localOverrides[InternalStore.paramStoresKey] as? [String: [String: Any]])?[storeName] {
                 return ParameterStore(
                     name: storeName,
                     evaluationDetails: cache.getEvaluationDetails(.LocalOverride),
                     client: client,
                     configuration: override.mapValues {[
                         "ref_type": "static",
-                        "param_type": getTypeOf($0),
+                        "param_type": getTypeOfValue($0) ?? "unknown",
                         "value": $0
                     ]}
                 )

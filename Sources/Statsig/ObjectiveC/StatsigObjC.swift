@@ -142,6 +142,18 @@ public final class StatsigObjC: NSObject {
     @objc public static func getLayerWithExposureLoggingDisabled(_ layerName: String, keepDeviceValue: Bool) -> LayerObjC {
         return LayerObjC(Statsig.getLayerWithExposureLoggingDisabled(layerName, keepDeviceValue: keepDeviceValue))
     }
+    
+    //
+    // MARK: - Get Parameter Store
+    //
+    
+    @objc public static func getParameterStoreForName(_ storeName: String) -> ParameterStoreObjC {
+        return ParameterStoreObjC(withParameterStore: Statsig.getParameterStore(storeName))
+    }
+    
+    @objc public static func getParameterStoreWithExposureLoggingDisabled(_ storeName: String) -> ParameterStoreObjC {
+        return ParameterStoreObjC(withParameterStore: Statsig.getParameterStoreWithExposureLoggingDisabled(storeName))
+    }
 
     //
     // MARK: - Manual Exposure Logging (Simple)
@@ -230,6 +242,10 @@ public final class StatsigObjC: NSObject {
 
     @objc public static func overrideLayer(_ layerName: String, value: [String: Any]) {
         Statsig.overrideLayer(layerName, value: value)
+    }
+    
+    @objc public static func overrideParameterStore(_ storeName: String, value: [String: Any]) {
+        Statsig.overrideParamStore(storeName, value: value)
     }
 
     @objc public static func removeOverride(_ overrideName: String) {
