@@ -1,3 +1,6 @@
+> [!WARNING]
+> We renamed this repo from `ios-sdk` to `statsig-kit`. Apps should continue working as expected, but we recommend updating your dependencies: [Guide](https://docs.statsig.com/client/iOS/repo-migration-guide).
+
 ## Statsig iOS SDK
 
 The Statsig iOS SDK for single user client environments. It works for both Swift and Objective-C. If you need a SDK for another language or server environment, check out our [other SDKs](https://docs.statsig.com/#sdks).

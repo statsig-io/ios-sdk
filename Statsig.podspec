@@ -13,7 +13,7 @@ Pod::Spec.new do |spec|
                      and also run A/B tests to understand whether a new feature actually helps your product before shipping.
                    DESC
 
-  spec.homepage     = "https://github.com/statsig-io/ios-sdk"
+  spec.homepage     = "https://github.com/statsig-io/statsig-kit"
 
   spec.license      = { :type => "ISC", :file => "LICENSE" }
 
@@ -24,7 +24,7 @@ Pod::Spec.new do |spec|
   spec.tvos.deployment_target = "10.0"
   spec.watchos.deployment_target = "7.0"
 
-  spec.source       = { :git => "https://github.com/statsig-io/ios-sdk.git", :tag => "#{spec.version}" }
+  spec.source       = { :git => "https://github.com/statsig-io/statsig-kit.git", :tag => "#{spec.version}" }
   spec.source_files  = "Sources/Statsig/**/*.swift"
   spec.resource_bundles  = {"Statsig" => ["PrivacyInfo.xcprivacy"]}
 
