@@ -89,7 +89,7 @@ class EventSpec: BaseSpec {
                 expect(actualMetadata?["reason"] as? String) == "Network:Recognized"
                 expect(actualMetadata?["lcut"] as? String) == "123456789"
                 expect(actualMetadata?["receivedAt"] as? String) == "12"
-                expect(actualMetadata?["rulePassed"] as? Bool) == false
+                expect(actualMetadata?["rulePassed"] as? String) == "false"
                 
                 if let actualBootstrapMetadata = actualMetadata?["bootstrapMetadata"] as? [String: Any] {
                     expect(actualBootstrapMetadata["generatorSDKInfo"] as? [String: String]) == ["version": "1.0.0"]

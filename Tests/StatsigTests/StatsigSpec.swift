@@ -777,7 +777,7 @@ class StatsigSpec: BaseSpec {
                         "reason": "Network:Recognized",
                         "lcut": "0",
                         "receivedAt": metadata!["receivedAt"]!,
-                        "rulePassed": false
+                        "rulePassed": "false"
                     ]))
                 )
                 expect(secondaryExposures).to(equal([]))

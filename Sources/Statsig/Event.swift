@@ -117,7 +117,7 @@ class Event {
             metadata["bootstrapMetadata"] = bootstrapMetadata.toDictionary()
         }
 
-        metadata["rulePassed"] = config.didPassRule;
+        metadata["rulePassed"] = config.didPassRule ? "true" : "false";
 
         evalDetails.addToDictionary(&metadata)
 
