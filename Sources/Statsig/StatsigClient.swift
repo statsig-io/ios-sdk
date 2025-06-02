@@ -1,8 +1,6 @@
 import Foundation
 
 public class StatsigClient {
-    private static let exposureDedupeQueueLabel = "com.Statsig.exposureDedupeQueue"
-
     internal var logger: EventLogger
     internal var statsigOptions: StatsigOptions
 
@@ -11,7 +9,6 @@ public class StatsigClient {
     private var store: InternalStore
     private var networkService: NetworkService
     private var syncTimer: Timer?
-    private var loggedExposures: [String: TimeInterval]
     // We use a list of functions to keep a weak reference to each listener. Using
     // NSHashTable.weakObjects isn't an option, as objects are only deallocated when
     // inside an autoreleasepool block. See https://github.com/GitHawkApp/FlatCache/issues/3
@@ -19,8 +16,6 @@ public class StatsigClient {
     private var hasInitialized: Bool = false
     private var lastInitializeError: StatsigClientError?
     private var completionWithResult: ResultCompletionBlock? = nil
-
-    private let exposureDedupeQueue = DispatchQueue(label: exposureDedupeQueueLabel, qos: .userInitiated, attributes: .concurrent)
 
     let maxEventNameLength = 64
 
@@ -60,7 +55,6 @@ public class StatsigClient {
         self.logger = EventLogger(sdkKey: sdkKey, user: currentUser, networkService: networkService)
         self.logger.start()
         Diagnostics.mark?.initialize.loggerStart.end(success: true)
-        self.loggedExposures = [String: TimeInterval]()
 
         subscribeToApplicationLifecycle()
 
@@ -141,9 +135,7 @@ public class StatsigClient {
      - completion: A callback block called when the new values have been received. May be called with a `StatsigClientError` object if the fetch fails.
      */
     public func updateUserWithResult(_ user: StatsigUser, values: [String: Any]? = nil, completion: ResultCompletionBlock? = nil) {
-        exposureDedupeQueue.async(flags: .barrier) { [weak self] in
-            self?.loggedExposures.removeAll()
-        }
+        self.logger.clearExposuresDedupeDict()
 
         self.updateUserImpl(user, values: values, completion: completion)
     }
@@ -305,19 +297,19 @@ extension StatsigClient {
         let ruleID = gate.ruleID
         let dedupeKey = gateName + (gateValue ? "true" : "false") + ruleID + gate.evaluationDetails.getDetailedReason()
 
-        if shouldLogExposure(key: dedupeKey) {
-            logger.log(
-                Event.gateExposure(
-                    user: currentUser,
-                    gateName: gateName,
-                    gateValue: gateValue,
-                    ruleID: ruleID,
-                    secondaryExposures: gate.secondaryExposures,
-                    evalDetails: gate.evaluationDetails,
-                    bootstrapMetadata: store.getBootstrapMetadata(),
-                    disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging)
-                .withManualExposureFlag(isManualExposure))
-        }
+        logger.log(
+            Event.gateExposure(
+                user: currentUser,
+                gateName: gateName,
+                gateValue: gateValue,
+                ruleID: ruleID,
+                secondaryExposures: gate.secondaryExposures,
+                evalDetails: gate.evaluationDetails,
+                bootstrapMetadata: store.getBootstrapMetadata(),
+                disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging
+            ).withManualExposureFlag(isManualExposure),
+            exposureDedupeKey: dedupeKey
+        )
     }
 }
 
@@ -398,16 +390,16 @@ extension StatsigClient {
         let ruleID = config.ruleID
         let dedupeKey = configName + ruleID + config.evaluationDetails.getDetailedReason()
 
-        if shouldLogExposure(key: dedupeKey) {
-            logger.log(
-                Event.configExposure(
-                    user: currentUser,
-                    configName: configName,
-                    config: config,
-                    bootstrapMetadata: store.getBootstrapMetadata(),
-                    disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging)
-                .withManualExposureFlag(isManualExposure))
-        }
+        logger.log(
+            Event.configExposure(
+                user: currentUser,
+                configName: configName,
+                config: config,
+                bootstrapMetadata: store.getBootstrapMetadata(),
+                disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging
+            ).withManualExposureFlag(isManualExposure),
+            exposureDedupeKey: dedupeKey
+        )
     }
 }
 
@@ -554,22 +546,21 @@ extension StatsigClient {
             layer.evaluationDetails.getDetailedReason()
         ].joined(separator: "|")
 
-        if shouldLogExposure(key: dedupeKey) {
-            logger.log(
-                Event.layerExposure(
-                    user: currentUser,
-                    configName: layer.name,
-                    ruleID: layer.ruleID,
-                    secondaryExposures: exposures,
-                    disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging,
-                    allocatedExperimentName: allocatedExperiment,
-                    parameterName: parameterName,
-                    isExplicitParameter: isExplicit,
-                    evalDetails: layer.evaluationDetails,
-                    bootstrapMetadata: store.getBootstrapMetadata()
-                )
-                .withManualExposureFlag(isManualExposure))
-        }
+        logger.log(
+            Event.layerExposure(
+                user: currentUser,
+                configName: layer.name,
+                ruleID: layer.ruleID,
+                secondaryExposures: exposures,
+                disableCurrentVCLogging: statsigOptions.disableCurrentVCLogging,
+                allocatedExperimentName: allocatedExperiment,
+                parameterName: parameterName,
+                isExplicitParameter: isExplicit,
+                evalDetails: layer.evaluationDetails,
+                bootstrapMetadata: store.getBootstrapMetadata()
+            ).withManualExposureFlag(isManualExposure),
+            exposureDedupeKey: dedupeKey
+        )
     }
 }
 
@@ -859,21 +850,6 @@ extension StatsigClient {
         return normalized
     }
 
-    private func shouldLogExposure(key: String) -> Bool {
-        return exposureDedupeQueue.sync { () -> Bool in
-            let now = Date().timeIntervalSince1970
-            if let lastTime = loggedExposures[key], lastTime >= now - 600 {
-                // if the last time the exposure was logged was less than 10 mins ago, do not log exposure
-                return false
-            }
-
-            exposureDedupeQueue.async(flags: .barrier) { [weak self] in
-                self?.loggedExposures[key] = now
-            }
-            return true
-        }
-    }
-
     private func updateUserImpl(_ user: StatsigUser, values: [String: Any]? = nil, completion: ResultCompletionBlock? = nil) {
         let normalizedUser = StatsigClient.normalizeUser(user, options: statsigOptions)
         currentUser = normalizedUser
@@ -934,9 +910,7 @@ extension StatsigClient {
      */
     @available(*, deprecated, message: "Use `StatsigClient.updateUserWithResult` instead")
     public func updateUser(_ user: StatsigUser, values: [String: Any]? = nil, completion: completionBlock = nil) {
-        exposureDedupeQueue.async(flags: .barrier) { [weak self] in
-            self?.loggedExposures.removeAll()
-        }
+        self.logger.clearExposuresDedupeDict()
 
         self.updateUserImpl(user, values: values) { error in 
             completion?(error?.message)

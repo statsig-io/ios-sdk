@@ -25,6 +25,8 @@ class EventLogger {
     var user: StatsigUser
     var nonExposedChecks: [String: Int]
 
+    private var exposuresDedupeDict = [String: TimeInterval]()
+
 #if os(tvOS)
     let MAX_SAVED_LOG_REQUEST_SIZE = 100_000 //100 KB
 #else
@@ -62,15 +64,32 @@ class EventLogger {
         }
     }
 
-    func log(_ event: Event) {
+    func log(_ event: Event, exposureDedupeKey: String? = nil) {
         logQueue.async { [weak self] in
             guard let self = self else { return }
+
+            if let key = exposureDedupeKey {
+                let now = Date().timeIntervalSince1970
+
+                if let lastTime = exposuresDedupeDict[key], lastTime >= now - 600 {
+                    // if the last time the exposure was logged was less than 10 mins ago, do not log exposure
+                    return
+                }
+
+                exposuresDedupeDict[key] = now
+            }
 
             self.events.append(event)
 
             if (self.events.count >= self.maxEventQueueSize) {
                 self.flush()
             }
+        }
+    }
+
+    internal func clearExposuresDedupeDict() {
+        logQueue.async(flags: .barrier) { [weak self] in
+            self?.exposuresDedupeDict.removeAll()
         }
     }
 
